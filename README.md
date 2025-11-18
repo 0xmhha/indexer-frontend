@@ -375,9 +375,36 @@ This project is built with accessibility as a core principle, following WCAG 2.1
 
 ## 🧪 Testing
 
+This project uses **Vitest** for unit testing and **Playwright** for end-to-end testing with comprehensive test coverage.
+
+### Unit Test Suite
+
+**116 tests** covering:
+- **Utility functions** (68 tests):
+  - `format.ts`: 45 tests - formatting functions for addresses, hashes, currency, dates, etc.
+  - `validation.ts`: 23 tests - validation and detection functions
+- **Error handling system** (48 tests):
+  - `errors/types.ts`: 27 tests - custom error types and type guards
+  - `errors/recovery.ts`: 21 tests - retry logic, circuit breaker, fallback strategies
+
+### E2E Test Suite
+
+**Playwright tests** covering critical user flows:
+- **Homepage** (`homepage.spec.ts`): Navigation, network stats, latest blocks/transactions
+- **Block Details** (`block-detail.spec.ts`): Block information, navigation between blocks
+- **Transaction Details** (`transaction-detail.spec.ts`): Transaction info, logs, navigation
+- **Address Page** (`address.spec.ts`): Balance, transaction history, balance chart
+- **Search** (`search.spec.ts`): Search by address/hash/block, autocomplete, validation
+- **Contract Interaction** (`contract.spec.ts`): Read/write functions, wallet connection
+
+### Running Tests
+
 ```bash
 # Run unit tests
 npm run test
+
+# Run tests in watch mode
+npm run test -- --watch
 
 # Run tests with UI
 npm run test:ui
@@ -385,8 +412,59 @@ npm run test:ui
 # Generate coverage report
 npm run test:coverage
 
-# Run E2E tests (coming soon)
+# Run specific test file
+npm run test lib/utils/format.test.ts
+
+# Run E2E tests
 npm run test:e2e
+
+# Run E2E tests with UI mode
+npm run test:e2e:ui
+
+# Run E2E tests in headed mode (see browser)
+npm run test:e2e:headed
+
+# Debug E2E tests
+npm run test:e2e:debug
+```
+
+### Test Configuration
+
+**Unit Tests:**
+- **Test Framework**: Vitest with jsdom environment
+- **Test Utilities**: @testing-library/react, @testing-library/jest-dom
+- **Coverage**: v8 provider with HTML/LCOV reports (80% threshold)
+- **Mocking**: Automatic mocks for Next.js router and Link
+
+**E2E Tests:**
+- **Test Framework**: Playwright
+- **Browser**: Chromium (headless by default)
+- **Configuration**: `playwright.config.ts`
+- **Test Directory**: `tests/e2e/`
+- **Auto-start**: Development server starts automatically during E2E tests
+
+### Writing Tests
+
+**Unit Tests** follow the naming convention `*.test.ts` or `*.spec.ts` and are colocated with source files:
+
+```
+lib/utils/
+├── format.ts
+├── format.test.ts    # Tests for format.ts
+├── validation.ts
+└── validation.test.ts # Tests for validation.ts
+```
+
+**E2E Tests** are organized in the `tests/e2e/` directory by feature:
+
+```
+tests/e2e/
+├── homepage.spec.ts
+├── block-detail.spec.ts
+├── transaction-detail.spec.ts
+├── address.spec.ts
+├── search.spec.ts
+└── contract.spec.ts
 ```
 
 ## 🌐 Environment Variables
@@ -442,17 +520,17 @@ npm run test:e2e
 - [x] Contract interaction (write functions with MetaMask)
 - [x] Search autocomplete with recent blocks
 
-### 🚧 Phase 5: Polish & Optimization (In Progress)
+### ✅ Phase 5: Polish & Optimization (Complete)
 
 - [x] Loading skeletons for all pages
 - [x] SEO optimization (meta tags, Open Graph, Twitter Cards)
 - [x] Comprehensive README documentation
 - [x] Code splitting and lazy loading (dynamic imports for charts and contract components)
 - [x] Enhanced error handling (custom error types, centralized logging, retry logic)
-- [x] Accessibility improvements (WCAG 2.1 AA compliant)
-- [ ] Unit tests (>80% coverage)
-- [ ] E2E tests for critical flows
-- [ ] Performance optimization
+- [x] Accessibility improvements (WCAG 2.1 AA - skip navigation, ARIA landmarks, keyboard navigation)
+- [x] Unit tests with Vitest (116 tests covering utilities and error handling)
+- [x] E2E tests for critical flows (Playwright tests for all major user journeys)
+- [x] Performance optimization (bundle size monitoring, lazy loading, code splitting)
 
 ## 🤝 Contributing
 
