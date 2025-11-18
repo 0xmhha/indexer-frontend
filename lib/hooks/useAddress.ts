@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@apollo/client'
-import { GET_ADDRESS_BALANCE, GET_TRANSACTIONS_BY_ADDRESS } from '@/lib/apollo/queries'
+import { GET_ADDRESS_BALANCE, GET_TRANSACTIONS_BY_ADDRESS, GET_BALANCE_HISTORY } from '@/lib/apollo/queries'
 
 /**
  * Hook to fetch address balance
@@ -46,5 +46,36 @@ export function useAddressTransactions(address: string | null, limit = 10, offse
     loading,
     error,
     fetchMore,
+  }
+}
+
+/**
+ * Hook to fetch balance history for an address
+ */
+export function useBalanceHistory(
+  address: string | null,
+  fromBlock: bigint,
+  toBlock: bigint,
+  limit = 100
+) {
+  const { data, loading, error } = useQuery(GET_BALANCE_HISTORY, {
+    variables: {
+      address: address ?? '',
+      fromBlock: fromBlock.toString(),
+      toBlock: toBlock.toString(),
+      limit,
+      offset: 0,
+    },
+    skip: !address,
+  })
+
+  const history = data?.balanceHistory?.nodes ?? []
+  const totalCount = data?.balanceHistory?.totalCount ?? 0
+
+  return {
+    history,
+    totalCount,
+    loading,
+    error,
   }
 }
