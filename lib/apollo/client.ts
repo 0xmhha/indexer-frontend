@@ -1,0 +1,97 @@
+import { ApolloClient, InMemoryCache, HttpLink, from, ApolloLink } from '@apollo/client'
+import { onError } from '@apollo/client/link/error'
+import { env } from '@/lib/config/env'
+
+/**
+ * Error handling link for Apollo Client
+ * Logs GraphQL and network errors
+ */
+const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
+  if (graphQLErrors) {
+    graphQLErrors.forEach(({ message, locations, path }) => {
+      // eslint-disable-next-line no-console
+      console.error(
+        `[GraphQL error]: Message: ${message}, Location: ${JSON.stringify(locations)}, Path: ${path}, Operation: ${operation.operationName}`
+      )
+    })
+  }
+
+  if (networkError) {
+    // eslint-disable-next-line no-console
+    console.error(`[Network error]: ${networkError.message}, Operation: ${operation.operationName}`)
+  }
+})
+
+/**
+ * HTTP link for GraphQL endpoint
+ */
+const httpLink = new HttpLink({
+  uri: env.graphqlEndpoint,
+  credentials: 'same-origin',
+})
+
+/**
+ * Request logging link (development only)
+ */
+const loggingLink = new ApolloLink((operation, forward) => {
+  if (env.isDevelopment) {
+    // eslint-disable-next-line no-console
+    console.log(`[GraphQL Request]: ${operation.operationName}`, operation.variables)
+  }
+  return forward(operation)
+})
+
+/**
+ * Apollo Client instance with error handling and caching
+ */
+export const apolloClient = new ApolloClient({
+  link: from([errorLink, loggingLink, httpLink]),
+  cache: new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          // Pagination field policy
+          transactionsByAddress: {
+            keyArgs: ['address'],
+            merge(existing, incoming, { args }) {
+              if (!args?.pagination?.offset) {
+                return incoming
+              }
+              const merged = existing ? { ...existing } : { nodes: [], totalCount: 0, pageInfo: {} }
+              merged.nodes = [...(existing?.nodes ?? []), ...(incoming?.nodes ?? [])]
+              merged.totalCount = incoming.totalCount
+              merged.pageInfo = incoming.pageInfo
+              return merged
+            },
+          },
+          balanceHistory: {
+            keyArgs: ['address', 'fromBlock', 'toBlock'],
+            merge(existing, incoming, { args }) {
+              if (!args?.pagination?.offset) {
+                return incoming
+              }
+              const merged = existing ? { ...existing } : { nodes: [], totalCount: 0, pageInfo: {} }
+              merged.nodes = [...(existing?.nodes ?? []), ...(incoming?.nodes ?? [])]
+              merged.totalCount = incoming.totalCount
+              merged.pageInfo = incoming.pageInfo
+              return merged
+            },
+          },
+        },
+      },
+    },
+  }),
+  defaultOptions: {
+    watchQuery: {
+      fetchPolicy: 'cache-and-network',
+      errorPolicy: 'all',
+    },
+    query: {
+      fetchPolicy: 'cache-first',
+      errorPolicy: 'all',
+    },
+    mutate: {
+      errorPolicy: 'all',
+    },
+  },
+})
