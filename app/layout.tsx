@@ -60,9 +60,18 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className="flex min-h-screen flex-col bg-bg-primary font-sans text-text-primary antialiased">
+        {/* Skip Navigation Link for keyboard users */}
+        <a
+          href="#main-content"
+          className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-accent-blue focus:px-4 focus:py-2 focus:font-mono focus:text-sm focus:text-bg-primary focus:outline-none focus:ring-2 focus:ring-accent-cyan"
+        >
+          Skip to main content
+        </a>
         <Providers>
           <Header />
-          <main className="flex-1">{children}</main>
+          <main id="main-content" className="flex-1" role="main">
+            {children}
+          </main>
           <Footer />
         </Providers>
       </body>
