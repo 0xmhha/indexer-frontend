@@ -2,7 +2,8 @@
 
 import { use } from 'react'
 import Link from 'next/link'
-import { useAddressBalance, useAddressTransactions } from '@/lib/hooks/useAddress'
+import { useAddressBalance, useAddressTransactions, useBalanceHistory } from '@/lib/hooks/useAddress'
+import { useLatestHeight } from '@/lib/hooks/useLatestHeight'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
   Table,
@@ -14,6 +15,7 @@ import {
 } from '@/components/ui/table'
 import { LoadingPage, LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
+import { BalanceHistoryChart } from '@/components/address/BalanceHistoryChart'
 import { formatCurrency, formatHash, formatNumber } from '@/lib/utils/format'
 import { isValidAddress } from '@/lib/utils/validation'
 import { env } from '@/lib/config/env'
@@ -27,6 +29,13 @@ export default function AddressPage({ params }: PageProps) {
   const resolvedParams = use(params)
   const address = resolvedParams.address
 
+  // Get latest block height for balance history
+  const { latestHeight } = useLatestHeight()
+
+  // Calculate block range for balance history (last 1000 blocks or all if less)
+  const toBlock = latestHeight ?? BigInt(0)
+  const fromBlock = toBlock > BigInt(1000) ? toBlock - BigInt(1000) : BigInt(0)
+
   // Call hooks unconditionally
   const { balance, loading: balanceLoading, error: balanceError } = useAddressBalance(address)
   const {
@@ -35,6 +44,11 @@ export default function AddressPage({ params }: PageProps) {
     loading: txLoading,
     error: txError,
   } = useAddressTransactions(address, 20)
+  const {
+    history,
+    loading: historyLoading,
+    error: historyError,
+  } = useBalanceHistory(address, fromBlock, toBlock, 100)
 
   // Validate address
   if (!isValidAddress(address)) {
@@ -72,6 +86,24 @@ export default function AddressPage({ params }: PageProps) {
                 {balance !== null ? formatCurrency(balance, env.currencySymbol) : 'Loading...'}
               </div>
             </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Balance History Chart */}
+      <Card className="mb-6">
+        <CardHeader className="border-b border-bg-tertiary">
+          <CardTitle>BALANCE HISTORY</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          {historyLoading ? (
+            <div className="flex h-64 items-center justify-center">
+              <LoadingSpinner />
+            </div>
+          ) : historyError ? (
+            <ErrorDisplay title="Failed to load balance history" message={historyError.message} />
+          ) : (
+            <BalanceHistoryChart history={history} />
           )}
         </CardContent>
       </Card>
