@@ -32,11 +32,13 @@ This repository is in its initial state with only licensing established. The pro
 ## Current State
 
 ### What Exists
+
 - **LICENSE**: Apache 2.0 license file
 - **Git Repository**: Initialized with remote origin
 - **Branch**: `claude/claude-md-mi3xygmziw6cms5f-01TgNRkqJ9McnW28AXx6QsrS`
 
 ### What's Missing
+
 - ❌ No package.json or dependencies
 - ❌ No source code structure
 - ❌ No build configuration
@@ -55,37 +57,44 @@ When initializing this project, consider the following modern frontend stack:
 ### Recommended Core Technologies
 
 **Framework Options:**
+
 - **React 18+** with TypeScript (Most popular, large ecosystem)
 - **Vue 3** with TypeScript (Progressive, easy learning curve)
 - **Svelte/SvelteKit** (Lightweight, compiled framework)
 - **Solid.js** (Reactive, performant)
 
 **Build Tools:**
+
 - **Vite** (Recommended: Fast, modern, excellent DX)
 - **Next.js** (If SSR/SSG needed)
 - **Remix** (Full-stack framework alternative)
 
 **Language:**
+
 - **TypeScript** (Strongly recommended for type safety)
 
 **Styling:**
+
 - **Tailwind CSS** (Utility-first CSS framework)
 - **CSS Modules** (Scoped CSS)
 - **Styled-components** or **Emotion** (CSS-in-JS)
 
 **State Management:**
+
 - **Zustand** (Lightweight, simple API)
 - **Redux Toolkit** (Complex state, established pattern)
 - **Jotai** or **Recoil** (Atomic state management)
 - **TanStack Query** (Server state management)
 
 **Testing:**
+
 - **Vitest** (Fast, Vite-native unit testing)
 - **Jest** (Mature, widely adopted)
 - **React Testing Library** (Component testing)
 - **Playwright** or **Cypress** (E2E testing)
 
 **Code Quality:**
+
 - **ESLint** (Linting)
 - **Prettier** (Code formatting)
 - **Husky** (Git hooks)
@@ -261,6 +270,7 @@ Standard npm scripts to include in package.json:
 ### Code Style
 
 **TypeScript:**
+
 - Use TypeScript for all new files (.ts, .tsx)
 - Define types explicitly, avoid `any` type
 - Use interfaces for object shapes
@@ -268,6 +278,7 @@ Standard npm scripts to include in package.json:
 - Prefer `const` over `let`, avoid `var`
 
 **Naming Conventions:**
+
 - **Files**: PascalCase for components (`Button.tsx`), camelCase for utilities (`formatDate.ts`)
 - **Components**: PascalCase (`UserProfile`)
 - **Functions**: camelCase (`handleSubmit`)
@@ -276,6 +287,7 @@ Standard npm scripts to include in package.json:
 - **Hooks**: camelCase starting with `use` (`useAuth`, `useFetchData`)
 
 **Component Structure:**
+
 ```typescript
 // 1. Imports (external first, then internal)
 import React, { useState, useEffect } from 'react';
@@ -324,22 +336,26 @@ export const UserCard: React.FC<UserCardProps> = ({ user, onEdit }) => {
 ### File Organization
 
 **Component Files:**
+
 - One component per file
 - Co-locate tests: `Button.tsx` and `Button.test.tsx` in same directory
 - Co-locate styles if using CSS modules: `Button.module.css`
 - Export components as named exports: `export const Button`
 
 **Index Files:**
+
 - Use `index.ts` files to re-export from directories
 - Makes imports cleaner: `import { Button } from '@/components/common'`
 
 ### State Management
 
 **Local State:**
+
 - Use `useState` for component-local state
 - Use `useReducer` for complex state logic
 
 **Global State:**
+
 - Use context for theme, auth, simple global state
 - Use state management library (Zustand/Redux) for complex app state
 - Keep API/server state separate with TanStack Query
@@ -347,41 +363,44 @@ export const UserCard: React.FC<UserCardProps> = ({ user, onEdit }) => {
 ### API Integration
 
 **Structure:**
+
 ```typescript
 // src/services/api/client.ts - API client setup
 export const apiClient = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 10000,
-});
+})
 
 // src/services/api/endpoints/users.ts - Endpoint definitions
 export const usersApi = {
   getUser: (id: string) => apiClient.get<User>(`/users/${id}`),
   listUsers: (params: ListParams) => apiClient.get<User[]>('/users', { params }),
-};
+}
 
 // src/hooks/useUsers.ts - React Query hooks
 export const useUser = (id: string) => {
   return useQuery({
     queryKey: ['user', id],
     queryFn: () => usersApi.getUser(id),
-  });
-};
+  })
+}
 ```
 
 ### Error Handling
 
 **Component Level:**
+
 ```typescript
 try {
-  await performAction();
+  await performAction()
 } catch (error) {
-  console.error('Action failed:', error);
-  toast.error('Failed to perform action');
+  console.error('Action failed:', error)
+  toast.error('Failed to perform action')
 }
 ```
 
 **API Level:**
+
 - Use axios interceptors for global error handling
 - Implement retry logic for network failures
 - Handle authentication errors globally
@@ -389,16 +408,19 @@ try {
 ### Testing
 
 **Unit Tests:**
+
 - Test utilities and pure functions thoroughly
 - Use describe/it blocks for organization
 - Aim for high coverage on business logic
 
 **Component Tests:**
+
 - Test user interactions, not implementation
 - Use React Testing Library's user-centric queries
 - Test accessibility
 
 **E2E Tests:**
+
 - Test critical user flows
 - Test happy paths and error cases
 - Keep E2E tests maintainable and fast
@@ -464,18 +486,21 @@ Before committing, always:
 ### Common Patterns
 
 **When reading files:**
+
 - Use Read tool for specific files
 - Use Glob tool for finding files by pattern
 - Use Grep tool for searching content
 - Use Task/Explore tool for understanding large codebases
 
 **When making changes:**
+
 - Read the file first with Read tool
 - Use Edit tool for modifications
 - Use Write tool only for new files
 - Verify changes by reading the file again
 
 **When working with git:**
+
 - Check git status before committing
 - Write clear, descriptive commit messages
 - Follow conventional commit format if established
@@ -553,6 +578,7 @@ footer (optional)
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -562,6 +588,7 @@ footer (optional)
 - `chore`: Maintenance tasks
 
 **Examples:**
+
 ```
 feat(auth): add user authentication flow
 
@@ -575,12 +602,14 @@ refactor(components): extract common button logic
 ### Git Commands
 
 **Push changes:**
+
 ```bash
 # Push to development branch
 git push -u origin claude/claude-md-mi3xygmziw6cms5f-01TgNRkqJ9McnW28AXx6QsrS
 ```
 
 **Commit workflow:**
+
 ```bash
 # Stage changes
 git add .
@@ -610,15 +639,18 @@ npm run test -- --run
 ### Environment Variable Management
 
 **Files:**
+
 - `.env.example`: Template with all required variables (committed)
 - `.env.local`: Local development values (gitignored)
 - `.env.production`: Production values (not in repo)
 
 **Naming Convention:**
+
 - Prefix with `VITE_` for client-side variables
 - Use UPPER_SNAKE_CASE: `VITE_API_BASE_URL`
 
 **Example .env.example:**
+
 ```bash
 # API Configuration
 VITE_API_BASE_URL=http://localhost:3000/api
@@ -633,13 +665,14 @@ VITE_INDEXER_WS_URL=ws://localhost:8080
 ```
 
 **Accessing in Code:**
+
 ```typescript
 // src/config/env.ts
 export const env = {
   apiBaseUrl: import.meta.env.VITE_API_BASE_URL,
   apiTimeout: Number(import.meta.env.VITE_API_TIMEOUT),
   enableAnalytics: import.meta.env.VITE_ENABLE_ANALYTICS === 'true',
-} as const;
+} as const
 ```
 
 ---
@@ -754,21 +787,25 @@ localStorage.setItem('token', authToken);
 ### Common Issues
 
 **Build Fails:**
+
 - Check TypeScript errors: `npm run type-check`
 - Check for missing dependencies: `npm install`
 - Clear cache: `rm -rf node_modules/.vite`
 
 **Tests Failing:**
+
 - Update snapshots if needed: `npm run test -- -u`
 - Check for async issues: ensure proper `await` usage
 - Verify mocks are set up correctly
 
 **Linting Errors:**
+
 - Auto-fix: `npm run lint:fix`
 - Check ESLint configuration
 - Verify peer dependencies are installed
 
 **Type Errors:**
+
 - Check tsconfig.json settings
 - Verify type declaration files exist
 - Install @types packages if needed
@@ -802,6 +839,7 @@ Once the project is initialized, refer to:
 ## Changelog
 
 ### 2025-11-18
+
 - Initial CLAUDE.md creation
 - Documented empty repository state
 - Established conventions and guidelines
@@ -812,6 +850,7 @@ Once the project is initialized, refer to:
 ## Notes for AI Assistants
 
 ### Current Priority
+
 The repository is **uninitialized**. The first priority should be to:
 
 1. Discuss with the user their vision for the indexer frontend
