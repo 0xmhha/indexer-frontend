@@ -19,7 +19,7 @@ export const env = {
 
   // Chain Configuration
   chainName: getEnvVar('NEXT_PUBLIC_CHAIN_NAME', 'Stable-One'),
-  chainId: getEnvVar('NEXT_PUBLIC_CHAIN_ID', '111133'),
+  chainId: getEnvVar('NEXT_PUBLIC_CHAIN_ID'),
   currencySymbol: getEnvVar('NEXT_PUBLIC_CURRENCY_SYMBOL', 'WEMIX'),
 
   // Optional APIs
