@@ -35,6 +35,7 @@ export interface Transaction {
   r?: string
   s?: string
   chainId?: string
+  timestamp?: string
   receipt?: TransactionReceipt
   gasUsed?: string
 }
