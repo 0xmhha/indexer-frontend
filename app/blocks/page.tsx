@@ -13,7 +13,7 @@ import {
   TableCell,
 } from '@/components/ui/table'
 import { Pagination } from '@/components/ui/pagination'
-import { LoadingPage } from '@/components/common/LoadingSpinner'
+import { ListPageSkeleton } from '@/components/skeletons/ListPageSkeleton'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { formatNumber, formatTimeAgo } from '@/lib/utils/format'
 import type { Block } from '@/types/graphql'
@@ -52,7 +52,7 @@ export default function BlocksListPage() {
   }
 
   if (loading && blocks.length === 0) {
-    return <LoadingPage />
+    return <ListPageSkeleton />
   }
 
   if (error) {
