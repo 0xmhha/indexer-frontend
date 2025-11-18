@@ -50,6 +50,12 @@ export function Header() {
             >
               Statistics
             </Link>
+            <Link
+              href="/contract"
+              className="font-mono text-xs uppercase tracking-wider text-text-secondary transition-colors hover:text-accent-blue"
+            >
+              Contract
+            </Link>
           </nav>
 
           {/* Chain Info and Mobile Search Toggle */}
