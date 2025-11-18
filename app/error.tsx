@@ -12,8 +12,14 @@ export default function Error({
 }) {
   useEffect(() => {
     // Log error to error reporting service
-    // eslint-disable-next-line no-console
-    console.error('Application error:', error)
+    import('@/lib/errors').then(({ errorLogger }) => {
+      errorLogger.error(error, {
+        action: 'page_error',
+        metadata: {
+          digest: error.digest,
+        },
+      })
+    })
   }, [error])
 
   return (

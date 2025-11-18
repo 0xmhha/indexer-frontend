@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { useTransaction } from '@/lib/hooks/useTransaction'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableRow, TableCell } from '@/components/ui/table'
-import { LoadingPage } from '@/components/common/LoadingSpinner'
+import { TransactionDetailSkeleton } from '@/components/skeletons/TransactionDetailSkeleton'
 import { NotFound } from '@/components/common/ErrorBoundary'
 import { formatNumber, formatCurrency, formatGasPrice } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
@@ -22,7 +22,7 @@ export default function TransactionPage({ params }: PageProps) {
   const { transaction, loading, error } = useTransaction(hash)
 
   if (loading) {
-    return <LoadingPage />
+    return <TransactionDetailSkeleton />
   }
 
   if (error || !transaction) {

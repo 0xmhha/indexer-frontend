@@ -2,6 +2,7 @@
 
 import { use } from 'react'
 import Link from 'next/link'
+import dynamic from 'next/dynamic'
 import { useAddressBalance, useAddressTransactions, useBalanceHistory } from '@/lib/hooks/useAddress'
 import { useLatestHeight } from '@/lib/hooks/useLatestHeight'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
@@ -13,13 +14,26 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table'
-import { LoadingPage, LoadingSpinner } from '@/components/common/LoadingSpinner'
+import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
-import { BalanceHistoryChart } from '@/components/address/BalanceHistoryChart'
+import { AddressDetailSkeleton } from '@/components/skeletons/AddressDetailSkeleton'
 import { formatCurrency, formatHash, formatNumber } from '@/lib/utils/format'
 import { isValidAddress } from '@/lib/utils/validation'
 import { env } from '@/lib/config/env'
 import type { Transaction } from '@/types/graphql'
+
+// Lazy load heavy chart component
+const BalanceHistoryChart = dynamic(
+  () => import('@/components/address/BalanceHistoryChart').then((mod) => ({ default: mod.BalanceHistoryChart })),
+  {
+    loading: () => (
+      <div className="flex h-64 items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    ),
+    ssr: false,
+  }
+)
 
 interface PageProps {
   params: Promise<{ address: string }>
@@ -60,7 +74,7 @@ export default function AddressPage({ params }: PageProps) {
   }
 
   if (balanceLoading) {
-    return <LoadingPage />
+    return <AddressDetailSkeleton />
   }
 
   return (

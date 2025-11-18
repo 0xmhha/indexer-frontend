@@ -1,13 +1,37 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
-import { BlocksOverTimeChart } from '@/components/stats/BlocksOverTimeChart'
-import { TopMinersTable } from '@/components/stats/TopMinersTable'
 import { useNetworkStats, useBlocksOverTime, useTopMiners } from '@/lib/hooks/useNetworkStats'
 import { useLatestHeight } from '@/lib/hooks/useLatestHeight'
 import { formatNumber } from '@/lib/utils/format'
+
+// Lazy load heavy chart and table components
+const BlocksOverTimeChart = dynamic(
+  () => import('@/components/stats/BlocksOverTimeChart').then((mod) => ({ default: mod.BlocksOverTimeChart })),
+  {
+    loading: () => (
+      <div className="flex h-64 items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    ),
+    ssr: false,
+  }
+)
+
+const TopMinersTable = dynamic(
+  () => import('@/components/stats/TopMinersTable').then((mod) => ({ default: mod.TopMinersTable })),
+  {
+    loading: () => (
+      <div className="flex h-64 items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    ),
+    ssr: false,
+  }
+)
 
 export default function StatsPage() {
   const { stats, loading: statsLoading, error: statsError } = useNetworkStats()

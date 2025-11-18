@@ -188,10 +188,53 @@ This project follows strict code quality guidelines:
 
 ### Error Handling
 
-- ✅ Use Result types instead of throwing exceptions
-- ✅ Explicit error handling with specific error types
+This project implements a comprehensive error handling system with custom error types, centralized logging, and recovery strategies:
+
+**Custom Error Types** (`lib/errors/types.ts`):
+- `AppError`: Base application error with code and status
+- `NetworkError`: Network-related failures
+- `GraphQLError`: GraphQL API errors
+- `ValidationError`: Input validation errors
+- `NotFoundError`: Resource not found errors
+- `TimeoutError`: Operation timeout errors
+- `Web3Error`: Wallet/contract interaction errors
+
+**Error Logging** (`lib/errors/logger.ts`):
+- Centralized error logging service
+- Automatic console logging in development
+- Production-ready with monitoring service integration (Sentry, LogRocket)
+- Error context tracking (component, action, metadata)
+
+**Error Recovery** (`lib/errors/recovery.ts`):
+- Retry logic with exponential backoff
+- Timeout handling
+- Circuit breaker pattern for preventing cascading failures
+- Fallback strategies
+
+```typescript
+import { withRetry, NetworkError, errorLogger } from '@/lib/errors'
+
+// Retry failed requests
+const data = await withRetry(
+  () => fetchData(),
+  { maxRetries: 3, delayMs: 1000 }
+)
+
+// Log errors with context
+errorLogger.error(error, {
+  component: 'UserProfile',
+  action: 'fetchUserData',
+  metadata: { userId: '123' }
+})
+```
+
+**Best Practices**:
+- ✅ Use custom error types for type-safe error handling
+- ✅ Log errors with context using errorLogger
+- ✅ Implement retry logic for network errors
+- ✅ Use Error Boundaries for React component errors
 - ❌ Never swallow errors silently
-- ❌ Never use generic try-catch without context
+- ❌ Never use generic try-catch without logging
 
 ### Resource Management
 
@@ -206,6 +249,49 @@ This project follows strict code quality guidelines:
 - ✅ Runtime validation at API boundaries with Zod
 
 See `.claude/system_prompt_additions.md` for complete guidelines.
+
+## ⚡ Performance Optimization
+
+This project implements several performance optimization strategies:
+
+### Code Splitting & Lazy Loading
+
+Heavy components are dynamically imported to reduce initial bundle size:
+
+- **Charts**: `BalanceHistoryChart`, `BlocksOverTimeChart` - Recharts library loaded on demand
+- **Contract Components**: `ContractReader`, `ContractWriter` - Only loaded on contract interaction page
+- **Data Tables**: `TopMinersTable` - Loaded when needed for statistics
+
+```typescript
+// Example: Dynamic import with loading state
+const BalanceHistoryChart = dynamic(
+  () => import('@/components/address/BalanceHistoryChart').then((mod) => ({ default: mod.BalanceHistoryChart })),
+  {
+    loading: () => <LoadingSpinner />,
+    ssr: false, // Client-side only for interactive charts
+  }
+)
+```
+
+### Next.js Configuration Optimizations
+
+- **Package Import Optimization**: Recharts, Apollo Client, date-fns optimized for tree-shaking
+- **SWC Minification**: Fast Rust-based minifier
+- **Console Log Removal**: Production builds remove console.log (keeps error/warn)
+- **Compression**: Gzip compression enabled
+- **Image Optimization**: WebP and AVIF format support
+
+### Bundle Size Monitoring
+
+To analyze bundle sizes:
+
+```bash
+# Install bundle analyzer
+npm install --save-dev @next/bundle-analyzer
+
+# Build with analysis
+ANALYZE=true npm run build
+```
 
 ## 🧪 Testing
 
@@ -244,36 +330,49 @@ npm run test:e2e
 - [x] Basic layout (Header, Footer)
 - [x] Error boundaries and loading states
 - [x] Environment configuration
+- [x] Base UI components (Button, Card, Table)
+- [x] Utilities (format, validation)
 
-### 🚧 Phase 2: Core Pages (In Progress)
+### ✅ Phase 2: Core Pages (Complete)
 
-- [ ] Homepage/Dashboard with live feed
-- [ ] Block detail page
-- [ ] Transaction detail page
-- [ ] Address page
-- [ ] WebSocket integration
+- [x] Homepage/Dashboard with live feed
+- [x] Block detail page with navigation
+- [x] Transaction detail page with logs
+- [x] Address page with balance and transactions
+- [x] WebSocket integration with auto-reconnect
+- [x] Real-time updates for latest blocks
+- [x] Network statistics display
 
-### 📅 Phase 3: Lists & Filtering (Planned)
+### ✅ Phase 3: Lists & Filtering (Complete)
 
-- [ ] Blocks list with pagination
-- [ ] Transactions list with pagination
-- [ ] Advanced filtering
-- [ ] URL-based filter persistence
+- [x] Blocks list with pagination and sorting
+- [x] Transactions list with pagination and filtering
+- [x] Global search with autocomplete
+- [x] Network statistics page with charts
+- [x] Gas usage visualization
+- [x] Transaction type indicators
 
-### 📅 Phase 4: Advanced Features (Planned)
+### ✅ Phase 4: Advanced Features (Complete)
 
-- [ ] Balance history charts
-- [ ] Network statistics
-- [ ] Contract interaction
-- [ ] Search autocomplete
+- [x] Balance history charts (last 1000 blocks)
+- [x] Network statistics with real-time data
+- [x] Blocks over time chart (24-hour view)
+- [x] Top miners leaderboard
+- [x] Contract interaction (read functions)
+- [x] Contract interaction (write functions with MetaMask)
+- [x] Search autocomplete with recent blocks
 
-### 📅 Phase 5: Polish & Optimization (Planned)
+### 🚧 Phase 5: Polish & Optimization (In Progress)
 
-- [ ] Performance optimization
-- [ ] Accessibility audit
+- [x] Loading skeletons for all pages
+- [x] SEO optimization (meta tags, Open Graph, Twitter Cards)
+- [x] Comprehensive README documentation
+- [x] Code splitting and lazy loading (dynamic imports for charts and contract components)
+- [x] Enhanced error handling (custom error types, centralized logging, retry logic)
+- [ ] Accessibility audit (WCAG 2.1 AA)
 - [ ] Unit tests (>80% coverage)
-- [ ] E2E tests
-- [ ] SEO optimization
+- [ ] E2E tests for critical flows
+- [ ] Performance optimization
 
 ## 🤝 Contributing
 

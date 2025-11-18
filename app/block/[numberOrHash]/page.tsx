@@ -13,7 +13,7 @@ import {
   TableCell,
 } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
-import { LoadingPage } from '@/components/common/LoadingSpinner'
+import { BlockDetailSkeleton } from '@/components/skeletons/BlockDetailSkeleton'
 import { NotFound } from '@/components/common/ErrorBoundary'
 import {
   formatNumber,
@@ -46,7 +46,7 @@ export default function BlockPage({ params }: PageProps) {
   const { block, loading, error } = useBlock(blockIdentifier)
 
   if (loading) {
-    return <LoadingPage />
+    return <BlockDetailSkeleton />
   }
 
   if (error || !block) {
