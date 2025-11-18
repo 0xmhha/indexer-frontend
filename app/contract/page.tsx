@@ -85,37 +85,49 @@ export default function ContractPage() {
         </CardHeader>
         <CardContent className="p-6 space-y-4">
           <div>
-            <label className="annotation mb-2 block">CONTRACT ADDRESS</label>
+            <label htmlFor="contract-address" className="annotation mb-2 block">
+              CONTRACT ADDRESS
+            </label>
             <input
+              id="contract-address"
               type="text"
               value={contractAddress}
               onChange={(e) => setContractAddress(e.target.value)}
               placeholder="0x..."
-              className="w-full border border-bg-tertiary bg-bg-secondary px-4 py-2 font-mono text-sm text-text-primary focus:border-accent-blue focus:outline-none"
+              aria-describedby={error ? 'contract-error' : undefined}
+              aria-invalid={error ? 'true' : 'false'}
+              className="w-full border border-bg-tertiary bg-bg-secondary px-4 py-2 font-mono text-sm text-text-primary focus:border-accent-blue focus:outline-none focus:ring-2 focus:ring-accent-blue"
             />
           </div>
 
           <div>
-            <label className="annotation mb-2 block">
+            <label htmlFor="contract-abi" className="annotation mb-2 block">
               CONTRACT ABI (JSON FORMAT)
             </label>
             <textarea
+              id="contract-abi"
               value={abi}
               onChange={(e) => setAbi(e.target.value)}
               placeholder='[{"inputs":[],"name":"totalSupply","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"}]'
               rows={8}
-              className="w-full border border-bg-tertiary bg-bg-secondary px-4 py-2 font-mono text-xs text-text-primary focus:border-accent-blue focus:outline-none"
+              aria-describedby="abi-help"
+              aria-invalid={error ? 'true' : 'false'}
+              className="w-full border border-bg-tertiary bg-bg-secondary px-4 py-2 font-mono text-xs text-text-primary focus:border-accent-blue focus:outline-none focus:ring-2 focus:ring-accent-blue"
             />
-            <p className="mt-2 font-mono text-xs text-text-muted">
+            <p id="abi-help" className="mt-2 font-mono text-xs text-text-muted">
               Paste the contract ABI in JSON format
             </p>
           </div>
 
           {error && (
-            <div className="font-mono text-xs text-error">{error}</div>
+            <div id="contract-error" role="alert" className="font-mono text-xs text-error">
+              {error}
+            </div>
           )}
 
-          <Button onClick={handleLoadContract}>LOAD CONTRACT</Button>
+          <Button onClick={handleLoadContract} aria-label="Load contract with provided address and ABI">
+            LOAD CONTRACT
+          </Button>
         </CardContent>
       </Card>
 
@@ -123,10 +135,14 @@ export default function ContractPage() {
       {isAbiValid && parsedAbi.length > 0 && (
         <>
           {/* Tabs */}
-          <div className="mb-4 flex gap-2">
+          <div className="mb-4 flex gap-2" role="tablist" aria-label="Contract interaction modes">
             <button
+              role="tab"
+              aria-selected={activeTab === 'read'}
+              aria-controls="read-panel"
+              id="read-tab"
               onClick={() => setActiveTab('read')}
-              className={`border px-6 py-2 font-mono text-xs uppercase tracking-wider transition-colors ${
+              className={`border px-6 py-2 font-mono text-xs uppercase tracking-wider transition-colors focus:outline-none focus:ring-2 focus:ring-accent-blue ${
                 activeTab === 'read'
                   ? 'border-accent-blue bg-accent-blue text-bg-primary'
                   : 'border-bg-tertiary bg-bg-secondary text-text-secondary hover:border-accent-blue hover:text-accent-blue'
@@ -135,8 +151,12 @@ export default function ContractPage() {
               READ CONTRACT
             </button>
             <button
+              role="tab"
+              aria-selected={activeTab === 'write'}
+              aria-controls="write-panel"
+              id="write-tab"
               onClick={() => setActiveTab('write')}
-              className={`border px-6 py-2 font-mono text-xs uppercase tracking-wider transition-colors ${
+              className={`border px-6 py-2 font-mono text-xs uppercase tracking-wider transition-colors focus:outline-none focus:ring-2 focus:ring-accent-blue ${
                 activeTab === 'write'
                   ? 'border-accent-blue bg-accent-blue text-bg-primary'
                   : 'border-bg-tertiary bg-bg-secondary text-text-secondary hover:border-accent-blue hover:text-accent-blue'
@@ -148,16 +168,30 @@ export default function ContractPage() {
 
           {/* Tab Content */}
           {activeTab === 'read' && (
-            <ContractReader
-              contractAddress={contractAddress}
-              abi={parsedAbi}
-            />
+            <div
+              role="tabpanel"
+              id="read-panel"
+              aria-labelledby="read-tab"
+              tabIndex={0}
+            >
+              <ContractReader
+                contractAddress={contractAddress}
+                abi={parsedAbi}
+              />
+            </div>
           )}
           {activeTab === 'write' && (
-            <ContractWriter
-              contractAddress={contractAddress}
-              abi={parsedAbi}
-            />
+            <div
+              role="tabpanel"
+              id="write-panel"
+              aria-labelledby="write-tab"
+              tabIndex={0}
+            >
+              <ContractWriter
+                contractAddress={contractAddress}
+                abi={parsedAbi}
+              />
+            </div>
           )}
         </>
       )}
