@@ -4,12 +4,12 @@ export function Footer() {
   const currentYear = new Date().getFullYear()
 
   return (
-    <footer className="w-full border-t border-bg-tertiary bg-bg-primary py-8">
+    <footer className="w-full border-t border-bg-tertiary bg-bg-primary py-8" role="contentinfo">
       <div className="container mx-auto px-4">
         <div className="grid grid-cols-1 gap-8 md:grid-cols-3">
           {/* About */}
           <div>
-            <h3 className="annotation mb-3">ABOUT</h3>
+            <h2 className="annotation mb-3">ABOUT</h2>
             <p className="font-mono text-xs text-text-secondary">
               Crystalline Infrastructure - Production-ready blockchain explorer for {env.chainName}
             </p>
@@ -17,22 +17,40 @@ export function Footer() {
 
           {/* API Endpoints */}
           <div>
-            <h3 className="annotation mb-3">API ENDPOINTS</h3>
-            <div className="space-y-1 font-mono text-xs text-text-secondary">
-              <div>GraphQL: {env.graphqlEndpoint}</div>
-              <div>WebSocket: {env.wsEndpoint}</div>
-              <div>JSON-RPC: {env.jsonRpcEndpoint}</div>
-            </div>
+            <h2 className="annotation mb-3">API ENDPOINTS</h2>
+            <dl className="space-y-1 font-mono text-xs text-text-secondary">
+              <div>
+                <dt className="inline">GraphQL: </dt>
+                <dd className="inline">{env.graphqlEndpoint}</dd>
+              </div>
+              <div>
+                <dt className="inline">WebSocket: </dt>
+                <dd className="inline">{env.wsEndpoint}</dd>
+              </div>
+              <div>
+                <dt className="inline">JSON-RPC: </dt>
+                <dd className="inline">{env.jsonRpcEndpoint}</dd>
+              </div>
+            </dl>
           </div>
 
           {/* Network Info */}
           <div>
-            <h3 className="annotation mb-3">NETWORK</h3>
-            <div className="space-y-1 font-mono text-xs text-text-secondary">
-              <div>Chain: {env.chainName}</div>
-              <div>Chain ID: {env.chainId}</div>
-              <div>Currency: {env.currencySymbol}</div>
-            </div>
+            <h2 className="annotation mb-3">NETWORK</h2>
+            <dl className="space-y-1 font-mono text-xs text-text-secondary">
+              <div>
+                <dt className="inline">Chain: </dt>
+                <dd className="inline">{env.chainName}</dd>
+              </div>
+              <div>
+                <dt className="inline">Chain ID: </dt>
+                <dd className="inline">{env.chainId}</dd>
+              </div>
+              <div>
+                <dt className="inline">Currency: </dt>
+                <dd className="inline">{env.currencySymbol}</dd>
+              </div>
+            </dl>
           </div>
         </div>
 
