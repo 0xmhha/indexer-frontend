@@ -22,22 +22,26 @@ This frontend consumes GraphQL/JSON-RPC APIs from the indexer-go backend and pro
 ## 🛠 Tech Stack
 
 ### Core
+
 - **Next.js 14+**: App Router, Server Components, Server Actions
 - **React 18+**: Hooks, Suspense, Error Boundaries
 - **TypeScript 5.3+**: Strict mode with comprehensive type safety
 
 ### State & Data
+
 - **Apollo Client**: GraphQL client with intelligent caching
 - **TanStack Query**: Server state management
 - **Zustand**: Lightweight client state
 
 ### UI & Styling
+
 - **Tailwind CSS**: Utility-first styling
 - **shadcn/ui**: Customized component primitives
 - **Framer Motion**: Subtle animations
 - **Recharts**: Data visualization
 
 ### Code Quality
+
 - **ESLint**: Linting with Next.js and TypeScript rules
 - **Prettier**: Code formatting with Tailwind plugin
 - **Vitest**: Unit testing
@@ -159,16 +163,19 @@ info: #00D4FF
 ## 🔌 API Integration
 
 ### GraphQL Endpoint
+
 ```
 http://localhost:8080/graphql
 ```
 
 ### WebSocket Endpoint
+
 ```
 ws://localhost:8080/ws
 ```
 
 ### JSON-RPC Endpoint
+
 ```
 http://localhost:8080/rpc
 ```
@@ -180,17 +187,20 @@ See `lib/apollo/queries.ts` for available GraphQL queries.
 This project follows strict code quality guidelines:
 
 ### Error Handling
+
 - ✅ Use Result types instead of throwing exceptions
 - ✅ Explicit error handling with specific error types
 - ❌ Never swallow errors silently
 - ❌ Never use generic try-catch without context
 
 ### Resource Management
+
 - ✅ Always use try-finally for cleanup
 - ✅ Implement proper async cleanup patterns
 - ❌ Never leak resources (connections, files, etc.)
 
 ### Type Safety
+
 - ✅ TypeScript strict mode enabled
 - ✅ No `any` types in production code
 - ✅ Runtime validation at API boundaries with Zod
@@ -215,18 +225,19 @@ npm run test:e2e
 
 ## 🌐 Environment Variables
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NEXT_PUBLIC_GRAPHQL_ENDPOINT` | GraphQL API endpoint | `http://localhost:8080/graphql` |
-| `NEXT_PUBLIC_WS_ENDPOINT` | WebSocket endpoint | `ws://localhost:8080/ws` |
-| `NEXT_PUBLIC_JSONRPC_ENDPOINT` | JSON-RPC endpoint | `http://localhost:8080/rpc` |
-| `NEXT_PUBLIC_CHAIN_NAME` | Blockchain name | `Stable-One` |
-| `NEXT_PUBLIC_CHAIN_ID` | Chain identifier | `111133` |
-| `NEXT_PUBLIC_CURRENCY_SYMBOL` | Native currency symbol | `WEMIX` |
+| Variable                       | Description            | Default                         |
+| ------------------------------ | ---------------------- | ------------------------------- |
+| `NEXT_PUBLIC_GRAPHQL_ENDPOINT` | GraphQL API endpoint   | `http://localhost:8080/graphql` |
+| `NEXT_PUBLIC_WS_ENDPOINT`      | WebSocket endpoint     | `ws://localhost:8080/ws`        |
+| `NEXT_PUBLIC_JSONRPC_ENDPOINT` | JSON-RPC endpoint      | `http://localhost:8080/rpc`     |
+| `NEXT_PUBLIC_CHAIN_NAME`       | Blockchain name        | `Stable-One`                    |
+| `NEXT_PUBLIC_CHAIN_ID`         | Chain identifier       | `111133`                        |
+| `NEXT_PUBLIC_CURRENCY_SYMBOL`  | Native currency symbol | `WEMIX`                         |
 
 ## 📋 Implementation Status
 
 ### ✅ Phase 1: Foundation (Complete)
+
 - [x] Next.js 14+ project setup with TypeScript
 - [x] Tailwind CSS + Design system implementation
 - [x] Apollo Client setup with GraphQL
@@ -235,6 +246,7 @@ npm run test:e2e
 - [x] Environment configuration
 
 ### 🚧 Phase 2: Core Pages (In Progress)
+
 - [ ] Homepage/Dashboard with live feed
 - [ ] Block detail page
 - [ ] Transaction detail page
@@ -242,18 +254,21 @@ npm run test:e2e
 - [ ] WebSocket integration
 
 ### 📅 Phase 3: Lists & Filtering (Planned)
+
 - [ ] Blocks list with pagination
 - [ ] Transactions list with pagination
 - [ ] Advanced filtering
 - [ ] URL-based filter persistence
 
 ### 📅 Phase 4: Advanced Features (Planned)
+
 - [ ] Balance history charts
 - [ ] Network statistics
 - [ ] Contract interaction
 - [ ] Search autocomplete
 
 ### 📅 Phase 5: Polish & Optimization (Planned)
+
 - [ ] Performance optimization
 - [ ] Accessibility audit
 - [ ] Unit tests (>80% coverage)
