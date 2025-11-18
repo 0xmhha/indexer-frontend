@@ -9,12 +9,12 @@ export function Header() {
   const [showSearch, setShowSearch] = useState(false)
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-bg-tertiary bg-bg-primary/95 backdrop-blur">
+    <header className="sticky top-0 z-50 w-full border-b border-bg-tertiary bg-bg-primary/95 backdrop-blur" role="banner">
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo and Title */}
-          <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-8 w-8 items-center justify-center border border-accent-blue bg-accent-blue/10">
+          <Link href="/" className="flex items-center gap-3" aria-label="Stable-One Explorer Home">
+            <div className="flex h-8 w-8 items-center justify-center border border-accent-blue bg-accent-blue/10" aria-hidden="true">
               <span className="font-mono text-xs font-bold text-accent-blue">SI</span>
             </div>
             <div className="flex flex-col">
@@ -26,12 +26,12 @@ export function Header() {
           </Link>
 
           {/* Desktop Search */}
-          <div className="hidden flex-1 max-w-2xl mx-8 lg:block">
+          <div className="hidden flex-1 max-w-2xl mx-8 lg:block" role="search">
             <SearchBar />
           </div>
 
           {/* Navigation */}
-          <nav className="hidden items-center gap-6 md:flex">
+          <nav className="hidden items-center gap-6 md:flex" aria-label="Main navigation">
             <Link
               href="/blocks"
               className="font-mono text-xs uppercase tracking-wider text-text-secondary transition-colors hover:text-accent-blue"
@@ -63,8 +63,10 @@ export function Header() {
             {/* Mobile Search Icon */}
             <button
               onClick={() => setShowSearch(!showSearch)}
-              className="lg:hidden border border-bg-tertiary bg-bg-secondary px-3 py-2 font-mono text-xs text-text-primary transition-colors hover:border-accent-blue hover:text-accent-blue"
-              aria-label="Toggle search"
+              className="lg:hidden border border-bg-tertiary bg-bg-secondary px-3 py-2 font-mono text-xs text-text-primary transition-colors hover:border-accent-blue hover:text-accent-blue focus:outline-none focus:ring-2 focus:ring-accent-blue"
+              aria-label={showSearch ? 'Close search' : 'Open search'}
+              aria-expanded={showSearch}
+              aria-controls="mobile-search"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -76,14 +78,15 @@ export function Header() {
                 strokeWidth="2"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                aria-hidden="true"
               >
                 <circle cx="11" cy="11" r="8" />
                 <path d="m21 21-4.35-4.35" />
               </svg>
             </button>
 
-            <div className="hidden items-center gap-2 md:flex">
-              <div className="h-2 w-2 animate-pulse rounded-full bg-success"></div>
+            <div className="hidden items-center gap-2 md:flex" role="status" aria-live="polite">
+              <div className="h-2 w-2 animate-pulse rounded-full bg-success" aria-hidden="true"></div>
               <span className="font-mono text-xs text-text-secondary">Chain ID: {env.chainId}</span>
             </div>
           </div>
@@ -91,7 +94,7 @@ export function Header() {
 
         {/* Mobile Search */}
         {showSearch && (
-          <div className="pb-4 lg:hidden">
+          <div id="mobile-search" className="pb-4 lg:hidden" role="search">
             <SearchBar />
           </div>
         )}

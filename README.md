@@ -293,6 +293,86 @@ npm install --save-dev @next/bundle-analyzer
 ANALYZE=true npm run build
 ```
 
+## ♿ Accessibility (WCAG 2.1 AA)
+
+This project is built with accessibility as a core principle, following WCAG 2.1 Level AA guidelines:
+
+### Skip Navigation
+
+- **Skip to main content** link for keyboard users
+- Hidden until focused, appears at top when tabbed
+- Allows users to bypass repetitive navigation
+
+### ARIA Landmarks & Labels
+
+- Semantic HTML with proper ARIA roles (`banner`, `main`, `contentinfo`, `navigation`)
+- All interactive elements have descriptive `aria-label` attributes
+- Form inputs with proper `aria-describedby` and `aria-invalid` states
+- Tab interfaces use `role="tablist"`, `aria-selected`, and `aria-controls`
+
+### Keyboard Navigation
+
+- Full keyboard accessibility (Tab, Shift+Tab, Arrow keys, Enter, Escape)
+- Tab panels are focusable with `tabIndex={0}`
+- Mobile search toggle with `aria-expanded` state
+- All interactive elements are keyboard accessible
+
+### Focus Indicators
+
+- High-contrast focus rings using accent blue (`#00D4FF`)
+- Enhanced `:focus-visible` styles for buttons, links, and form inputs
+- Visible focus indicators meet WCAG 2.1 AA contrast requirements (4.5:1 ratio)
+- Links get underline on focus for additional visual feedback
+
+### Form Accessibility
+
+- All form inputs have associated `<label>` elements with `htmlFor`
+- Error messages use `role="alert"` for screen reader announcement
+- Descriptive placeholder text and help text with `aria-describedby`
+- Input validation states with `aria-invalid`
+
+### Responsive to User Preferences
+
+```css
+/* Reduced motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+}
+
+/* Enhanced contrast for high contrast mode */
+@media (prefers-contrast: high) {
+  outline-width: 3px !important;
+  outline-offset: 3px !important;
+}
+```
+
+### Screen Reader Support
+
+- Semantic HTML structure with proper heading hierarchy
+- Descriptive link text (avoid "click here")
+- Alternative text for icons with `aria-hidden="true"` for decorative elements
+- Status indicators with `role="status"` and `aria-live="polite"`
+
+### Testing Accessibility
+
+```bash
+# Manual testing with keyboard
+# - Tab through all interactive elements
+# - Verify focus indicators are visible
+# - Test skip navigation link
+
+# Screen reader testing
+# - macOS: VoiceOver (Cmd+F5)
+# - Windows: NVDA or JAWS
+# - Verify all content is announced correctly
+
+# Automated testing (recommended tools)
+# - axe DevTools browser extension
+# - Lighthouse accessibility audit
+# - Pa11y CLI tool
+```
+
 ## 🧪 Testing
 
 This project uses **Vitest** for unit testing and **Playwright** for end-to-end testing with comprehensive test coverage.
