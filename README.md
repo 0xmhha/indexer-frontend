@@ -295,9 +295,26 @@ ANALYZE=true npm run build
 
 ## 🧪 Testing
 
+This project uses **Vitest** for unit testing with comprehensive test coverage.
+
+### Test Suite
+
+**116 tests** covering:
+- **Utility functions** (68 tests):
+  - `format.ts`: 45 tests - formatting functions for addresses, hashes, currency, dates, etc.
+  - `validation.ts`: 23 tests - validation and detection functions
+- **Error handling system** (48 tests):
+  - `errors/types.ts`: 27 tests - custom error types and type guards
+  - `errors/recovery.ts`: 21 tests - retry logic, circuit breaker, fallback strategies
+
+### Running Tests
+
 ```bash
-# Run unit tests
+# Run all tests
 npm run test
+
+# Run tests in watch mode
+npm run test -- --watch
 
 # Run tests with UI
 npm run test:ui
@@ -305,8 +322,30 @@ npm run test:ui
 # Generate coverage report
 npm run test:coverage
 
+# Run specific test file
+npm run test lib/utils/format.test.ts
+
 # Run E2E tests (coming soon)
 npm run test:e2e
+```
+
+### Test Configuration
+
+- **Test Framework**: Vitest with jsdom environment
+- **Test Utilities**: @testing-library/react, @testing-library/jest-dom
+- **Coverage**: v8 provider with HTML/LCOV reports
+- **Mocking**: Automatic mocks for Next.js router and Link
+
+### Writing Tests
+
+All test files follow the naming convention `*.test.ts` or `*.spec.ts` and are colocated with source files:
+
+```
+lib/utils/
+├── format.ts
+├── format.test.ts    # Tests for format.ts
+├── validation.ts
+└── validation.test.ts # Tests for validation.ts
 ```
 
 ## 🌐 Environment Variables
@@ -370,7 +409,7 @@ npm run test:e2e
 - [x] Code splitting and lazy loading (dynamic imports for charts and contract components)
 - [x] Enhanced error handling (custom error types, centralized logging, retry logic)
 - [ ] Accessibility audit (WCAG 2.1 AA)
-- [ ] Unit tests (>80% coverage)
+- [x] Unit tests with Vitest (116 tests covering utilities and error handling)
 - [ ] E2E tests for critical flows
 - [ ] Performance optimization
 
