@@ -13,7 +13,7 @@ import {
   TableCell,
 } from '@/components/ui/table'
 import { Pagination } from '@/components/ui/pagination'
-import { LoadingPage } from '@/components/common/LoadingSpinner'
+import { ListPageSkeleton } from '@/components/skeletons/ListPageSkeleton'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { formatNumber, formatHash, formatCurrency, formatTimeAgo } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
@@ -53,7 +53,7 @@ export default function TransactionsListPage() {
   }
 
   if (loading && transactions.length === 0) {
-    return <LoadingPage />
+    return <ListPageSkeleton />
   }
 
   if (error) {

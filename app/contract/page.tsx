@@ -1,12 +1,37 @@
 'use client'
 
 import { useState } from 'react'
+import dynamic from 'next/dynamic'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { ContractReader } from '@/components/contract/ContractReader'
-import { ContractWriter } from '@/components/contract/ContractWriter'
+import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { isValidAddress } from '@/lib/utils/validation'
 import type { ContractABI } from '@/types/contract'
+
+// Lazy load contract interaction components
+const ContractReader = dynamic(
+  () => import('@/components/contract/ContractReader').then((mod) => ({ default: mod.ContractReader })),
+  {
+    loading: () => (
+      <div className="flex h-64 items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    ),
+    ssr: false,
+  }
+)
+
+const ContractWriter = dynamic(
+  () => import('@/components/contract/ContractWriter').then((mod) => ({ default: mod.ContractWriter })),
+  {
+    loading: () => (
+      <div className="flex h-64 items-center justify-center">
+        <LoadingSpinner />
+      </div>
+    ),
+    ssr: false,
+  }
+)
 
 export default function ContractPage() {
   const [contractAddress, setContractAddress] = useState('')

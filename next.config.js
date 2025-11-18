@@ -8,8 +8,23 @@ const nextConfig = {
     formats: ['image/webp', 'image/avif'],
   },
   experimental: {
-    optimizePackageImports: ['lucide-react'],
+    // Optimize package imports to reduce bundle size
+    optimizePackageImports: [
+      'lucide-react',
+      'recharts',
+      '@apollo/client',
+      'date-fns',
+    ],
   },
+  // Production optimizations
+  ...(process.env.NODE_ENV === 'production' && {
+    compiler: {
+      // Remove console logs in production
+      removeConsole: {
+        exclude: ['error', 'warn'],
+      },
+    },
+  }),
 }
 
 module.exports = nextConfig
