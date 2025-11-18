@@ -9,6 +9,7 @@ Build a production-ready blockchain explorer frontend for Stable-One (Ethereum-b
 ## Design Philosophy: Crystalline Infrastructure
 
 **Core Aesthetic Principles:**
+
 - **Precision & Clarity**: Complex blockchain data becomes comprehensible through geometric rigor and spatial intelligence
 - **Minimal Text**: Typography appears only when necessary—small, technical, serving as coordinate markers
 - **Functional Color**: Restrained palette (cool grays, blacks, precise blue accents) creates zones of meaning through chromatic coding
@@ -17,6 +18,7 @@ Build a production-ready blockchain explorer frontend for Stable-One (Ethereum-b
 - **Master Craftsmanship**: Every alignment, spacing, and color choice meticulously calibrated for clarity and authority
 
 **Visual Language:**
+
 - Blues suggest flow and movement (transactions, real-time data)
 - Structural grays anchor static elements (blocks, architecture)
 - Warm accents (orange) mark critical nodes requiring attention
@@ -30,22 +32,26 @@ See `frontend-design-philosophy.md` and `blockchain-explorer-visual.pdf` for com
 ## Technical Stack
 
 ### Core Framework
+
 - **Next.js 14+**: App Router, Server Components, Server Actions
 - **TypeScript 5.3+**: Strict mode enabled
 - **React 18+**: Hooks, Suspense, Error Boundaries
 
 ### State Management & Data Fetching
+
 - **Apollo Client**: GraphQL client with caching
 - **TanStack Query (React Query)**: Server state management
 - **Zustand**: Lightweight client state (theme, UI preferences)
 
 ### UI & Styling
+
 - **Tailwind CSS**: Utility-first styling
 - **shadcn/ui**: Component primitives (customized to design system)
 - **Framer Motion**: Subtle animations for data transitions
 - **Recharts/Victory**: Data visualization (blocks, transactions over time)
 
 ### Code Quality
+
 - **ESLint**: Airbnb config + Next.js rules
 - **Prettier**: Code formatting
 - **Husky + lint-staged**: Pre-commit hooks
@@ -57,26 +63,31 @@ See `frontend-design-philosophy.md` and `blockchain-explorer-visual.pdf` for com
 ## Architecture Principles (SOLID)
 
 ### Single Responsibility Principle
+
 - Each component has one reason to change
 - Separate data fetching from presentation
 - Distinct layers: API → Services → Hooks → Components
 
 ### Open/Closed Principle
+
 - Components open for extension via composition
 - Closed for modification through prop interfaces
 - Use render props and HOCs for extensibility
 
 ### Liskov Substitution
+
 - All component variants interchangeable
 - Consistent prop interfaces across similar components
 - Proper TypeScript generics for type safety
 
 ### Interface Segregation
+
 - Small, focused interfaces
 - No component forced to implement unused props
 - Separate read/write interfaces where applicable
 
 ### Dependency Inversion
+
 - Depend on abstractions (hooks, contexts)
 - No direct storage/API access in components
 - Inject dependencies via props/context
@@ -86,73 +97,83 @@ See `frontend-design-philosophy.md` and `blockchain-explorer-visual.pdf` for com
 ## Code Quality Standards (from system_prompt_additions.md)
 
 ### Error Handling
+
 ```typescript
 // ❌ NEVER: Silent error swallowing
 try {
-  fetchData();
+  fetchData()
 } catch (e) {
-  console.log(e); // NO
+  console.log(e) // NO
 }
 
 // ✅ DO: Explicit error types
-type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
+type Result<T, E> = { ok: true; value: T } | { ok: false; error: E }
 
 async function fetchBlock(height: bigint): Promise<Result<Block, AppError>> {
   try {
-    const result = await client.query({ query: GET_BLOCK, variables: { number: height.toString() } });
-    return { ok: true, value: result.data.block };
+    const result = await client.query({
+      query: GET_BLOCK,
+      variables: { number: height.toString() },
+    })
+    return { ok: true, value: result.data.block }
   } catch (error) {
     if (error instanceof ApolloError) {
-      return { ok: false, error: new AppError('GRAPHQL_ERROR', error.message, error) };
+      return { ok: false, error: new AppError('GRAPHQL_ERROR', error.message, error) }
     }
-    return { ok: false, error: new AppError('UNKNOWN_ERROR', 'Failed to fetch block', error) };
+    return { ok: false, error: new AppError('UNKNOWN_ERROR', 'Failed to fetch block', error) }
   }
 }
 ```
 
 ### Resource Management
+
 ```typescript
 // ✅ Proper cleanup with try-finally
 async function subscribeToBlocks(callback: (block: Block) => void): Promise<void> {
-  const ws = new WebSocket('ws://localhost:8080/ws');
+  const ws = new WebSocket('ws://localhost:8080/ws')
   try {
     ws.onmessage = (event) => {
-      const data = JSON.parse(event.data);
-      callback(data);
-    };
+      const data = JSON.parse(event.data)
+      callback(data)
+    }
     await new Promise((resolve, reject) => {
-      ws.onopen = resolve;
-      ws.onerror = reject;
-    });
+      ws.onopen = resolve
+      ws.onerror = reject
+    })
   } finally {
-    ws.close(); // Always executed
+    ws.close() // Always executed
   }
 }
 ```
 
 ### Input Validation
+
 ```typescript
 // ✅ Runtime validation at API boundaries
-import { z } from 'zod';
+import { z } from 'zod'
 
 const BlockFilterSchema = z.object({
   numberFrom: z.bigint().optional(),
   numberTo: z.bigint().optional(),
-  miner: z.string().regex(/^0x[a-fA-F0-9]{40}$/).optional(),
-});
+  miner: z
+    .string()
+    .regex(/^0x[a-fA-F0-9]{40}$/)
+    .optional(),
+})
 
-type BlockFilter = z.infer<typeof BlockFilterSchema>;
+type BlockFilter = z.infer<typeof BlockFilterSchema>
 
 function validateBlockFilter(input: unknown): Result<BlockFilter, ValidationError> {
-  const result = BlockFilterSchema.safeParse(input);
+  const result = BlockFilterSchema.safeParse(input)
   if (!result.success) {
-    return { ok: false, error: new ValidationError(result.error.message) };
+    return { ok: false, error: new ValidationError(result.error.message) }
   }
-  return { ok: true, value: result.data };
+  return { ok: true, value: result.data }
 }
 ```
 
 ### TypeScript Strict Mode
+
 ```typescript
 // tsconfig.json
 {
@@ -173,6 +194,7 @@ function validateBlockFilter(input: unknown): Result<BlockFilter, ValidationErro
 ## Backend API Reference
 
 ### GraphQL Endpoint
+
 **URL**: `http://localhost:8080/graphql`
 **Playground**: `http://localhost:8080/playground`
 
@@ -216,7 +238,12 @@ query GetBlockByHash($hash: Hash!) {
     hash
     timestamp
     miner
-    transactions { hash from to value }
+    transactions {
+      hash
+      from
+      to
+      value
+    }
   }
 }
 
@@ -259,10 +286,7 @@ query GetTransaction($hash: Hash!) {
 
 # Get transactions by address
 query GetTransactionsByAddress($address: Address!, $limit: Int, $offset: Int) {
-  transactionsByAddress(
-    address: $address
-    pagination: { limit: $limit, offset: $offset }
-  ) {
+  transactionsByAddress(address: $address, pagination: { limit: $limit, offset: $offset }) {
     nodes {
       hash
       blockNumber
@@ -344,28 +368,34 @@ query GetLogs(
 ```
 
 ### WebSocket Subscriptions
+
 **URL**: `ws://localhost:8080/ws`
 
 ```javascript
 // Subscribe to new blocks
-const ws = new WebSocket('ws://localhost:8080/ws');
-ws.send(JSON.stringify({
-  jsonrpc: '2.0',
-  method: 'subscribe',
-  params: ['newBlock'],
-  id: 1
-}));
+const ws = new WebSocket('ws://localhost:8080/ws')
+ws.send(
+  JSON.stringify({
+    jsonrpc: '2.0',
+    method: 'subscribe',
+    params: ['newBlock'],
+    id: 1,
+  })
+)
 
 // Subscribe to new transactions
-ws.send(JSON.stringify({
-  jsonrpc: '2.0',
-  method: 'subscribe',
-  params: ['newTransaction'],
-  id: 2
-}));
+ws.send(
+  JSON.stringify({
+    jsonrpc: '2.0',
+    method: 'subscribe',
+    params: ['newTransaction'],
+    id: 2,
+  })
+)
 ```
 
 ### JSON-RPC Endpoint
+
 **URL**: `http://localhost:8080/rpc`
 
 ```javascript
@@ -402,9 +432,11 @@ POST /rpc
 ## Feature List & User Stories
 
 ### 1. Homepage / Dashboard
+
 **User Story**: As a user, I want to see the current state of the blockchain at a glance.
 
 **Features**:
+
 - Latest block height with real-time updates
 - Recent blocks (last 10) with time, miner, transaction count
 - Recent transactions (last 10) with from/to/value
@@ -413,6 +445,7 @@ POST /rpc
 - Search bar (block number, block hash, transaction hash, address)
 
 **Components**:
+
 - `<Dashboard />`: Main layout
 - `<LatestBlockCard />`: Display latest block info
 - `<RecentBlocksList />`: List of recent blocks
@@ -422,6 +455,7 @@ POST /rpc
 - `<LiveFeed />`: Real-time WebSocket feed
 
 **Design Notes**:
+
 - Grid layout with geometric precision
 - Monospace fonts for hashes and addresses
 - Blue accents for real-time updates
@@ -430,11 +464,13 @@ POST /rpc
 ---
 
 ### 2. Block Detail Page
+
 **URL**: `/block/[numberOrHash]`
 
 **User Story**: As a user, I want to view complete information about a specific block.
 
 **Features**:
+
 - Block header information (number, hash, parent hash, timestamp)
 - Miner address with link to address page
 - Gas information (used/limit/base fee)
@@ -444,12 +480,14 @@ POST /rpc
 - Navigation to previous/next block
 
 **Components**:
+
 - `<BlockDetailPage />`: Main layout
 - `<BlockHeader />`: Block metadata
 - `<BlockTransactionsList />`: Transactions in block
 - `<BlockNavigation />`: Prev/next block links
 
 **Design Notes**:
+
 - Hexagonal layout echoing the visual design
 - Technical annotations style for metadata
 - Systematic grid for transaction list
@@ -457,11 +495,13 @@ POST /rpc
 ---
 
 ### 3. Transaction Detail Page
+
 **URL**: `/tx/[hash]`
 
 **User Story**: As a user, I want to view complete information about a specific transaction.
 
 **Features**:
+
 - Transaction hash, status (success/failure)
 - Block number and timestamp
 - From/to addresses with links
@@ -473,6 +513,7 @@ POST /rpc
 - Signature components (v, r, s)
 
 **Components**:
+
 - `<TransactionDetailPage />`: Main layout
 - `<TransactionHeader />`: Hash, status, block
 - `<TransactionFlow />`: Visual from → to representation
@@ -481,6 +522,7 @@ POST /rpc
 - `<InputDataViewer />`: Hex + ASCII + decoded view
 
 **Design Notes**:
+
 - Flow visualization using connection lines
 - Color-coded status (green for success, red for failure)
 - Logs displayed as systematic data blocks
@@ -488,11 +530,13 @@ POST /rpc
 ---
 
 ### 4. Address Page
+
 **URL**: `/address/[address]`
 
 **User Story**: As a user, I want to view all activity for a specific address.
 
 **Features**:
+
 - Address overview (balance, transaction count)
 - Balance history chart
 - Transaction list (sent/received) with filtering
@@ -503,6 +547,7 @@ POST /rpc
 - Token balances (if contract implements ERC-20/721/1155)
 
 **Components**:
+
 - `<AddressPage />`: Main layout
 - `<AddressHeader />`: Address, balance, QR code
 - `<BalanceHistoryChart />`: Visual balance over time
@@ -511,6 +556,7 @@ POST /rpc
 - `<ContractInfo />`: Contract-specific information
 
 **Design Notes**:
+
 - Balance chart using blue gradients
 - Transaction list with alternating row highlighting
 - Filter interface using geometric compartments
@@ -518,11 +564,13 @@ POST /rpc
 ---
 
 ### 5. Blocks List Page
+
 **URL**: `/blocks`
 
 **User Story**: As a user, I want to browse all blocks with filtering options.
 
 **Features**:
+
 - Paginated list of all blocks
 - Filter by block number range
 - Filter by timestamp range
@@ -531,12 +579,14 @@ POST /rpc
 - Display block metadata (number, age, miner, transactions, gas used)
 
 **Components**:
+
 - `<BlocksListPage />`: Main layout
 - `<BlocksTable />`: Paginated table
 - `<BlockFilters />`: Filter controls
 - `<Pagination />`: Reusable pagination component
 
 **Design Notes**:
+
 - Grid-based table layout
 - Technical coordinate markers for block numbers
 - Color-coded gas usage (gradient from low to high)
@@ -544,11 +594,13 @@ POST /rpc
 ---
 
 ### 6. Transactions List Page
+
 **URL**: `/txs`
 
 **User Story**: As a user, I want to browse all transactions with filtering options.
 
 **Features**:
+
 - Paginated list of all transactions
 - Filter by block number range
 - Filter by from/to address
@@ -557,11 +609,13 @@ POST /rpc
 - Sort options (timestamp, value, gas used)
 
 **Components**:
+
 - `<TransactionsListPage />`: Main layout
 - `<TransactionsTable />`: Paginated table
 - `<TransactionFilters />`: Filter controls
 
 **Design Notes**:
+
 - Systematic arrangement of transaction data
 - High-value transactions highlighted with warm accents
 - Status indicators using color coding
@@ -569,11 +623,13 @@ POST /rpc
 ---
 
 ### 7. Contract Interaction Page (Advanced)
+
 **URL**: `/contract/[address]`
 
 **User Story**: As a user, I want to interact with smart contracts.
 
 **Features**:
+
 - Contract ABI import/input
 - Read contract methods (view/pure functions)
 - Write contract methods (with wallet connection)
@@ -581,6 +637,7 @@ POST /rpc
 - Contract verification status
 
 **Components**:
+
 - `<ContractPage />`: Main layout
 - `<ABIInput />`: ABI entry component
 - `<ReadFunctions />`: Display read-only methods
@@ -588,6 +645,7 @@ POST /rpc
 - `<WalletConnect />`: Wallet connection component
 
 **Design Notes**:
+
 - Technical interface with function signatures
 - Input fields styled as system terminals
 - Clear visual separation between read/write operations
@@ -595,11 +653,13 @@ POST /rpc
 ---
 
 ### 8. Network Statistics Page
+
 **URL**: `/stats`
 
 **User Story**: As a user, I want to see comprehensive network analytics.
 
 **Features**:
+
 - Blocks over time chart
 - Transactions over time chart
 - Average block time trend
@@ -608,6 +668,7 @@ POST /rpc
 - Network hash rate (if available)
 
 **Components**:
+
 - `<StatsPage />`: Main layout
 - `<BlocksChart />`: Time-series visualization
 - `<TransactionsChart />`: Time-series visualization
@@ -615,6 +676,7 @@ POST /rpc
 - `<NetworkMetrics />`: Key performance indicators
 
 **Design Notes**:
+
 - Charts using blueprint/technical drawing aesthetic
 - Grid overlays on all visualizations
 - Minimal color palette for clarity
@@ -622,11 +684,13 @@ POST /rpc
 ---
 
 ### 9. Search Functionality
+
 **Global Feature**: Available on all pages via header
 
 **User Story**: As a user, I want to quickly find blocks, transactions, or addresses.
 
 **Features**:
+
 - Auto-detect input type (block number, hash, address)
 - Instant search with debouncing
 - Search suggestions/autocomplete
@@ -634,11 +698,13 @@ POST /rpc
 - Redirect to appropriate detail page
 
 **Components**:
+
 - `<GlobalSearch />`: Header search bar
 - `<SearchSuggestions />`: Dropdown with results
 - `<SearchHistory />`: Recent searches
 
 **Design Notes**:
+
 - Monospace input for technical data
 - Search results styled as coordinate markers
 - Instant visual feedback on input type detection
@@ -646,11 +712,13 @@ POST /rpc
 ---
 
 ### 10. Real-Time Updates
+
 **Global Feature**: WebSocket integration throughout app
 
 **User Story**: As a user, I want to see new blocks and transactions as they occur.
 
 **Features**:
+
 - Real-time block updates on homepage
 - Real-time transaction updates
 - Visual notifications for new data
@@ -658,11 +726,13 @@ POST /rpc
 - Connection status indicator
 
 **Components**:
+
 - `<WebSocketProvider />`: Context for WS connection
 - `<LiveIndicator />`: Connection status component
 - `<NewDataNotification />`: Toast/banner for updates
 
 **Design Notes**:
+
 - Subtle pulse animations for new data
 - Blue accent color for live indicators
 - Non-intrusive notification system
@@ -681,31 +751,31 @@ export default {
       colors: {
         // Background layers
         bg: {
-          primary: '#0A0E14',     // Main background
-          secondary: '#1C2128',   // Card backgrounds
-          tertiary: '#21262D',    // Subtle elevation
+          primary: '#0A0E14', // Main background
+          secondary: '#1C2128', // Card backgrounds
+          tertiary: '#21262D', // Subtle elevation
         },
         // Accent colors
         accent: {
-          blue: '#00D4FF',        // Primary actions, links
-          cyan: '#4DD0E1',        // Secondary highlights
-          orange: '#FFA726',      // Warnings, high-value indicators
+          blue: '#00D4FF', // Primary actions, links
+          cyan: '#4DD0E1', // Secondary highlights
+          orange: '#FFA726', // Warnings, high-value indicators
         },
         // Text colors
         text: {
-          primary: '#E6EDF3',     // Main text
-          secondary: '#8B949E',   // Secondary text
-          muted: '#6E7681',       // Muted/disabled text
+          primary: '#E6EDF3', // Main text
+          secondary: '#8B949E', // Secondary text
+          muted: '#6E7681', // Muted/disabled text
         },
         // Semantic colors
         success: '#2EA043',
-          error: '#F85149',
+        error: '#F85149',
         warning: '#FFA726',
         info: '#00D4FF',
       },
     },
   },
-};
+}
 ```
 
 ### Typography
@@ -715,7 +785,7 @@ export default {
 const fontConfig = {
   sans: ['Inter', 'system-ui', 'sans-serif'],
   mono: ['JetBrains Mono', 'Courier New', 'monospace'],
-};
+}
 
 // Usage guidelines
 // - Use mono for: addresses, hashes, block numbers, hex data
@@ -724,16 +794,17 @@ const fontConfig = {
 ```
 
 ### Spacing System
+
 ```typescript
 // 8px baseline grid
 const spacing = {
-  xs: '0.5rem',  // 8px
-  sm: '1rem',    // 16px
-  md: '1.5rem',  // 24px
-  lg: '2rem',    // 32px
-  xl: '3rem',    // 48px
+  xs: '0.5rem', // 8px
+  sm: '1rem', // 16px
+  md: '1.5rem', // 24px
+  lg: '2rem', // 32px
+  xl: '3rem', // 48px
   '2xl': '4rem', // 64px
-};
+}
 ```
 
 ### Component Patterns
@@ -914,6 +985,7 @@ NEXT_PUBLIC_PRICE_API_URL=https://api.coingecko.com/api/v3
 ## Implementation Phases
 
 ### Phase 1: Foundation (Week 1)
+
 - [ ] Next.js project setup with TypeScript
 - [ ] Tailwind + shadcn/ui installation and customization
 - [ ] Apollo Client setup with GraphQL codegen
@@ -923,6 +995,7 @@ NEXT_PUBLIC_PRICE_API_URL=https://api.coingecko.com/api/v3
 - [ ] Error boundaries and loading states
 
 ### Phase 2: Core Pages (Week 2)
+
 - [ ] Homepage/Dashboard with live feed
 - [ ] Block detail page with navigation
 - [ ] Transaction detail page with logs
@@ -930,6 +1003,7 @@ NEXT_PUBLIC_PRICE_API_URL=https://api.coingecko.com/api/v3
 - [ ] WebSocket integration for real-time updates
 
 ### Phase 3: Lists & Filtering (Week 3)
+
 - [ ] Blocks list page with pagination
 - [ ] Transactions list page with pagination
 - [ ] Advanced filtering on all list pages
@@ -937,6 +1011,7 @@ NEXT_PUBLIC_PRICE_API_URL=https://api.coingecko.com/api/v3
 - [ ] URL-based filter persistence
 
 ### Phase 4: Advanced Features (Week 4)
+
 - [ ] Balance history chart on address page
 - [ ] Network statistics page with charts
 - [ ] Contract interaction page (read/write)
@@ -944,6 +1019,7 @@ NEXT_PUBLIC_PRICE_API_URL=https://api.coingecko.com/api/v3
 - [ ] Dark/light theme toggle (if desired)
 
 ### Phase 5: Polish & Optimization (Week 5)
+
 - [ ] Performance optimization (code splitting, lazy loading)
 - [ ] Accessibility audit and fixes (WCAG 2.1 AA)
 - [ ] Comprehensive error handling
@@ -958,6 +1034,7 @@ NEXT_PUBLIC_PRICE_API_URL=https://api.coingecko.com/api/v3
 ## Testing Strategy
 
 ### Unit Tests (Vitest + Testing Library)
+
 ```typescript
 // Example: BlockCard.test.tsx
 import { render, screen } from '@testing-library/react';
@@ -997,46 +1074,47 @@ describe('BlockCard', () => {
 ```
 
 ### E2E Tests (Playwright)
+
 ```typescript
 // Example: block-detail.spec.ts
-import { test, expect } from '@playwright/test';
+import { test, expect } from '@playwright/test'
 
 test('block detail page displays correct information', async ({ page }) => {
-  await page.goto('/block/1000');
+  await page.goto('/block/1000')
 
   // Check block number
-  await expect(page.locator('h1')).toContainText('Block #1000');
+  await expect(page.locator('h1')).toContainText('Block #1000')
 
   // Check transactions list
-  const txList = page.locator('[data-testid="transactions-list"]');
-  await expect(txList).toBeVisible();
+  const txList = page.locator('[data-testid="transactions-list"]')
+  await expect(txList).toBeVisible()
 
   // Check navigation links
-  await expect(page.locator('[data-testid="prev-block"]')).toHaveAttribute('href', '/block/999');
-  await expect(page.locator('[data-testid="next-block"]')).toHaveAttribute('href', '/block/1001');
-});
+  await expect(page.locator('[data-testid="prev-block"]')).toHaveAttribute('href', '/block/999')
+  await expect(page.locator('[data-testid="next-block"]')).toHaveAttribute('href', '/block/1001')
+})
 
 test('real-time block updates work', async ({ page }) => {
-  await page.goto('/');
+  await page.goto('/')
 
   // Wait for WebSocket connection
-  await page.waitForSelector('[data-testid="live-indicator"][data-status="connected"]');
+  await page.waitForSelector('[data-testid="live-indicator"][data-status="connected"]')
 
-  const initialBlock = await page.locator('[data-testid="latest-block"]').textContent();
+  const initialBlock = await page.locator('[data-testid="latest-block"]').textContent()
 
   // Wait for new block (max 30 seconds)
   await page.waitForFunction(
     (initial) => {
-      const current = document.querySelector('[data-testid="latest-block"]')?.textContent;
-      return current !== initial;
+      const current = document.querySelector('[data-testid="latest-block"]')?.textContent
+      return current !== initial
     },
     initialBlock,
     { timeout: 30000 }
-  );
+  )
 
-  const newBlock = await page.locator('[data-testid="latest-block"]').textContent();
-  expect(newBlock).not.toBe(initialBlock);
-});
+  const newBlock = await page.locator('[data-testid="latest-block"]').textContent()
+  expect(newBlock).not.toBe(initialBlock)
+})
 ```
 
 ---
@@ -1050,6 +1128,7 @@ test('real-time block updates work', async ({ page }) => {
 - **Cumulative Layout Shift (CLS)**: < 0.1
 
 **Optimization Strategies**:
+
 - Next.js Image optimization for all images
 - Code splitting by route
 - Lazy loading for charts and heavy components
@@ -1063,23 +1142,27 @@ test('real-time block updates work', async ({ page }) => {
 ## Accessibility Requirements (WCAG 2.1 AA)
 
 ### Color Contrast
+
 - Text on background: minimum 4.5:1 ratio
 - Large text (18pt+): minimum 3:1 ratio
 - Interactive elements: minimum 3:1 ratio
 
 ### Keyboard Navigation
+
 - All interactive elements keyboard accessible
 - Visible focus indicators
 - Logical tab order
 - Skip navigation links
 
 ### Screen Reader Support
+
 - Semantic HTML (header, nav, main, footer, article)
 - ARIA labels for complex components
 - Descriptive alt text for images
 - Live regions for real-time updates
 
 ### Responsive Design
+
 - Minimum target size: 44x44px for touch targets
 - Text zoom up to 200% without horizontal scrolling
 - Mobile-first responsive design
@@ -1090,12 +1173,14 @@ test('real-time block updates work', async ({ page }) => {
 ## Deployment Guide
 
 ### Build for Production
+
 ```bash
 npm run build
 npm run start
 ```
 
 ### Docker Deployment
+
 ```dockerfile
 # Dockerfile
 FROM node:20-alpine AS builder
@@ -1119,6 +1204,7 @@ CMD ["npm", "start"]
 ```
 
 ### Environment-Specific Builds
+
 ```bash
 # Development
 NEXT_PUBLIC_GRAPHQL_ENDPOINT=http://localhost:8080/graphql npm run dev
@@ -1135,86 +1221,87 @@ NEXT_PUBLIC_GRAPHQL_ENDPOINT=https://api.example.com/graphql npm run build
 ## Code Examples
 
 ### Custom Hook: useBlock
+
 ```typescript
 // lib/hooks/useBlock.ts
-import { useQuery } from '@apollo/client';
-import { GET_BLOCK } from '@/lib/apollo/queries';
-import type { Block } from '@/types/block';
+import { useQuery } from '@apollo/client'
+import { GET_BLOCK } from '@/lib/apollo/queries'
+import type { Block } from '@/types/block'
 
-type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
+type Result<T, E> = { ok: true; value: T } | { ok: false; error: E }
 
 export function useBlock(numberOrHash: bigint | string): Result<Block | null, Error> {
-  const isHash = typeof numberOrHash === 'string' && numberOrHash.startsWith('0x');
+  const isHash = typeof numberOrHash === 'string' && numberOrHash.startsWith('0x')
 
   const { data, loading, error } = useQuery(GET_BLOCK, {
-    variables: isHash
-      ? { hash: numberOrHash }
-      : { number: numberOrHash.toString() },
+    variables: isHash ? { hash: numberOrHash } : { number: numberOrHash.toString() },
     skip: !numberOrHash,
-  });
+  })
 
-  if (loading) return { ok: true, value: null };
-  if (error) return { ok: false, error };
+  if (loading) return { ok: true, value: null }
+  if (error) return { ok: false, error }
 
-  return { ok: true, value: data?.block ?? null };
+  return { ok: true, value: data?.block ?? null }
 }
 ```
 
 ### Utility: Format Address
+
 ```typescript
 // lib/utils/format.ts
 export function formatAddress(address: string, short: boolean = true): string {
   if (!address || !address.startsWith('0x')) {
-    throw new Error('Invalid address format');
+    throw new Error('Invalid address format')
   }
 
-  if (!short) return address;
+  if (!short) return address
 
-  return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  return `${address.slice(0, 6)}...${address.slice(-4)}`
 }
 
 export function formatHash(hash: string, short: boolean = true): string {
   if (!hash || !hash.startsWith('0x')) {
-    throw new Error('Invalid hash format');
+    throw new Error('Invalid hash format')
   }
 
-  if (!short) return hash;
+  if (!short) return hash
 
-  return `${hash.slice(0, 10)}...${hash.slice(-8)}`;
+  return `${hash.slice(0, 10)}...${hash.slice(-8)}`
 }
 
 export function formatValue(value: bigint, decimals: number = 18): string {
-  const divisor = BigInt(10 ** decimals);
-  const integerPart = value / divisor;
-  const fractionalPart = value % divisor;
+  const divisor = BigInt(10 ** decimals)
+  const integerPart = value / divisor
+  const fractionalPart = value % divisor
 
-  const fractionalStr = fractionalPart.toString().padStart(decimals, '0');
-  const trimmed = fractionalStr.replace(/0+$/, '');
+  const fractionalStr = fractionalPart.toString().padStart(decimals, '0')
+  const trimmed = fractionalStr.replace(/0+$/, '')
 
   if (trimmed === '') {
-    return integerPart.toString();
+    return integerPart.toString()
   }
 
-  return `${integerPart}.${trimmed}`;
+  return `${integerPart}.${trimmed}`
 }
 
 export function formatTimeAgo(timestamp: bigint): string {
-  const now = BigInt(Math.floor(Date.now() / 1000));
-  const diff = Number(now - timestamp);
+  const now = BigInt(Math.floor(Date.now() / 1000))
+  const diff = Number(now - timestamp)
 
-  const minute = 60;
-  const hour = minute * 60;
-  const day = hour * 24;
+  const minute = 60
+  const hour = minute * 60
+  const day = hour * 24
 
-  if (diff < minute) return `${diff} seconds ago`;
-  if (diff < hour) return `${Math.floor(diff / minute)} minutes ago`;
-  if (diff < day) return `${Math.floor(diff / hour)} hours ago`;
+  if (diff < minute) return `${diff} seconds ago`
+  if (diff < hour) return `${Math.floor(diff / minute)} minutes ago`
+  if (diff < day) return `${Math.floor(diff / hour)} hours ago`
 
-  return `${Math.floor(diff / day)} days ago`;
+  return `${Math.floor(diff / day)} days ago`
 }
 ```
 
 ### Component: AddressLink
+
 ```typescript
 // components/common/AddressLink.tsx
 import Link from 'next/link';
@@ -1255,6 +1342,7 @@ export function AddressLink({
 ## Success Criteria
 
 ### Functional Requirements
+
 - ✅ All pages render data from backend API correctly
 - ✅ Real-time updates work via WebSocket
 - ✅ Search functionality works for all input types
@@ -1263,6 +1351,7 @@ export function AddressLink({
 - ✅ Error states handled gracefully
 
 ### Non-Functional Requirements
+
 - ✅ Lighthouse score: >90 (Performance, Accessibility, Best Practices, SEO)
 - ✅ Unit test coverage: >80%
 - ✅ E2E tests cover critical user flows
@@ -1272,6 +1361,7 @@ export function AddressLink({
 - ✅ Works on Chrome, Firefox, Safari, Edge (last 2 versions)
 
 ### Design Requirements
+
 - ✅ Matches Crystalline Infrastructure design philosophy
 - ✅ Consistent use of color palette and typography
 - ✅ Geometric precision in layouts

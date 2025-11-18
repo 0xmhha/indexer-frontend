@@ -117,46 +117,49 @@ Before marking any code complete, verify:
 ```typescript
 // ❌ NEVER DO THIS - silent error swallowing
 try {
-    riskyOperation();
+  riskyOperation()
 } catch (e) {
-    console.log(e); // Logging is not handling
+  console.log(e) // Logging is not handling
 }
 
 // ❌ NEVER DO THIS - generic error handling
 try {
-    operation();
+  operation()
 } catch (error) {
-    throw error; // No context added
+  throw error // No context added
 }
 
 // ✅ DO THIS - explicit error types and handling
 class ValidationError extends Error {
-    constructor(message: string, public field: string) {
-        super(message);
-        this.name = 'ValidationError';
-    }
+  constructor(
+    message: string,
+    public field: string
+  ) {
+    super(message)
+    this.name = 'ValidationError'
+  }
 }
 
 async function operation(): Promise<Result<Data, AppError>> {
-    try {
-        const result = await riskyOperation();
-        return Ok(result);
-    } catch (error) {
-        if (error instanceof ValidationError) {
-            return Err(new AppError('VALIDATION_FAILED', error.message, error));
-        }
-        return Err(new AppError('UNKNOWN_ERROR', 'Operation failed', error));
+  try {
+    const result = await riskyOperation()
+    return Ok(result)
+  } catch (error) {
+    if (error instanceof ValidationError) {
+      return Err(new AppError('VALIDATION_FAILED', error.message, error))
     }
+    return Err(new AppError('UNKNOWN_ERROR', 'Operation failed', error))
+  }
 }
 
 // ✅ DO THIS - Result type pattern
-type Result<T, E> = { ok: true; value: T } | { ok: false; error: E };
+type Result<T, E> = { ok: true; value: T } | { ok: false; error: E }
 
 function divide(a: number, b: number): Result<number, string> {
-    if (b === 0) {
-        return { ok: false, error: 'Division by zero' };
-    }
-    return { ok: true, value: a / b };
+  if (b === 0) {
+    return { ok: false, error: 'Division by zero' }
+  }
+  return { ok: true, value: a / b }
 }
 ```
 
@@ -251,38 +254,40 @@ command || error_exit "Command failed" 2
 ### RESOURCE MANAGEMENT:
 
 #### JavaScript/TypeScript:
+
 ```typescript
 // ❌ NEVER DO THIS - no cleanup
-const file = await open('file.txt');
-const data = await file.read();
+const file = await open('file.txt')
+const data = await file.read()
 // File never closed
 
 // ✅ DO THIS - RAII pattern with try-finally
 async function processFile(path: string): Promise<void> {
-    const file = await open(path);
-    try {
-        const data = await file.read();
-        await process(data);
-    } finally {
-        await file.close(); // Always executed
-    }
+  const file = await open(path)
+  try {
+    const data = await file.read()
+    await process(data)
+  } finally {
+    await file.close() // Always executed
+  }
 }
 
 // ✅ DO THIS - using statement pattern
 class ResourceManager<T extends { dispose(): void }> {
-    constructor(private resource: T) {}
+  constructor(private resource: T) {}
 
-    async use<R>(fn: (resource: T) => Promise<R>): Promise<R> {
-        try {
-            return await fn(this.resource);
-        } finally {
-            this.resource.dispose();
-        }
+  async use<R>(fn: (resource: T) => Promise<R>): Promise<R> {
+    try {
+      return await fn(this.resource)
+    } finally {
+      this.resource.dispose()
     }
+  }
 }
 ```
 
 #### Golang:
+
 ```go
 // ❌ NEVER DO THIS - missing defer
 file, err := os.Open("file.txt")
@@ -324,6 +329,7 @@ func withResource[T any](
 ```
 
 #### Shell:
+
 ```bash
 # ❌ NEVER DO THIS - no cleanup
 temp_file=$(mktemp)
@@ -350,42 +356,44 @@ process_file "$TEMP_FILE"
 
 ```typescript
 // ❌ Unchecked type assertions
-const data = JSON.parse(input) as UserData; // Runtime error risk
+const data = JSON.parse(input) as UserData // Runtime error risk
 
 // ❌ Mutable shared state
-let sharedCounter = 0;
-export function increment() { sharedCounter++; } // Race conditions
+let sharedCounter = 0
+export function increment() {
+  sharedCounter++
+} // Race conditions
 
 // ❌ Callback hell
 doAsync1((err1, res1) => {
-    doAsync2(res1, (err2, res2) => {
-        doAsync3(res2, (err3, res3) => {
-            // Deeply nested, error handling duplicated
-        });
-    });
-});
+  doAsync2(res1, (err2, res2) => {
+    doAsync3(res2, (err3, res3) => {
+      // Deeply nested, error handling duplicated
+    })
+  })
+})
 
 // ✅ Use validation
-const result = UserDataSchema.safeParse(JSON.parse(input));
+const result = UserDataSchema.safeParse(JSON.parse(input))
 if (!result.success) {
-    return Err(new ValidationError(result.error));
+  return Err(new ValidationError(result.error))
 }
 
 // ✅ Immutable patterns
 export class Counter {
-    constructor(private readonly value: number = 0) {}
-    increment(): Counter {
-        return new Counter(this.value + 1);
-    }
+  constructor(private readonly value: number = 0) {}
+  increment(): Counter {
+    return new Counter(this.value + 1)
+  }
 }
 
 // ✅ async/await with proper error handling
 try {
-    const res1 = await doAsync1();
-    const res2 = await doAsync2(res1);
-    const res3 = await doAsync3(res2);
+  const res1 = await doAsync1()
+  const res2 = await doAsync2(res1)
+  const res3 = await doAsync3(res2)
 } catch (error) {
-    handleError(error);
+  handleError(error)
 }
 ```
 
@@ -480,45 +488,45 @@ fi
 ### COMPREHENSIVE TEST COVERAGE:
 
 #### JavaScript/TypeScript:
+
 ```typescript
 describe('UserService', () => {
-    // ✅ Unit tests for all public methods
-    describe('createUser', () => {
-        it('should create user with valid data', async () => {
-            const user = await service.createUser(validData);
-            expect(user).toMatchObject(validData);
-        });
+  // ✅ Unit tests for all public methods
+  describe('createUser', () => {
+    it('should create user with valid data', async () => {
+      const user = await service.createUser(validData)
+      expect(user).toMatchObject(validData)
+    })
 
-        it('should reject invalid email', async () => {
-            await expect(
-                service.createUser({ ...validData, email: 'invalid' })
-            ).rejects.toThrow(ValidationError);
-        });
+    it('should reject invalid email', async () => {
+      await expect(service.createUser({ ...validData, email: 'invalid' })).rejects.toThrow(
+        ValidationError
+      )
+    })
 
-        // ✅ Edge cases
-        it('should handle duplicate email', async () => {
-            await service.createUser(validData);
-            await expect(
-                service.createUser(validData)
-            ).rejects.toThrow('Email already exists');
-        });
-    });
+    // ✅ Edge cases
+    it('should handle duplicate email', async () => {
+      await service.createUser(validData)
+      await expect(service.createUser(validData)).rejects.toThrow('Email already exists')
+    })
+  })
 
-    // ✅ Property-based testing
-    it('should maintain email uniqueness invariant', async () => {
-        await fc.assert(
-            fc.asyncProperty(fc.array(userArbitrary, { minLength: 2 }), async (users) => {
-                const created = await Promise.all(users.map(u => service.createUser(u)));
-                const emails = created.map(u => u.email);
-                const uniqueEmails = new Set(emails);
-                return emails.length === uniqueEmails.size;
-            })
-        );
-    });
-});
+  // ✅ Property-based testing
+  it('should maintain email uniqueness invariant', async () => {
+    await fc.assert(
+      fc.asyncProperty(fc.array(userArbitrary, { minLength: 2 }), async (users) => {
+        const created = await Promise.all(users.map((u) => service.createUser(u)))
+        const emails = created.map((u) => u.email)
+        const uniqueEmails = new Set(emails)
+        return emails.length === uniqueEmails.size
+      })
+    )
+  })
+})
 ```
 
 #### Golang:
+
 ```go
 func TestUserService_CreateUser(t *testing.T) {
     tests := []struct {
@@ -559,31 +567,33 @@ func TestUserService_CreateUser(t *testing.T) {
 ### RESOURCE LEAK TESTING:
 
 #### JavaScript/TypeScript:
+
 ```typescript
 describe('Database connection pool', () => {
-    it('should not leak connections', async () => {
-        const initialCount = pool.activeConnections();
+  it('should not leak connections', async () => {
+    const initialCount = pool.activeConnections()
 
-        // Perform operations
-        for (let i = 0; i < 1000; i++) {
-            const conn = await pool.acquire();
-            try {
-                await conn.query('SELECT 1');
-            } finally {
-                await pool.release(conn);
-            }
-        }
+    // Perform operations
+    for (let i = 0; i < 1000; i++) {
+      const conn = await pool.acquire()
+      try {
+        await conn.query('SELECT 1')
+      } finally {
+        await pool.release(conn)
+      }
+    }
 
-        // Allow async cleanup
-        await new Promise(resolve => setTimeout(resolve, 100));
+    // Allow async cleanup
+    await new Promise((resolve) => setTimeout(resolve, 100))
 
-        const finalCount = pool.activeConnections();
-        expect(finalCount).toBe(initialCount);
-    });
-});
+    const finalCount = pool.activeConnections()
+    expect(finalCount).toBe(initialCount)
+  })
+})
 ```
 
 #### Golang:
+
 ```go
 func TestNoGoroutineLeak(t *testing.T) {
     initialCount := runtime.NumGoroutine()
@@ -613,7 +623,8 @@ func TestNoGoroutineLeak(t *testing.T) {
 ### CODE DOCUMENTATION:
 
 #### JavaScript/TypeScript JSDoc:
-```typescript
+
+````typescript
 /**
  * Creates a new user in the system.
  *
@@ -633,11 +644,12 @@ func TestNoGoroutineLeak(t *testing.T) {
  * ```
  */
 async function createUser(input: UserInput): Promise<User> {
-    // Implementation
+  // Implementation
 }
-```
+````
 
 #### Golang GoDoc:
+
 ```go
 // CreateUser creates a new user in the system.
 //
@@ -665,6 +677,7 @@ func (s *UserService) CreateUser(input UserInput) (*User, error) {
 ```
 
 #### Shell Script Documentation:
+
 ```bash
 #!/bin/bash
 # setup_node.sh - Initialize and configure blockchain node

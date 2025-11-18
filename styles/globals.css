@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 10 14 20; /* #0A0E14 */
+    --foreground: 230 237 243; /* #E6EDF3 */
+
+    --card: 28 33 40; /* #1C2128 */
+    --card-foreground: 230 237 243; /* #E6EDF3 */
+
+    --popover: 28 33 40; /* #1C2128 */
+    --popover-foreground: 230 237 243; /* #E6EDF3 */
+
+    --primary: 0 212 255; /* #00D4FF */
+    --primary-foreground: 10 14 20; /* #0A0E14 */
+
+    --secondary: 28 33 40; /* #1C2128 */
+    --secondary-foreground: 230 237 243; /* #E6EDF3 */
+
+    --muted: 33 38 45; /* #21262D */
+    --muted-foreground: 139 148 158; /* #8B949E */
+
+    --accent: 0 212 255; /* #00D4FF */
+    --accent-foreground: 10 14 20; /* #0A0E14 */
+
+    --destructive: 248 81 73; /* #F85149 */
+    --destructive-foreground: 230 237 243; /* #E6EDF3 */
+
+    --border: 33 38 45; /* #21262D */
+    --input: 33 38 45; /* #21262D */
+    --ring: 0 212 255; /* #00D4FF */
+
+    --radius: 0.375rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-bg-primary font-sans text-text-primary antialiased;
+    font-feature-settings:
+      'rlig' 1,
+      'calt' 1;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-bg-secondary;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply rounded bg-bg-tertiary;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-text-muted;
+  }
+}
+
+@layer utilities {
+  /* Text utilities for monospace data */
+  .text-mono-data {
+    @apply font-mono text-xs tracking-tight;
+  }
+
+  /* Hash/Address styling */
+  .hash-display {
+    @apply break-all font-mono text-accent-blue;
+  }
+
+  /* Card with border */
+  .card-bordered {
+    @apply rounded-none border border-bg-tertiary bg-bg-secondary;
+  }
+
+  /* Grid overlay (for technical aesthetic) */
+  .grid-overlay {
+    background-image:
+      linear-gradient(rgba(0, 212, 255, 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(0, 212, 255, 0.05) 1px, transparent 1px);
+    background-size: 20px 20px;
+  }
+
+  /* Hexagonal button (Crystalline Infrastructure aesthetic) */
+  .btn-hex {
+    @apply bg-accent-blue font-mono text-xs uppercase tracking-wider text-bg-primary;
+    @apply rounded-none px-4 py-2 transition-colors hover:bg-accent-cyan;
+  }
+
+  /* Technical annotation style */
+  .annotation {
+    @apply font-mono text-[10px] uppercase tracking-widest text-text-secondary;
+  }
+}
