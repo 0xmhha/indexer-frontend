@@ -33,7 +33,10 @@ const httpLink = new HttpLink({
  */
 const loggingLink = new ApolloLink((operation, forward) => {
   if (env.isDevelopment) {
-    console.log(`[GraphQL Request]: ${operation.operationName}`, operation.variables)
+    const variables = operation.variables
+    const hasVariables = Object.keys(variables).length > 0
+    const variablesStr = hasVariables ? JSON.stringify(variables, null, 2) : '(no variables)'
+    console.log(`[GraphQL Request]: ${operation.operationName}`, variablesStr)
   }
   return forward(operation)
 })

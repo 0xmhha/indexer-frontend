@@ -27,12 +27,23 @@ export default function BlocksListPage() {
 
   const offset = (currentPage - 1) * ITEMS_PER_PAGE
 
-  const { blocks, totalCount, loading, error } = useBlocks({
+  const { blocks: rawBlocks, totalCount, loading, error } = useBlocks({
     limit: ITEMS_PER_PAGE,
     offset,
   })
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE)
+
+  // Sort blocks based on orderBy and orderDirection
+  const blocks = [...rawBlocks].sort((a, b) => {
+    let comparison = 0
+    if (orderBy === 'number') {
+      comparison = Number(BigInt(a.number) - BigInt(b.number))
+    } else if (orderBy === 'timestamp') {
+      comparison = Number(BigInt(a.timestamp) - BigInt(b.timestamp))
+    }
+    return orderDirection === 'desc' ? -comparison : comparison
+  })
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page)
