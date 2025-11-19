@@ -80,7 +80,11 @@ export const apolloClient = new ApolloClient({
   }),
   defaultOptions: {
     watchQuery: {
-      fetchPolicy: 'cache-and-network',
+      // Use cache-first to prevent flickering, data shows immediately from cache
+      // Components can override with refetch() when needed
+      fetchPolicy: 'cache-first',
+      // Don't notify on network status changes to prevent loading state flicker
+      notifyOnNetworkStatusChange: false,
       errorPolicy: 'all',
     },
     query: {

@@ -1,5 +1,6 @@
 /**
  * WebSocket service for real-time blockchain updates
+ * Uses singleton pattern to prevent reconnection on page navigation
  */
 
 import { env } from '@/lib/config/env'
@@ -20,12 +21,28 @@ export interface WebSocketClient {
   unsubscribe: (subscription: WebSocketSubscription) => void
   onMessage: (callback: (message: WebSocketMessage) => void) => () => void
   isConnected: () => boolean
+  getConnectionState: () => 'connecting' | 'connected' | 'disconnected' | 'error'
+}
+
+// Singleton instance for the WebSocket client
+let singletonClient: WebSocketClient | null = null
+let connectionState: 'connecting' | 'connected' | 'disconnected' | 'error' = 'disconnected'
+
+/**
+ * Get or create singleton WebSocket client
+ * This ensures only one connection exists across all page navigations
+ */
+export function getWebSocketClient(): WebSocketClient {
+  if (!singletonClient) {
+    singletonClient = createWebSocketClientInternal()
+  }
+  return singletonClient
 }
 
 /**
- * Create WebSocket client for blockchain updates
+ * Create WebSocket client for blockchain updates (internal)
  */
-export function createWebSocketClient(): WebSocketClient {
+function createWebSocketClientInternal(): WebSocketClient {
   let ws: WebSocket | null = null
   let reconnectTimer: NodeJS.Timeout | null = null
   const messageHandlers: Set<(message: WebSocketMessage) => void> = new Set()
@@ -38,9 +55,11 @@ export function createWebSocketClient(): WebSocketClient {
     }
 
     try {
+      connectionState = 'connecting'
       ws = new WebSocket(env.wsEndpoint)
 
       ws.onopen = () => {
+        connectionState = 'connected'
         if (env.isDevelopment) {
           console.log('[WebSocket] Connected to', env.wsEndpoint)
         }
@@ -76,6 +95,7 @@ export function createWebSocketClient(): WebSocketClient {
       }
 
       ws.onerror = (error) => {
+        connectionState = 'error'
         console.error('[WebSocket] Error:', error)
 
         messageHandlers.forEach((handler) => {
@@ -84,6 +104,7 @@ export function createWebSocketClient(): WebSocketClient {
       }
 
       ws.onclose = () => {
+        connectionState = 'disconnected'
         if (env.isDevelopment) {
           console.log('[WebSocket] Disconnected')
         }
@@ -169,6 +190,8 @@ export function createWebSocketClient(): WebSocketClient {
     return ws?.readyState === WebSocket.OPEN
   }
 
+  const getConnectionState = () => connectionState
+
   return {
     connect,
     disconnect,
@@ -176,5 +199,17 @@ export function createWebSocketClient(): WebSocketClient {
     unsubscribe,
     onMessage,
     isConnected,
+    getConnectionState,
   }
+}
+
+/**
+ * Reset singleton (for testing purposes only)
+ */
+export function resetWebSocketClient(): void {
+  if (singletonClient) {
+    singletonClient.disconnect()
+    singletonClient = null
+  }
+  connectionState = 'disconnected'
 }

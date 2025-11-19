@@ -1,8 +1,8 @@
 'use client'
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { createContext, useContext, useEffect, useState, ReactNode, useMemo } from 'react'
 import {
-  createWebSocketClient,
+  getWebSocketClient,
   type WebSocketClient,
   type WebSocketMessage,
 } from '@/lib/services/websocket'
@@ -28,13 +28,16 @@ export function useWebSocket() {
 }
 
 export function WebSocketProvider({ children }: { children: ReactNode }) {
-  const [client] = useState(() => createWebSocketClient())
-  const [isConnected, setIsConnected] = useState(false)
+  // Use singleton client - persists across page navigations
+  const client = useMemo(() => getWebSocketClient(), [])
+  const [isConnected, setIsConnected] = useState(() => client.isConnected())
   const [lastMessage, setLastMessage] = useState<WebSocketMessage | null>(null)
 
   useEffect(() => {
-    // Connect on mount
-    client.connect()
+    // Connect if not already connected
+    if (!client.isConnected()) {
+      client.connect()
+    }
 
     // Subscribe to messages
     const unsubscribe = client.onMessage((message) => {
@@ -47,10 +50,9 @@ export function WebSocketProvider({ children }: { children: ReactNode }) {
       }
     })
 
-    // Cleanup on unmount
+    // Only unsubscribe on unmount, don't disconnect the singleton
     return () => {
       unsubscribe()
-      client.disconnect()
     }
   }, [client])
 
