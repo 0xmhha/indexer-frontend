@@ -18,11 +18,11 @@ const config: Config = {
     },
     extend: {
       colors: {
-        // Background layers (Crystalline Infrastructure)
+        // Background layers (Crystalline Infrastructure) - use CSS variables for theme support
         bg: {
-          primary: '#0A0E14',
-          secondary: '#1C2128',
-          tertiary: '#21262D',
+          primary: 'var(--bg-primary)',
+          secondary: 'var(--bg-secondary)',
+          tertiary: 'var(--bg-tertiary)',
         },
         // Accent colors
         accent: {
@@ -30,11 +30,11 @@ const config: Config = {
           cyan: '#4DD0E1',
           orange: '#FFA726',
         },
-        // Text colors
+        // Text colors - use CSS variables for theme support
         text: {
-          primary: '#E6EDF3',
-          secondary: '#8B949E',
-          muted: '#6E7681',
+          primary: 'var(--text-primary)',
+          secondary: 'var(--text-secondary)',
+          muted: 'var(--text-muted)',
         },
         // Semantic colors
         success: '#2EA043',

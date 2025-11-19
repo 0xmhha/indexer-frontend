@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 import { env } from '@/lib/config/env'
 import { SearchBar } from '@/components/common/SearchBar'
+import { ThemeToggle } from '@/components/common/ThemeToggle'
 
 export function Header() {
   const [showSearch, setShowSearch] = useState(false)
@@ -58,8 +59,11 @@ export function Header() {
             </Link>
           </nav>
 
-          {/* Chain Info and Mobile Search Toggle */}
+          {/* Chain Info, Theme Toggle, and Mobile Search Toggle */}
           <div className="flex items-center gap-3">
+            {/* Theme Toggle */}
+            <ThemeToggle />
+
             {/* Mobile Search Icon */}
             <button
               onClick={() => setShowSearch(!showSearch)}

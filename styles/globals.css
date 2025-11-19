@@ -3,7 +3,9 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  /* Dark theme (default) */
+  :root,
+  .dark {
     --background: 10 14 20; /* #0A0E14 */
     --foreground: 230 237 243; /* #E6EDF3 */
 
@@ -33,6 +35,55 @@
     --ring: 0 212 255; /* #00D4FF */
 
     --radius: 0.375rem;
+
+    /* Custom colors for dark theme */
+    --bg-primary: #0A0E14;
+    --bg-secondary: #1C2128;
+    --bg-tertiary: #21262D;
+    --text-primary: #E6EDF3;
+    --text-secondary: #8B949E;
+    --text-muted: #6E7681;
+  }
+
+  /* Light theme */
+  .light {
+    --background: 255 255 255; /* #FFFFFF */
+    --foreground: 36 41 46; /* #24292E */
+
+    --card: 246 248 250; /* #F6F8FA */
+    --card-foreground: 36 41 46; /* #24292E */
+
+    --popover: 255 255 255; /* #FFFFFF */
+    --popover-foreground: 36 41 46; /* #24292E */
+
+    --primary: 0 150 199; /* #0096C7 - slightly darker for light mode */
+    --primary-foreground: 255 255 255; /* #FFFFFF */
+
+    --secondary: 246 248 250; /* #F6F8FA */
+    --secondary-foreground: 36 41 46; /* #24292E */
+
+    --muted: 234 238 242; /* #EAEEF2 */
+    --muted-foreground: 87 96 106; /* #57606A */
+
+    --accent: 0 150 199; /* #0096C7 */
+    --accent-foreground: 255 255 255; /* #FFFFFF */
+
+    --destructive: 207 34 46; /* #CF222E */
+    --destructive-foreground: 255 255 255; /* #FFFFFF */
+
+    --border: 208 215 222; /* #D0D7DE */
+    --input: 208 215 222; /* #D0D7DE */
+    --ring: 0 150 199; /* #0096C7 */
+
+    --radius: 0.375rem;
+
+    /* Custom colors for light theme */
+    --bg-primary: #FFFFFF;
+    --bg-secondary: #F6F8FA;
+    --bg-tertiary: #EAEEF2;
+    --text-primary: #24292E;
+    --text-secondary: #57606A;
+    --text-muted: #6E7681;
   }
 }
 
