@@ -2,6 +2,8 @@ import { gql } from '@apollo/client'
 
 /**
  * GraphQL Queries for Blockchain Explorer
+ *
+ * Note: Backend uses String for all custom scalars (BigInt, Hash, Address, Bytes)
  */
 
 // Get latest indexed block height
@@ -13,7 +15,7 @@ export const GET_LATEST_HEIGHT = gql`
 
 // Get block by number
 export const GET_BLOCK = gql`
-  query GetBlock($number: BigInt!) {
+  query GetBlock($number: String!) {
     block(number: $number) {
       number
       hash
@@ -40,7 +42,7 @@ export const GET_BLOCK = gql`
 
 // Get block by hash
 export const GET_BLOCK_BY_HASH = gql`
-  query GetBlockByHash($hash: Hash!) {
+  query GetBlockByHash($hash: String!) {
     blockByHash(hash: $hash) {
       number
       hash
@@ -63,7 +65,7 @@ export const GET_BLOCK_BY_HASH = gql`
 
 // Get transaction by hash
 export const GET_TRANSACTION = gql`
-  query GetTransaction($hash: Hash!) {
+  query GetTransaction($hash: String!) {
     transaction(hash: $hash) {
       hash
       blockNumber
@@ -102,7 +104,7 @@ export const GET_TRANSACTION = gql`
 
 // Get transactions by address
 export const GET_TRANSACTIONS_BY_ADDRESS = gql`
-  query GetTransactionsByAddress($address: Address!, $limit: Int, $offset: Int) {
+  query GetTransactionsByAddress($address: String!, $limit: Int, $offset: Int) {
     transactionsByAddress(address: $address, pagination: { limit: $limit, offset: $offset }) {
       nodes {
         hash
@@ -110,7 +112,7 @@ export const GET_TRANSACTIONS_BY_ADDRESS = gql`
         from
         to
         value
-        gasUsed
+        gas
       }
       totalCount
       pageInfo {
@@ -123,7 +125,7 @@ export const GET_TRANSACTIONS_BY_ADDRESS = gql`
 
 // Get address balance
 export const GET_ADDRESS_BALANCE = gql`
-  query GetAddressBalance($address: Address!, $blockNumber: BigInt) {
+  query GetAddressBalance($address: String!, $blockNumber: String) {
     addressBalance(address: $address, blockNumber: $blockNumber)
   }
 `
@@ -131,9 +133,9 @@ export const GET_ADDRESS_BALANCE = gql`
 // Get balance history
 export const GET_BALANCE_HISTORY = gql`
   query GetBalanceHistory(
-    $address: Address!
-    $fromBlock: BigInt!
-    $toBlock: BigInt!
+    $address: String!
+    $fromBlock: String!
+    $toBlock: String!
     $limit: Int
     $offset: Int
   ) {
@@ -161,10 +163,10 @@ export const GET_BALANCE_HISTORY = gql`
 // Get logs with filtering
 export const GET_LOGS = gql`
   query GetLogs(
-    $address: Address
-    $topics: [Hash!]
-    $blockNumberFrom: BigInt
-    $blockNumberTo: BigInt
+    $address: String
+    $topics: [String!]
+    $blockNumberFrom: String
+    $blockNumberTo: String
     $limit: Int
     $offset: Int
   ) {
@@ -187,5 +189,35 @@ export const GET_LOGS = gql`
       }
       totalCount
     }
+  }
+`
+
+// Get blocks by time range for analytics
+export const GET_BLOCKS_BY_TIME_RANGE = gql`
+  query GetBlocksByTimeRange($fromTime: String!, $toTime: String!, $limit: Int) {
+    blocksByTimeRange(
+      fromTime: $fromTime
+      toTime: $toTime
+      pagination: { limit: $limit }
+    ) {
+      nodes {
+        number
+        hash
+        timestamp
+        miner
+        gasUsed
+        gasLimit
+        transactionCount
+      }
+      totalCount
+    }
+  }
+`
+
+// Get block count and transaction count
+export const GET_NETWORK_METRICS = gql`
+  query GetNetworkMetrics {
+    blockCount
+    transactionCount
   }
 `

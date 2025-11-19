@@ -74,12 +74,21 @@ export async function withTimeout<T>(
   timeoutMs: number,
   operation = 'Operation'
 ): Promise<T> {
-  return Promise.race([
-    fn(),
-    sleep(timeoutMs).then(() => {
-      throw new TimeoutError(operation)
-    }),
-  ])
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new TimeoutError(operation))
+    }, timeoutMs)
+
+    fn()
+      .then((result) => {
+        clearTimeout(timer)
+        resolve(result)
+      })
+      .catch((error) => {
+        clearTimeout(timer)
+        reject(error)
+      })
+  })
 }
 
 /**

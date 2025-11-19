@@ -1,6 +1,6 @@
 'use client'
 
-import { use } from 'react'
+import { use, useState } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { useAddressBalance, useAddressTransactions, useBalanceHistory } from '@/lib/hooks/useAddress'
@@ -14,6 +14,7 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table'
+import { Pagination } from '@/components/ui/pagination'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { AddressDetailSkeleton } from '@/components/skeletons/AddressDetailSkeleton'
@@ -43,6 +44,10 @@ export default function AddressPage({ params }: PageProps) {
   const resolvedParams = use(params)
   const address = resolvedParams.address
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1)
+  const itemsPerPage = 20
+
   // Get latest block height for balance history
   const { latestHeight } = useLatestHeight()
 
@@ -57,12 +62,15 @@ export default function AddressPage({ params }: PageProps) {
     totalCount,
     loading: txLoading,
     error: txError,
-  } = useAddressTransactions(address, 20)
+  } = useAddressTransactions(address, itemsPerPage, (currentPage - 1) * itemsPerPage)
   const {
     history,
     loading: historyLoading,
     error: historyError,
   } = useBalanceHistory(address, fromBlock, toBlock, 100)
+
+  // Calculate total pages
+  const totalPages = Math.ceil(totalCount / itemsPerPage)
 
   // Validate address
   if (!isValidAddress(address)) {
@@ -214,12 +222,10 @@ export default function AddressPage({ params }: PageProps) {
         </CardContent>
       </Card>
 
-      {/* Info */}
-      {totalCount > 20 && (
-        <div className="mt-4 text-center">
-          <p className="text-xs text-text-muted">
-            Showing first 20 transactions. Pagination coming soon.
-          </p>
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="mt-6">
+          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
         </div>
       )}
     </div>

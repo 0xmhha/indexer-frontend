@@ -30,8 +30,6 @@ export default function BlocksListPage() {
   const { blocks, totalCount, loading, error } = useBlocks({
     limit: ITEMS_PER_PAGE,
     offset,
-    orderBy,
-    orderDirection,
   })
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE)

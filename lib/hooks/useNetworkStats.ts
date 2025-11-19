@@ -1,19 +1,21 @@
 'use client'
 
-import { useQuery } from '@apollo/client'
-import {
-  GET_NETWORK_STATS,
-  GET_BLOCKS_OVER_TIME,
-  GET_TOP_MINERS,
-} from '@/lib/apollo/queries-extended'
+import { useNetworkMetrics } from './useAnalytics'
 
 /**
  * Hook to fetch network statistics
+ * This is a compatibility wrapper for existing code that uses useNetworkStats
  */
 export function useNetworkStats() {
-  const { data, loading, error } = useQuery(GET_NETWORK_STATS)
+  const { blockCount, transactionCount, loading, error } = useNetworkMetrics()
 
-  const stats = data?.networkStats ?? null
+  // Transform to match expected interface
+  const stats = blockCount && transactionCount
+    ? {
+        totalBlocks: blockCount,
+        totalTransactions: transactionCount,
+      }
+    : null
 
   return {
     stats,
@@ -22,42 +24,16 @@ export function useNetworkStats() {
   }
 }
 
-/**
- * Hook to fetch blocks over time data for charts
- */
-export function useBlocksOverTime(from: bigint, to: bigint, interval: string = '1h') {
-  const { data, loading, error } = useQuery(GET_BLOCKS_OVER_TIME, {
-    variables: {
-      from: from.toString(),
-      to: to.toString(),
-      interval,
-    },
-  })
-
-  const blocksOverTime = data?.blocksOverTime ?? []
-
-  return {
-    blocksOverTime,
-    loading,
-    error,
-  }
-}
+// Re-export hooks from useAnalytics for backward compatibility
+export { useBlocksByTimeRange as useBlocksOverTime } from './useAnalytics'
 
 /**
- * Hook to fetch top miners
+ * Placeholder for top miners - not yet implemented in backend
  */
-export function useTopMiners(limit = 10) {
-  const { data, loading, error } = useQuery(GET_TOP_MINERS, {
-    variables: {
-      limit,
-    },
-  })
-
-  const topMiners = data?.topMiners ?? []
-
+export function useTopMiners(_limit = 10) {
   return {
-    topMiners,
-    loading,
-    error,
+    topMiners: [],
+    loading: false,
+    error: null,
   }
 }

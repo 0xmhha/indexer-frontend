@@ -42,7 +42,6 @@ export function createWebSocketClient(): WebSocketClient {
 
       ws.onopen = () => {
         if (env.isDevelopment) {
-          // eslint-disable-next-line no-console
           console.log('[WebSocket] Connected to', env.wsEndpoint)
         }
 
@@ -72,13 +71,11 @@ export function createWebSocketClient(): WebSocketClient {
             })
           }
         } catch (error) {
-          // eslint-disable-next-line no-console
           console.error('[WebSocket] Failed to parse message:', error)
         }
       }
 
       ws.onerror = (error) => {
-        // eslint-disable-next-line no-console
         console.error('[WebSocket] Error:', error)
 
         messageHandlers.forEach((handler) => {
@@ -88,7 +85,6 @@ export function createWebSocketClient(): WebSocketClient {
 
       ws.onclose = () => {
         if (env.isDevelopment) {
-          // eslint-disable-next-line no-console
           console.log('[WebSocket] Disconnected')
         }
 
@@ -105,7 +101,6 @@ export function createWebSocketClient(): WebSocketClient {
         }, 5000)
       }
     } catch (error) {
-      // eslint-disable-next-line no-console
       console.error('[WebSocket] Connection failed:', error)
     }
   }

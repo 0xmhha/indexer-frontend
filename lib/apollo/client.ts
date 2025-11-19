@@ -9,7 +9,6 @@ import { env } from '@/lib/config/env'
 const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
   if (graphQLErrors) {
     graphQLErrors.forEach(({ message, locations, path }) => {
-      // eslint-disable-next-line no-console
       console.error(
         `[GraphQL error]: Message: ${message}, Location: ${JSON.stringify(locations)}, Path: ${path}, Operation: ${operation.operationName}`
       )
@@ -17,7 +16,6 @@ const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
   }
 
   if (networkError) {
-    // eslint-disable-next-line no-console
     console.error(`[Network error]: ${networkError.message}, Operation: ${operation.operationName}`)
   }
 })
@@ -35,7 +33,6 @@ const httpLink = new HttpLink({
  */
 const loggingLink = new ApolloLink((operation, forward) => {
   if (env.isDevelopment) {
-    // eslint-disable-next-line no-console
     console.log(`[GraphQL Request]: ${operation.operationName}`, operation.variables)
   }
   return forward(operation)

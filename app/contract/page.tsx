@@ -59,7 +59,7 @@ export default function ContractPage() {
       }
       setParsedAbi(parsed)
       setIsAbiValid(true)
-    } catch (e) {
+    } catch {
       setError('Invalid JSON ABI format')
       return
     }

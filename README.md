@@ -478,6 +478,8 @@ tests/e2e/
 | `NEXT_PUBLIC_CHAIN_ID`         | Chain identifier       | `111133`                        |
 | `NEXT_PUBLIC_CURRENCY_SYMBOL`  | Native currency symbol | `WEMIX`                         |
 
+> 기본값은 `config/app.config.json`에서 관리됩니다. 환경 변수를 지정하면 해당 값이 우선하며, 설정 파일만 수정해도 런타임을 재빌드하지 않고 체인 정보를 변경할 수 있습니다.
+
 ## 📋 Implementation Status
 
 ### ✅ Phase 1: Foundation (Complete)

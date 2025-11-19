@@ -48,11 +48,12 @@ describe('withRetry', () => {
     const fn = vi.fn().mockRejectedValue(error)
 
     const promise = withRetry(fn, { maxRetries: 2, delayMs: 100 })
+    const expectation = expect(promise).rejects.toThrow('Persistent failure')
 
     await vi.advanceTimersByTimeAsync(100)
     await vi.advanceTimersByTimeAsync(200)
 
-    await expect(promise).rejects.toThrow('Persistent failure')
+    await expectation
     expect(fn).toHaveBeenCalledTimes(3) // Initial + 2 retries
   })
 
@@ -131,10 +132,13 @@ describe('withTimeout', () => {
     }
 
     const promise = withTimeout(fn, 1000, 'Test operation')
+    const timeoutExpectation = expect(promise).rejects.toThrow(TimeoutError)
+    const messageExpectation = expect(promise).rejects.toThrow('Operation timed out: Test operation')
+
     await vi.advanceTimersByTimeAsync(1000)
 
-    await expect(promise).rejects.toThrow(TimeoutError)
-    await expect(promise).rejects.toThrow('Operation timed out: Test operation')
+    await timeoutExpectation
+    await messageExpectation
   })
 })
 

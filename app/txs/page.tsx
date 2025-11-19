@@ -15,7 +15,7 @@ import {
 import { Pagination } from '@/components/ui/pagination'
 import { ListPageSkeleton } from '@/components/skeletons/ListPageSkeleton'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
-import { formatNumber, formatHash, formatCurrency, formatTimeAgo } from '@/lib/utils/format'
+import { formatNumber, formatHash, formatCurrency } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
 import type { Transaction } from '@/types/graphql'
 
@@ -31,8 +31,6 @@ export default function TransactionsListPage() {
   const { transactions, totalCount, loading, error } = useTransactions({
     limit: ITEMS_PER_PAGE,
     offset,
-    orderBy,
-    orderDirection,
   })
 
   const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE)
@@ -152,7 +150,8 @@ export default function TransactionsListPage() {
                           </Link>
                         </TableCell>
                         <TableCell className="font-mono text-xs text-text-secondary">
-                          {tx.timestamp ? formatTimeAgo(BigInt(tx.timestamp)) : 'Pending'}
+                          {/* Timestamp not available in Transaction type */}
+                          -
                         </TableCell>
                         <TableCell>
                           <Link

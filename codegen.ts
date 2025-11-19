@@ -2,10 +2,11 @@ import type { CodegenConfig } from '@graphql-codegen/cli'
 
 const config: CodegenConfig = {
   overwrite: true,
-  schema: 'http://localhost:8080/graphql',
+  // Use local schema file instead of remote endpoint
+  schema: '../indexer-go/api/graphql/schema.graphql',
   documents: ['lib/**/*.{ts,tsx}', 'components/**/*.{ts,tsx}', 'app/**/*.{ts,tsx}'],
   generates: {
-    'lib/graphql/types.ts': {
+    'lib/graphql/generated.ts': {
       plugins: ['typescript', 'typescript-operations', 'typescript-react-apollo'],
       config: {
         withHooks: true,
@@ -17,6 +18,7 @@ const config: CodegenConfig = {
           BigInt: 'string',
           Hash: 'string',
           Address: 'string',
+          Bytes: 'string',
         },
       },
     },

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { ethers } from 'ethers'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { env } from '@/lib/config/env'
@@ -27,7 +28,7 @@ export function ContractReader({ contractAddress, abi }: ContractReaderProps) {
     (item) =>
       item.type === 'function' &&
       (item.stateMutability === 'view' || item.stateMutability === 'pure')
-  )
+  ) as AbiFunction[]
 
   const handleCallFunction = async (func: AbiFunction) => {
     const functionName = func.name || 'unknown'
@@ -51,44 +52,48 @@ export function ContractReader({ contractAddress, abi }: ContractReaderProps) {
         return inputElement?.value || ''
       })
 
-      // Call the contract function using JSON-RPC
-      const response = await fetch(env.jsonRpcEndpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jsonrpc: '2.0',
-          id: 1,
-          method: 'eth_call',
-          params: [
-            {
-              to: contractAddress,
-              data: encodeFunctionCall(func, inputs),
-            },
-            'latest',
-          ],
-        }),
-      })
+      // Create provider and contract instance
+      const provider = new ethers.JsonRpcProvider(env.jsonRpcEndpoint)
+      const contract = new ethers.Contract(contractAddress, abi, provider)
 
-      const data = await response.json()
-
-      if (data.error) {
-        throw new Error(data.error.message || 'Failed to call function')
+      // Call the function
+      const contractFunction = contract[functionName]
+      if (typeof contractFunction !== 'function') {
+        throw new Error(`Function ${functionName} not found in contract`)
       }
+      const result = await contractFunction(...inputs)
 
-      // Decode the result
-      const result = decodeFunctionResult(func, data.result)
+      // Format result based on output type
+      let formattedResult: string
+      if (func.outputs && func.outputs.length > 0) {
+        if (func.outputs.length === 1) {
+          const outputType = func.outputs[0]?.type ?? 'unknown'
+          formattedResult = formatOutput(result, outputType)
+        } else {
+          // Multiple outputs
+          formattedResult = func.outputs
+            .map((output, i) => {
+              const value = Array.isArray(result) ? result[i] : result[output.name ?? i]
+              return `${output.name || `output${i}`}: ${formatOutput(value, output.type)}`
+            })
+            .join('\n')
+        }
+      } else {
+        formattedResult = String(result)
+      }
 
       setFunctionCalls((prev) => ({
         ...prev,
         [functionName]: {
           name: functionName,
           inputs,
-          result,
+          result: formattedResult,
           loading: false,
           error: null,
         },
       }))
     } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to call function'
       setFunctionCalls((prev) => ({
         ...prev,
         [functionName]: {
@@ -96,7 +101,7 @@ export function ContractReader({ contractAddress, abi }: ContractReaderProps) {
           inputs: [],
           result: null,
           loading: false,
-          error: error instanceof Error ? error.message : 'Failed to call function',
+          error: errorMessage,
         },
       }))
     }
@@ -122,7 +127,14 @@ export function ContractReader({ contractAddress, abi }: ContractReaderProps) {
         return (
           <Card key={`${funcName}-${index}`}>
             <CardHeader className="border-b border-bg-tertiary">
-              <CardTitle className="font-mono text-sm">{funcName}</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="font-mono text-sm">{funcName}</CardTitle>
+                {func.outputs && func.outputs.length > 0 && (
+                  <span className="font-mono text-xs text-text-muted">
+                    → {func.outputs.map((o) => o.type).join(', ')}
+                  </span>
+                )}
+              </div>
             </CardHeader>
             <CardContent className="p-6 space-y-4">
               {/* Function Inputs */}
@@ -136,7 +148,7 @@ export function ContractReader({ contractAddress, abi }: ContractReaderProps) {
                       <input
                         id={`input-${funcName}-${inputIndex}`}
                         type="text"
-                        placeholder={input.type}
+                        placeholder={getPlaceholder(input.type)}
                         className="w-full border border-bg-tertiary bg-bg-secondary px-3 py-2 font-mono text-xs text-text-primary focus:border-accent-blue focus:outline-none"
                       />
                     </div>
@@ -157,7 +169,7 @@ export function ContractReader({ contractAddress, abi }: ContractReaderProps) {
                 <div className="border-t border-bg-tertiary pt-4">
                   <div className="annotation mb-2">RESULT</div>
                   <div className="rounded border border-accent-blue bg-accent-blue/10 p-4">
-                    <pre className="font-mono text-xs text-accent-blue overflow-x-auto">
+                    <pre className="font-mono text-xs text-accent-blue overflow-x-auto whitespace-pre-wrap break-all">
                       {call.result}
                     </pre>
                   </div>
@@ -168,7 +180,9 @@ export function ContractReader({ contractAddress, abi }: ContractReaderProps) {
               {call?.error && (
                 <div className="border-t border-bg-tertiary pt-4">
                   <div className="annotation mb-2">ERROR</div>
-                  <div className="font-mono text-xs text-error">{call.error}</div>
+                  <div className="rounded border border-error bg-error/10 p-4">
+                    <p className="font-mono text-xs text-error">{call.error}</p>
+                  </div>
                 </div>
               )}
             </CardContent>
@@ -179,43 +193,75 @@ export function ContractReader({ contractAddress, abi }: ContractReaderProps) {
   )
 }
 
-// Simple function encoding (for demonstration - in production use ethers.js or web3.js)
-function encodeFunctionCall(func: AbiFunction, _inputs: string[]): string {
-  // This is a simplified implementation
-  // In production, use proper ABI encoding from ethers.js or web3.js
-  const signature = `${func.name}(${func.inputs.map((i) => i.type).join(',')})`
-  const hash = keccak256().slice(0, 10) // First 4 bytes
-
-  // For now, just return the function selector
-  // TODO: Properly encode parameters using ethers.js
-  return hash + signature // Include signature for reference
-}
-
-function decodeFunctionResult(func: AbiFunction, data: string): string {
-  // This is a simplified implementation
-  // In production, use proper ABI decoding from ethers.js or web3.js
-
-  if (!data || data === '0x') {
-    return 'No data returned'
-  }
-
-  // Simple hex to decimal conversion for uint256
-  if (func.outputs && func.outputs.length === 1 && func.outputs[0] && func.outputs[0].type === 'uint256') {
-    try {
-      const value = BigInt(data)
-      return value.toString()
-    } catch {
-      return data
+/**
+ * Format output value based on type
+ */
+function formatOutput(value: unknown, type: string): string {
+  try {
+    // Handle BigInt types
+    if (type.includes('uint') || type.includes('int')) {
+      return typeof value === 'bigint' ? value.toString() : String(value)
     }
-  }
 
-  // Return raw data for other types
-  return data
+    // Handle address
+    if (type === 'address') {
+      return String(value)
+    }
+
+    // Handle bool
+    if (type === 'bool' || type === 'boolean') {
+      return String(value)
+    }
+
+    // Handle bytes
+    if (type.includes('bytes')) {
+      return String(value)
+    }
+
+    // Handle string
+    if (type === 'string') {
+      return String(value)
+    }
+
+    // Handle arrays
+    if (type.includes('[]')) {
+      if (Array.isArray(value)) {
+        return JSON.stringify(value, (_, v) =>
+          typeof v === 'bigint' ? v.toString() : v
+        )
+      }
+    }
+
+    // Default
+    return JSON.stringify(value, (_, v) =>
+      typeof v === 'bigint' ? v.toString() : v
+    )
+  } catch {
+    return String(value)
+  }
 }
 
-// Simple keccak256 implementation (for demonstration)
-function keccak256(): string {
-  // This is a placeholder - in production, use proper keccak256 from ethers.js
-  // For now, return a mock hash
-  return '0x' + '00'.repeat(32)
+/**
+ * Get placeholder text for input based on type
+ */
+function getPlaceholder(type: string): string {
+  if (type === 'address') {
+    return '0x...'
+  }
+  if (type.includes('uint') || type.includes('int')) {
+    return '0'
+  }
+  if (type === 'bool' || type === 'boolean') {
+    return 'true or false'
+  }
+  if (type === 'string') {
+    return 'Enter string'
+  }
+  if (type.includes('bytes')) {
+    return '0x...'
+  }
+  if (type.includes('[]')) {
+    return '[value1, value2, ...]'
+  }
+  return `Enter ${type}`
 }

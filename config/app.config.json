@@ -1,0 +1,12 @@
+{
+  "chain": {
+    "name": "Stable-One",
+    "id": "8283",
+    "currencySymbol": "STABLEONE"
+  },
+  "api": {
+    "graphqlEndpoint": "http://localhost:8080/graphql",
+    "wsEndpoint": "ws://localhost:8080/ws",
+    "jsonRpcEndpoint": "http://localhost:8080/rpc"
+  }
+}

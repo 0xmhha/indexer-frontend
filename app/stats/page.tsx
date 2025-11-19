@@ -4,13 +4,15 @@ import dynamic from 'next/dynamic'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
-import { useNetworkStats, useBlocksOverTime, useTopMiners } from '@/lib/hooks/useNetworkStats'
-import { useLatestHeight } from '@/lib/hooks/useLatestHeight'
+import { useBlocksByTimeRange, useNetworkMetrics } from '@/lib/hooks/useAnalytics'
 import { formatNumber } from '@/lib/utils/format'
 
-// Lazy load heavy chart and table components
-const BlocksOverTimeChart = dynamic(
-  () => import('@/components/stats/BlocksOverTimeChart').then((mod) => ({ default: mod.BlocksOverTimeChart })),
+// Lazy load heavy chart components
+const TransactionsOverTimeChart = dynamic(
+  () =>
+    import('@/components/stats/TransactionsOverTimeChart').then((mod) => ({
+      default: mod.TransactionsOverTimeChart,
+    })),
   {
     loading: () => (
       <div className="flex h-64 items-center justify-center">
@@ -21,8 +23,11 @@ const BlocksOverTimeChart = dynamic(
   }
 )
 
-const TopMinersTable = dynamic(
-  () => import('@/components/stats/TopMinersTable').then((mod) => ({ default: mod.TopMinersTable })),
+const GasUsageTrendsChart = dynamic(
+  () =>
+    import('@/components/stats/GasUsageTrendsChart').then((mod) => ({
+      default: mod.GasUsageTrendsChart,
+    })),
   {
     loading: () => (
       <div className="flex h-64 items-center justify-center">
@@ -34,20 +39,19 @@ const TopMinersTable = dynamic(
 )
 
 export default function StatsPage() {
-  const { stats, loading: statsLoading, error: statsError } = useNetworkStats()
-  const { latestHeight } = useLatestHeight()
+  const { blockCount, transactionCount, loading: metricsLoading, error: metricsError } = useNetworkMetrics()
 
-  // Get data for last 24 hours (assuming 12 second block time, ~7200 blocks)
-  const toBlock = latestHeight ?? BigInt(0)
-  const fromBlock = toBlock > BigInt(7200) ? toBlock - BigInt(7200) : BigInt(0)
+  // Calculate time range for last 24 hours
+  const now = Math.floor(Date.now() / 1000)
+  const dayAgo = now - 24 * 60 * 60
+  const toTime = BigInt(now)
+  const fromTime = BigInt(dayAgo)
 
   const {
-    blocksOverTime,
+    blocks,
     loading: blocksLoading,
     error: blocksError,
-  } = useBlocksOverTime(fromBlock, toBlock, '1h')
-
-  const { topMiners, loading: minersLoading, error: minersError } = useTopMiners(10)
+  } = useBlocksByTimeRange(fromTime, toTime, 1000)
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -59,49 +63,37 @@ export default function StatsPage() {
       </div>
 
       {/* Key Metrics */}
-      {statsLoading ? (
+      {metricsLoading ? (
         <div className="mb-8 flex h-32 items-center justify-center">
           <LoadingSpinner />
         </div>
-      ) : statsError ? (
+      ) : metricsError ? (
         <div className="mb-8">
-          <ErrorDisplay title="Failed to load network statistics" message={statsError.message} />
+          <ErrorDisplay title="Failed to load network metrics" message={metricsError.message} />
         </div>
       ) : (
-        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2">
           <StatCard
             label="TOTAL BLOCKS"
-            value={stats ? formatNumber(stats.totalBlocks) : 'N/A'}
+            value={blockCount ? formatNumber(blockCount) : 'N/A'}
             icon="□"
             color="text-accent-blue"
           />
           <StatCard
             label="TOTAL TRANSACTIONS"
-            value={stats ? formatNumber(stats.totalTransactions) : 'N/A'}
+            value={transactionCount ? formatNumber(transactionCount) : 'N/A'}
             icon="→"
             color="text-accent-cyan"
-          />
-          <StatCard
-            label="AVG BLOCK TIME"
-            value={stats ? `${stats.averageBlockTime.toFixed(2)}s` : 'N/A'}
-            icon="◷"
-            color="text-text-secondary"
-          />
-          <StatCard
-            label="AVG GAS PRICE"
-            value={stats ? formatNumber(BigInt(stats.averageGasPrice)) : 'N/A'}
-            icon="⚡"
-            color="text-accent-orange"
           />
         </div>
       )}
 
       {/* Charts Section */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        {/* Blocks Over Time */}
+        {/* Transactions Over Time */}
         <Card>
           <CardHeader className="border-b border-bg-tertiary">
-            <CardTitle>BLOCKS OVER TIME (24H)</CardTitle>
+            <CardTitle>TRANSACTIONS OVER TIME (24H)</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
             {blocksLoading ? (
@@ -111,53 +103,25 @@ export default function StatsPage() {
             ) : blocksError ? (
               <ErrorDisplay title="Failed to load chart" message={blocksError.message} />
             ) : (
-              <BlocksOverTimeChart data={blocksOverTime} />
+              <TransactionsOverTimeChart blocks={blocks} />
             )}
           </CardContent>
         </Card>
 
-        {/* Transactions Over Time - Placeholder */}
+        {/* Gas Usage Trends */}
         <Card>
           <CardHeader className="border-b border-bg-tertiary">
-            <CardTitle>TRANSACTIONS OVER TIME</CardTitle>
+            <CardTitle>GAS USAGE TRENDS (24H)</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <div className="flex h-64 items-center justify-center border border-bg-tertiary bg-bg-secondary">
-              <p className="font-mono text-xs text-text-muted">
-                Requires separate transactions aggregation query
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Gas Usage Trends - Placeholder */}
-        <Card>
-          <CardHeader className="border-b border-bg-tertiary">
-            <CardTitle>GAS USAGE TRENDS</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            <div className="flex h-64 items-center justify-center border border-bg-tertiary bg-bg-secondary">
-              <p className="font-mono text-xs text-text-muted">
-                Gas trend data available in blocksOverTime query
-              </p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Top Miners */}
-        <Card>
-          <CardHeader className="border-b border-bg-tertiary">
-            <CardTitle>TOP MINERS</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            {minersLoading ? (
+            {blocksLoading ? (
               <div className="flex h-64 items-center justify-center">
                 <LoadingSpinner />
               </div>
-            ) : minersError ? (
-              <ErrorDisplay title="Failed to load miners" message={minersError.message} />
+            ) : blocksError ? (
+              <ErrorDisplay title="Failed to load chart" message={blocksError.message} />
             ) : (
-              <TopMinersTable miners={topMiners} />
+              <GasUsageTrendsChart blocks={blocks} />
             )}
           </CardContent>
         </Card>

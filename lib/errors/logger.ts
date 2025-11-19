@@ -107,7 +107,6 @@ class ErrorLogger {
     const prefix = `[${severity.toUpperCase()}] [${timestamp.toISOString()}]`
     const contextStr = context ? `\nContext: ${JSON.stringify(context, null, 2)}` : ''
 
-    /* eslint-disable no-console */
     if (severity === 'error') {
       console.error(prefix, error, contextStr)
     } else if (severity === 'warning') {
@@ -115,7 +114,6 @@ class ErrorLogger {
     } else {
       console.info(prefix, error.message, contextStr)
     }
-    /* eslint-enable no-console */
   }
 
   /**
@@ -151,7 +149,6 @@ class ErrorLogger {
 
     // For now, just log to console in production
     if (severity === 'error') {
-      // eslint-disable-next-line no-console
       console.error('[Production Error]', error.message, context)
     }
   }

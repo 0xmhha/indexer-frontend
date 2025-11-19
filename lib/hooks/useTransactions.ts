@@ -1,7 +1,47 @@
 'use client'
 
-import { useQuery } from '@apollo/client'
-import { GET_TRANSACTIONS } from '@/lib/apollo/queries-extended'
+import { gql, useQuery } from '@apollo/client'
+import { transformTransactions, type TransformedTransaction } from '@/lib/utils/graphql-transforms'
+
+// Query for transactions with pagination
+const GET_TRANSACTIONS = gql`
+  query GetTransactions(
+    $limit: Int
+    $offset: Int
+    $blockNumberFrom: String
+    $blockNumberTo: String
+    $from: String
+    $to: String
+    $type: Int
+  ) {
+    transactions(
+      pagination: { limit: $limit, offset: $offset }
+      filter: {
+        blockNumberFrom: $blockNumberFrom
+        blockNumberTo: $blockNumberTo
+        from: $from
+        to: $to
+        type: $type
+      }
+    ) {
+      nodes {
+        hash
+        blockNumber
+        from
+        to
+        value
+        gas
+        gasPrice
+        type
+      }
+      totalCount
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+      }
+    }
+  }
+`
 
 interface UseTransactionsParams {
   limit?: number
@@ -10,26 +50,14 @@ interface UseTransactionsParams {
   blockNumberTo?: string
   from?: string
   to?: string
-  type?: string
-  orderBy?: string
-  orderDirection?: 'asc' | 'desc'
+  type?: number
 }
 
 /**
  * Hook to fetch transactions with pagination and filtering
  */
 export function useTransactions(params: UseTransactionsParams = {}) {
-  const {
-    limit = 20,
-    offset = 0,
-    blockNumberFrom,
-    blockNumberTo,
-    from,
-    to,
-    type,
-    orderBy = 'blockNumber',
-    orderDirection = 'desc',
-  } = params
+  const { limit = 20, offset = 0, blockNumberFrom, blockNumberTo, from, to, type } = params
 
   const { data, loading, error, refetch, fetchMore } = useQuery(GET_TRANSACTIONS, {
     variables: {
@@ -40,12 +68,11 @@ export function useTransactions(params: UseTransactionsParams = {}) {
       from,
       to,
       type,
-      orderBy,
-      orderDirection,
     },
   })
 
-  const transactions = data?.transactions?.nodes ?? []
+  const rawTransactions = data?.transactions?.nodes ?? []
+  const transactions: TransformedTransaction[] = transformTransactions(rawTransactions)
   const totalCount = data?.transactions?.totalCount ?? 0
   const pageInfo = data?.transactions?.pageInfo
 

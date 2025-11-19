@@ -1,7 +1,39 @@
 'use client'
 
-import { useQuery } from '@apollo/client'
-import { GET_BLOCKS } from '@/lib/apollo/queries-extended'
+import { gql, useQuery } from '@apollo/client'
+import { transformBlocks, type TransformedBlock } from '@/lib/utils/graphql-transforms'
+
+// Query for blocks with pagination
+const GET_BLOCKS = gql`
+  query GetBlocks(
+    $limit: Int
+    $offset: Int
+    $numberFrom: String
+    $numberTo: String
+    $miner: String
+  ) {
+    blocks(
+      pagination: { limit: $limit, offset: $offset }
+      filter: { numberFrom: $numberFrom, numberTo: $numberTo, miner: $miner }
+    ) {
+      nodes {
+        number
+        hash
+        timestamp
+        miner
+        gasUsed
+        gasLimit
+        size
+        transactionCount
+      }
+      totalCount
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+      }
+    }
+  }
+`
 
 interface UseBlocksParams {
   limit?: number
@@ -9,23 +41,13 @@ interface UseBlocksParams {
   numberFrom?: string
   numberTo?: string
   miner?: string
-  orderBy?: string
-  orderDirection?: 'asc' | 'desc'
 }
 
 /**
  * Hook to fetch blocks with pagination and filtering
  */
 export function useBlocks(params: UseBlocksParams = {}) {
-  const {
-    limit = 20,
-    offset = 0,
-    numberFrom,
-    numberTo,
-    miner,
-    orderBy = 'number',
-    orderDirection = 'desc',
-  } = params
+  const { limit = 20, offset = 0, numberFrom, numberTo, miner } = params
 
   const { data, loading, error, refetch, fetchMore } = useQuery(GET_BLOCKS, {
     variables: {
@@ -34,12 +56,11 @@ export function useBlocks(params: UseBlocksParams = {}) {
       numberFrom,
       numberTo,
       miner,
-      orderBy,
-      orderDirection,
     },
   })
 
-  const blocks = data?.blocks?.nodes ?? []
+  const rawBlocks = data?.blocks?.nodes ?? []
+  const blocks: TransformedBlock[] = transformBlocks(rawBlocks)
   const totalCount = data?.blocks?.totalCount ?? 0
   const pageInfo = data?.blocks?.pageInfo
 

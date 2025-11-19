@@ -2,6 +2,24 @@
  * Environment configuration
  * Centralized access to environment variables with type safety
  */
+import appConfig from '@/config/app.config.json'
+
+interface ApiConfig {
+  graphqlEndpoint?: string
+  wsEndpoint?: string
+  jsonRpcEndpoint?: string
+}
+
+interface ChainConfig {
+  name?: string
+  id?: string
+  currencySymbol?: string
+}
+
+const { api = {} as ApiConfig, chain = {} as ChainConfig } = appConfig as {
+  api?: ApiConfig
+  chain?: ChainConfig
+}
 
 function getEnvVar(key: string, defaultValue?: string): string {
   const value = process.env[key] ?? defaultValue
@@ -13,14 +31,14 @@ function getEnvVar(key: string, defaultValue?: string): string {
 
 export const env = {
   // API Endpoints
-  graphqlEndpoint: getEnvVar('NEXT_PUBLIC_GRAPHQL_ENDPOINT', 'http://localhost:8080/graphql'),
-  wsEndpoint: getEnvVar('NEXT_PUBLIC_WS_ENDPOINT', 'ws://localhost:8080/ws'),
-  jsonRpcEndpoint: getEnvVar('NEXT_PUBLIC_JSONRPC_ENDPOINT', 'http://localhost:8080/rpc'),
+  graphqlEndpoint: getEnvVar('NEXT_PUBLIC_GRAPHQL_ENDPOINT', api.graphqlEndpoint),
+  wsEndpoint: getEnvVar('NEXT_PUBLIC_WS_ENDPOINT', api.wsEndpoint),
+  jsonRpcEndpoint: getEnvVar('NEXT_PUBLIC_JSONRPC_ENDPOINT', api.jsonRpcEndpoint),
 
   // Chain Configuration
-  chainName: getEnvVar('NEXT_PUBLIC_CHAIN_NAME', 'Stable-One'),
-  chainId: getEnvVar('NEXT_PUBLIC_CHAIN_ID'),
-  currencySymbol: getEnvVar('NEXT_PUBLIC_CURRENCY_SYMBOL', 'WEMIX'),
+  chainName: getEnvVar('NEXT_PUBLIC_CHAIN_NAME', chain.name),
+  chainId: getEnvVar('NEXT_PUBLIC_CHAIN_ID', chain.id),
+  currencySymbol: getEnvVar('NEXT_PUBLIC_CURRENCY_SYMBOL', chain.currencySymbol),
 
   // Optional APIs
   priceApiUrl: process.env.NEXT_PUBLIC_PRICE_API_URL,
@@ -40,7 +58,6 @@ if (typeof window === 'undefined') {
       }
     })
   } catch (error) {
-    // eslint-disable-next-line no-console
     console.error('Environment validation failed:', error)
   }
 }
