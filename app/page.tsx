@@ -5,6 +5,9 @@ import { RecentBlocksList } from '@/components/blocks/RecentBlocksList'
 import { NetworkStats } from '@/components/common/NetworkStats'
 import { LiveIndicator } from '@/components/common/LiveIndicator'
 
+// Force dynamic rendering for real-time WebSocket features
+export const dynamic = 'force-dynamic'
+
 export default function HomePage() {
   return (
     <div className="container mx-auto px-4 py-8">

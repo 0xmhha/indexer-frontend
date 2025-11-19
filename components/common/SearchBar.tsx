@@ -4,10 +4,11 @@ import { useState, FormEvent, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import { detectInputType } from '@/lib/utils/validation'
 import { useLatestHeight } from '@/lib/hooks/useLatestHeight'
-import { formatNumber } from '@/lib/utils/format'
+import { useSearchHistory } from '@/lib/hooks/useSearchHistory'
+import { formatNumber, formatHash } from '@/lib/utils/format'
 
 interface Suggestion {
-  type: 'block' | 'hint'
+  type: 'block' | 'hint' | 'history'
   label: string
   value: string
   description?: string
@@ -24,6 +25,7 @@ export function SearchBar() {
 
   // Get latest block height for recent blocks suggestions
   const { latestHeight } = useLatestHeight()
+  const { history, addToHistory } = useSearchHistory()
 
   // Generate suggestions based on query
   const getSuggestions = (): Suggestion[] => {
@@ -31,10 +33,24 @@ export function SearchBar() {
     const trimmed = query.trim()
 
     if (!trimmed) {
+      // Show recent search history first
+      if (history.length > 0) {
+        const recentHistory = history.slice(0, 5)
+        for (const item of recentHistory) {
+          const typeLabel = item.type === 'blockNumber' ? 'Block' : item.type === 'hash' ? 'Hash' : 'Address'
+          suggestions.push({
+            type: 'history',
+            label: item.type === 'hash' || item.type === 'address' ? formatHash(item.query) : item.query,
+            value: item.query,
+            description: `Recent ${typeLabel}`,
+          })
+        }
+      }
+
       // Show recent blocks when empty
       if (latestHeight) {
         const blockNumber = latestHeight
-        for (let i = 0; i < 5; i++) {
+        for (let i = 0; i < 3; i++) {
           const num = blockNumber - BigInt(i)
           if (num >= BigInt(0)) {
             suggestions.push({
@@ -157,6 +173,9 @@ export function SearchBar() {
       return
     }
 
+    // Save to search history
+    addToHistory(value, detectedType)
+
     // Navigate based on detected type
     switch (detectedType) {
       case 'blockNumber':
@@ -178,6 +197,11 @@ export function SearchBar() {
   const handleSuggestionClick = (suggestion: Suggestion) => {
     if (suggestion.type === 'block') {
       navigateToResult(suggestion.value, 'blockNumber')
+    } else if (suggestion.type === 'history') {
+      const detectedType = detectInputType(suggestion.value)
+      if (detectedType) {
+        navigateToResult(suggestion.value, detectedType)
+      }
     } else if (suggestion.type === 'hint' && suggestion.value) {
       setQuery(suggestion.value)
       setShowSuggestions(false)
@@ -187,7 +211,7 @@ export function SearchBar() {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!showSuggestions) return
 
-    const selectableSuggestions = suggestions.filter((s) => s.type === 'block')
+    const selectableSuggestions = suggestions.filter((s) => s.type === 'block' || s.type === 'history')
 
     if (e.key === 'ArrowDown') {
       e.preventDefault()
@@ -252,9 +276,10 @@ export function SearchBar() {
             className="absolute top-full left-0 right-0 mt-1 border border-bg-tertiary bg-bg-secondary shadow-lg z-50 max-h-96 overflow-y-auto"
           >
             {suggestions.map((suggestion, index) => {
-              const selectableSuggestions = suggestions.filter((s) => s.type === 'block')
-              const selectableIndex = suggestion.type === 'block' ? selectableSuggestions.indexOf(suggestion) : -1
+              const selectableSuggestions = suggestions.filter((s) => s.type === 'block' || s.type === 'history')
+              const selectableIndex = (suggestion.type === 'block' || suggestion.type === 'history') ? selectableSuggestions.indexOf(suggestion) : -1
               const isSelected = selectableIndex === selectedIndex
+              const isSelectable = suggestion.type === 'block' || suggestion.type === 'history'
 
               return (
                 <div
@@ -262,7 +287,7 @@ export function SearchBar() {
                   onClick={() => handleSuggestionClick(suggestion)}
                   className={`
                     px-4 py-3 border-b border-bg-tertiary last:border-b-0
-                    ${suggestion.type === 'block' ? 'cursor-pointer hover:bg-bg-tertiary' : 'cursor-default'}
+                    ${isSelectable ? 'cursor-pointer hover:bg-bg-tertiary' : 'cursor-default'}
                     ${isSelected ? 'bg-bg-tertiary' : ''}
                   `}
                 >
@@ -270,16 +295,17 @@ export function SearchBar() {
                     <div>
                       <div
                         className={`font-mono text-sm ${
-                          suggestion.type === 'block' ? 'text-accent-blue' : 'text-text-secondary'
+                          isSelectable ? 'text-accent-blue' : 'text-text-secondary'
                         }`}
                       >
+                        {suggestion.type === 'history' && <span className="text-text-muted mr-2">↺</span>}
                         {suggestion.label}
                       </div>
                       {suggestion.description && (
                         <div className="font-mono text-xs text-text-muted mt-1">{suggestion.description}</div>
                       )}
                     </div>
-                    {suggestion.type === 'block' && (
+                    {isSelectable && (
                       <div className="font-mono text-xs text-text-muted">→</div>
                     )}
                   </div>
