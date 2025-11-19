@@ -59,7 +59,7 @@ interface UseTransactionsParams {
 export function useTransactions(params: UseTransactionsParams = {}) {
   const { limit = 20, offset = 0, blockNumberFrom, blockNumberTo, from, to, type } = params
 
-  const { data, loading, error, refetch, fetchMore } = useQuery(GET_TRANSACTIONS, {
+  const { data, loading, error, refetch, fetchMore, previousData } = useQuery(GET_TRANSACTIONS, {
     variables: {
       limit,
       offset,
@@ -69,12 +69,17 @@ export function useTransactions(params: UseTransactionsParams = {}) {
       to,
       type,
     },
+    // Use previous data while loading to prevent flickering
+    returnPartialData: true,
   })
 
-  const rawTransactions = data?.transactions?.nodes ?? []
+  // Use previous data while loading new data to prevent flickering
+  const effectiveData = data ?? previousData
+
+  const rawTransactions = effectiveData?.transactions?.nodes ?? []
   const transactions: TransformedTransaction[] = transformTransactions(rawTransactions)
-  const totalCount = data?.transactions?.totalCount ?? 0
-  const pageInfo = data?.transactions?.pageInfo
+  const totalCount = effectiveData?.transactions?.totalCount ?? 0
+  const pageInfo = effectiveData?.transactions?.pageInfo
 
   return {
     transactions,

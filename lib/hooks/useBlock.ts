@@ -12,12 +12,15 @@ export function useBlock(numberOrHash: bigint | string | null) {
 
   const variables = isHash ? { hash: numberOrHash } : { number: numberOrHash?.toString() ?? '0' }
 
-  const { data, loading, error, refetch } = useQuery(query, {
+  const { data, loading, error, refetch, previousData } = useQuery(query, {
     variables,
     skip: !numberOrHash,
+    returnPartialData: true,
   })
 
-  const block = isHash ? data?.blockByHash : data?.block
+  // Use previous data while loading to prevent flickering
+  const effectiveData = data ?? previousData
+  const block = isHash ? effectiveData?.blockByHash : effectiveData?.block
 
   return {
     block,

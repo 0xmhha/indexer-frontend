@@ -49,7 +49,7 @@ interface UseBlocksParams {
 export function useBlocks(params: UseBlocksParams = {}) {
   const { limit = 20, offset = 0, numberFrom, numberTo, miner } = params
 
-  const { data, loading, error, refetch, fetchMore } = useQuery(GET_BLOCKS, {
+  const { data, loading, error, refetch, fetchMore, previousData } = useQuery(GET_BLOCKS, {
     variables: {
       limit,
       offset,
@@ -57,12 +57,17 @@ export function useBlocks(params: UseBlocksParams = {}) {
       numberTo,
       miner,
     },
+    // Use previous data while loading to prevent flickering
+    returnPartialData: true,
   })
 
-  const rawBlocks = data?.blocks?.nodes ?? []
+  // Use previous data while loading new data to prevent flickering
+  const effectiveData = data ?? previousData
+
+  const rawBlocks = effectiveData?.blocks?.nodes ?? []
   const blocks: TransformedBlock[] = transformBlocks(rawBlocks)
-  const totalCount = data?.blocks?.totalCount ?? 0
-  const pageInfo = data?.blocks?.pageInfo
+  const totalCount = effectiveData?.blocks?.totalCount ?? 0
+  const pageInfo = effectiveData?.blocks?.pageInfo
 
   return {
     blocks,
