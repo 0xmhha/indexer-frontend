@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { useRouter, useSearchParams, useParams } from 'next/navigation'
-import { useAddressBalance, useAddressTransactions, useBalanceHistory } from '@/lib/hooks/useAddress'
+import { useAddressBalance, useAddressTransactions, useBalanceHistory, useTokenBalances } from '@/lib/hooks/useAddress'
 import { useFilteredTransactions } from '@/lib/hooks/useFilteredTransactions'
 import { useLatestHeight } from '@/lib/hooks/useLatestHeight'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
@@ -24,6 +24,7 @@ import { TransactionFilters, type TransactionFilterValues } from '@/components/t
 import { TransactionTypeBadge } from '@/components/transactions/TransactionTypeBadge'
 import { ContractVerificationStatus } from '@/components/contract/ContractVerificationStatus'
 import { SourceCodeViewer } from '@/components/contract/SourceCodeViewer'
+import { TokenBalancesTable } from '@/components/address/TokenBalancesTable'
 import { formatCurrency, formatHash, formatNumber } from '@/lib/utils/format'
 import { isValidAddress } from '@/lib/utils/validation'
 import { env } from '@/lib/config/env'
@@ -134,6 +135,8 @@ export default function AddressPage() {
     error: historyError,
   } = useBalanceHistory(address, fromBlock, toBlock, 100)
 
+  const { balances, loading: balancesLoading } = useTokenBalances(address)
+
   // Filter handlers
   const handleApplyFilters = (filters: TransactionFilterValues) => {
     // Set default block range if not provided
@@ -241,6 +244,16 @@ export default function AddressPage() {
           ) : (
             <BalanceHistoryChart history={history} />
           )}
+        </CardContent>
+      </Card>
+
+      {/* Token Balances */}
+      <Card className="mb-6">
+        <CardHeader className="border-b border-bg-tertiary">
+          <CardTitle>TOKEN BALANCES</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <TokenBalancesTable balances={balances} loading={balancesLoading} />
         </CardContent>
       </Card>
 

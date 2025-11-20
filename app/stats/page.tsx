@@ -4,7 +4,8 @@ import dynamic from 'next/dynamic'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
-import { useBlocksByTimeRange, useNetworkMetrics } from '@/lib/hooks/useAnalytics'
+import { useBlocksByTimeRange, useNetworkMetrics, useTopMiners } from '@/lib/hooks/useAnalytics'
+import { TopMinersTable } from '@/components/stats/TopMinersTable'
 import { formatNumber } from '@/lib/utils/format'
 
 // Lazy load heavy chart components
@@ -53,6 +54,8 @@ export default function StatsPage() {
     error: blocksError,
   } = useBlocksByTimeRange(fromTime, toTime, 1000)
 
+  const { miners, loading: minersLoading } = useTopMiners(10)
+
   return (
     <div className="container mx-auto px-4 py-8">
       {/* Header */}
@@ -89,7 +92,7 @@ export default function StatsPage() {
       )}
 
       {/* Charts Section */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="mb-6 grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Transactions Over Time */}
         <Card>
           <CardHeader className="border-b border-bg-tertiary">
@@ -126,6 +129,16 @@ export default function StatsPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Top Miners Section */}
+      <Card>
+        <CardHeader className="border-b border-bg-tertiary">
+          <CardTitle>TOP MINERS</CardTitle>
+        </CardHeader>
+        <CardContent className="p-0">
+          <TopMinersTable miners={miners} loading={minersLoading} />
+        </CardContent>
+      </Card>
     </div>
   )
 }

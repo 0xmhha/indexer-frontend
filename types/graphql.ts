@@ -36,3 +36,20 @@ export {
   toNumber,
   toDate,
 } from '@/lib/utils/graphql-transforms'
+
+// Additional types for features not yet supported by backend
+export interface MinerStats {
+  address: string
+  blockCount: number
+  lastBlockNumber: bigint
+  percentage: number
+}
+
+export interface TokenBalance {
+  contractAddress: string
+  tokenType: string
+  balance: bigint
+  name: string | null
+  symbol: string | null
+  decimals: number | null
+}
