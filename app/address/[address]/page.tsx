@@ -1,9 +1,11 @@
 'use client'
 
-import { use, useState } from 'react'
+import { use, useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useAddressBalance, useAddressTransactions, useBalanceHistory } from '@/lib/hooks/useAddress'
+import { useFilteredTransactions } from '@/lib/hooks/useFilteredTransactions'
 import { useLatestHeight } from '@/lib/hooks/useLatestHeight'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
@@ -18,6 +20,7 @@ import { Pagination } from '@/components/ui/pagination'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { AddressDetailSkeleton } from '@/components/skeletons/AddressDetailSkeleton'
+import { TransactionFilters, type TransactionFilterValues } from '@/components/transactions/TransactionFilters'
 import { formatCurrency, formatHash, formatNumber } from '@/lib/utils/format'
 import { isValidAddress } from '@/lib/utils/validation'
 import { env } from '@/lib/config/env'
@@ -43,10 +46,46 @@ interface PageProps {
 export default function AddressPage({ params }: PageProps) {
   const resolvedParams = use(params)
   const address = resolvedParams.address
+  const router = useRouter()
+  const searchParams = useSearchParams()
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 20
+
+  // Parse initial filters from URL
+  const getFiltersFromURL = useCallback((): TransactionFilterValues | null => {
+    const fromBlock = searchParams.get('fromBlock')
+    const toBlock = searchParams.get('toBlock')
+    const minValue = searchParams.get('minValue')
+    const maxValue = searchParams.get('maxValue')
+    const txType = searchParams.get('txType')
+    const successOnly = searchParams.get('successOnly')
+
+    // Only return filters if at least one parameter is set
+    if (fromBlock || toBlock || minValue || maxValue || txType || successOnly) {
+      return {
+        fromBlock: fromBlock || '',
+        toBlock: toBlock || '',
+        minValue: minValue || '',
+        maxValue: maxValue || '',
+        txType: txType ? parseInt(txType) : 0,
+        successOnly: successOnly === 'true',
+      }
+    }
+    return null
+  }, [searchParams])
+
+  // Filter state - initialize from URL
+  const [activeFilters, setActiveFilters] = useState<TransactionFilterValues | null>(() =>
+    getFiltersFromURL()
+  )
+
+  // Sync filters with URL on searchParams change
+  useEffect(() => {
+    const urlFilters = getFiltersFromURL()
+    setActiveFilters(urlFilters)
+  }, [getFiltersFromURL])
 
   // Get latest block height for balance history
   const { latestHeight } = useLatestHeight()
@@ -57,17 +96,87 @@ export default function AddressPage({ params }: PageProps) {
 
   // Call hooks unconditionally
   const { balance, loading: balanceLoading, error: balanceError } = useAddressBalance(address)
+
+  // Unfiltered transactions
   const {
-    transactions,
-    totalCount,
-    loading: txLoading,
-    error: txError,
+    transactions: unfilteredTransactions,
+    totalCount: unfilteredTotalCount,
+    loading: unfilteredTxLoading,
+    error: unfilteredTxError,
   } = useAddressTransactions(address, itemsPerPage, (currentPage - 1) * itemsPerPage)
+
+  // Filtered transactions (only when filters are active)
+  const {
+    transactions: filteredTransactions,
+    totalCount: filteredTotalCount,
+    loading: filteredTxLoading,
+    error: filteredTxError,
+  } = useFilteredTransactions({
+    address,
+    fromBlock: activeFilters?.fromBlock || '0',
+    toBlock: activeFilters?.toBlock || (latestHeight?.toString() || '0'),
+    minValue: activeFilters?.minValue,
+    maxValue: activeFilters?.maxValue,
+    txType: activeFilters?.txType,
+    successOnly: activeFilters?.successOnly,
+    limit: itemsPerPage,
+    offset: (currentPage - 1) * itemsPerPage,
+  })
+
+  // Use filtered or unfiltered data based on active filters
+  const transactions = activeFilters ? filteredTransactions : unfilteredTransactions
+  const totalCount = activeFilters ? filteredTotalCount : unfilteredTotalCount
+  const txLoading = activeFilters ? filteredTxLoading : unfilteredTxLoading
+  const txError = activeFilters ? filteredTxError : unfilteredTxError
+
   const {
     history,
     loading: historyLoading,
     error: historyError,
   } = useBalanceHistory(address, fromBlock, toBlock, 100)
+
+  // Filter handlers
+  const handleApplyFilters = (filters: TransactionFilterValues) => {
+    // Set default block range if not provided
+    const appliedFilters = {
+      ...filters,
+      fromBlock: filters.fromBlock || '0',
+      toBlock: filters.toBlock || (latestHeight?.toString() || '0'),
+    }
+    setActiveFilters(appliedFilters)
+    setCurrentPage(1)
+
+    // Update URL with filter parameters
+    const params = new URLSearchParams()
+    if (appliedFilters.fromBlock && appliedFilters.fromBlock !== '0') {
+      params.set('fromBlock', appliedFilters.fromBlock)
+    }
+    if (appliedFilters.toBlock) {
+      params.set('toBlock', appliedFilters.toBlock)
+    }
+    if (appliedFilters.minValue) {
+      params.set('minValue', appliedFilters.minValue)
+    }
+    if (appliedFilters.maxValue) {
+      params.set('maxValue', appliedFilters.maxValue)
+    }
+    if (appliedFilters.txType !== 0) {
+      params.set('txType', appliedFilters.txType.toString())
+    }
+    if (appliedFilters.successOnly) {
+      params.set('successOnly', 'true')
+    }
+
+    const queryString = params.toString()
+    router.push(queryString ? `?${queryString}` : '', { scroll: false })
+  }
+
+  const handleResetFilters = () => {
+    setActiveFilters(null)
+    setCurrentPage(1)
+    // Clear URL parameters
+    router.push('', { scroll: false })
+  }
 
   // Calculate total pages
   const totalPages = Math.ceil(totalCount / itemsPerPage)
@@ -130,11 +239,19 @@ export default function AddressPage({ params }: PageProps) {
         </CardContent>
       </Card>
 
+      {/* Transaction Filters */}
+      <TransactionFilters
+        onApply={handleApplyFilters}
+        onReset={handleResetFilters}
+        initialValues={activeFilters || undefined}
+        isLoading={txLoading}
+      />
+
       {/* Transactions */}
       <Card>
         <CardHeader className="border-b border-bg-tertiary">
           <CardTitle className="flex items-center justify-between">
-            <span>TRANSACTIONS</span>
+            <span>TRANSACTIONS {activeFilters && '(FILTERED)'}</span>
             {totalCount > 0 && (
               <span className="font-mono text-xs text-text-secondary">
                 {formatNumber(totalCount)} total
@@ -164,6 +281,7 @@ export default function AddressPage({ params }: PageProps) {
                   <TableHead>FROM</TableHead>
                   <TableHead>TO</TableHead>
                   <TableHead className="text-right">VALUE</TableHead>
+                  {activeFilters && <TableHead>STATUS</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -214,6 +332,17 @@ export default function AddressPage({ params }: PageProps) {
                     <TableCell className="text-right font-mono">
                       {formatCurrency(BigInt(tx.value), env.currencySymbol)}
                     </TableCell>
+                    {activeFilters && (
+                      <TableCell>
+                        {tx.receipt?.status === 1 ? (
+                          <span className="font-mono text-xs text-accent-green">SUCCESS</span>
+                        ) : tx.receipt?.status === 0 ? (
+                          <span className="font-mono text-xs text-accent-orange">FAILED</span>
+                        ) : (
+                          <span className="font-mono text-xs text-text-muted">-</span>
+                        )}
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
               </TableBody>
