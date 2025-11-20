@@ -51,9 +51,8 @@ export function ContractWriter({ contractAddress, abi }: ContractWriterProps) {
             setWalletAddress(address)
             setWalletConnected(true)
           }
-        } catch (error) {
-          // Not connected
-          console.debug('Wallet not connected:', error)
+        } catch {
+          // Wallet not connected - silently ignore
         }
       }
     }

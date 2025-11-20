@@ -1,7 +1,7 @@
 'use client'
 
-import { use } from 'react'
 import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import { useBlock } from '@/lib/hooks/useBlock'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
@@ -21,18 +21,15 @@ import {
   formatDate,
   formatCurrency,
   formatBytes,
+  formatGasPrice,
 } from '@/lib/utils/format'
 import { isValidBlockNumber, parseBlockNumber } from '@/lib/utils/validation'
 import { env } from '@/lib/config/env'
 import type { Transaction } from '@/types/graphql'
 
-interface PageProps {
-  params: Promise<{ numberOrHash: string }>
-}
-
-export default function BlockPage({ params }: PageProps) {
-  const resolvedParams = use(params)
-  const numberOrHash = resolvedParams.numberOrHash
+export default function BlockPage() {
+  const params = useParams()
+  const numberOrHash = params.numberOrHash as string
 
   // Parse block number
   let blockIdentifier: bigint | string
@@ -126,6 +123,24 @@ export default function BlockPage({ params }: PageProps) {
                 <TableCell className="font-bold">Gas Used / Limit</TableCell>
                 <TableCell className="font-mono">
                   {formatNumber(BigInt(block.gasUsed))} / {formatNumber(BigInt(block.gasLimit))}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-bold">Base Fee Per Gas</TableCell>
+                <TableCell className="font-mono">
+                  {block.baseFeePerGas ? formatGasPrice(block.baseFeePerGas) : 'N/A'}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-bold">Blob Gas Used / Excess</TableCell>
+                <TableCell className="font-mono">
+                  {formatNumber(BigInt(block.blobGasUsed ?? '0'))} / {formatNumber(BigInt(block.excessBlobGas ?? '0'))}
+                </TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-bold">Withdrawals Root</TableCell>
+                <TableCell className="font-mono text-accent-blue">
+                  {block.withdrawalsRoot ?? 'N/A'}
                 </TableCell>
               </TableRow>
               <TableRow>

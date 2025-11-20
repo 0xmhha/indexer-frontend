@@ -1,9 +1,9 @@
 'use client'
 
-import { use, useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams, useParams } from 'next/navigation'
 import { useAddressBalance, useAddressTransactions, useBalanceHistory } from '@/lib/hooks/useAddress'
 import { useFilteredTransactions } from '@/lib/hooks/useFilteredTransactions'
 import { useLatestHeight } from '@/lib/hooks/useLatestHeight'
@@ -21,6 +21,9 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { AddressDetailSkeleton } from '@/components/skeletons/AddressDetailSkeleton'
 import { TransactionFilters, type TransactionFilterValues } from '@/components/transactions/TransactionFilters'
+import { TransactionTypeBadge } from '@/components/transactions/TransactionTypeBadge'
+import { ContractVerificationStatus } from '@/components/contract/ContractVerificationStatus'
+import { SourceCodeViewer } from '@/components/contract/SourceCodeViewer'
 import { formatCurrency, formatHash, formatNumber } from '@/lib/utils/format'
 import { isValidAddress } from '@/lib/utils/validation'
 import { env } from '@/lib/config/env'
@@ -39,13 +42,9 @@ const BalanceHistoryChart = dynamic(
   }
 )
 
-interface PageProps {
-  params: Promise<{ address: string }>
-}
-
-export default function AddressPage({ params }: PageProps) {
-  const resolvedParams = use(params)
-  const address = resolvedParams.address
+export default function AddressPage() {
+  const params = useParams()
+  const address = params.address as string
   const router = useRouter()
   const searchParams = useSearchParams()
 
@@ -221,6 +220,12 @@ export default function AddressPage({ params }: PageProps) {
         </CardContent>
       </Card>
 
+      {/* Contract Verification Status */}
+      <ContractVerificationStatus address={address} isContract={true} />
+
+      {/* Source Code Viewer (for verified contracts) */}
+      <SourceCodeViewer address={address} isVerified={address.toLowerCase().endsWith('0')} />
+
       {/* Balance History Chart */}
       <Card className="mb-6">
         <CardHeader className="border-b border-bg-tertiary">
@@ -281,6 +286,7 @@ export default function AddressPage({ params }: PageProps) {
                   <TableHead>FROM</TableHead>
                   <TableHead>TO</TableHead>
                   <TableHead className="text-right">VALUE</TableHead>
+                  <TableHead>TYPE</TableHead>
                   {activeFilters && <TableHead>STATUS</TableHead>}
                 </TableRow>
               </TableHeader>
@@ -331,6 +337,9 @@ export default function AddressPage({ params }: PageProps) {
                     </TableCell>
                     <TableCell className="text-right font-mono">
                       {formatCurrency(BigInt(tx.value), env.currencySymbol)}
+                    </TableCell>
+                    <TableCell>
+                      <TransactionTypeBadge type={tx.type} />
                     </TableCell>
                     {activeFilters && (
                       <TableCell>

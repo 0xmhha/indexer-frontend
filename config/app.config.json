@@ -8,5 +8,9 @@
     "graphqlEndpoint": "http://localhost:8080/graphql",
     "wsEndpoint": "ws://localhost:8080/ws",
     "jsonRpcEndpoint": "http://localhost:8080/rpc"
+  },
+  "site": {
+    "url": "http://localhost:3000",
+    "name": "Stable-One Explorer"
   }
 }

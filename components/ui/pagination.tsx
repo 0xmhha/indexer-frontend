@@ -22,13 +22,14 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
   const pages = Array.from({ length: endPage - startPage + 1 }, (_, i) => startPage + i)
 
   return (
-    <div className={cn('flex items-center justify-center gap-2', className)}>
+    <nav aria-label="Pagination" className={cn('flex items-center justify-center gap-2', className)}>
       {/* First Page */}
       {currentPage > 1 && (
         <button
           onClick={() => onPageChange(1)}
           className="btn-hex h-8 px-3 py-1 text-[10px] disabled:opacity-50"
           disabled={currentPage === 1}
+          aria-label="Go to first page"
         >
           FIRST
         </button>
@@ -39,12 +40,13 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
         onClick={() => onPageChange(currentPage - 1)}
         className="btn-hex h-8 px-3 py-1 text-[10px] disabled:opacity-50"
         disabled={currentPage === 1}
+        aria-label="Go to previous page"
       >
         PREV
       </button>
 
       {/* Page Numbers */}
-      {startPage > 1 && <span className="px-2 font-mono text-xs text-text-muted">...</span>}
+      {startPage > 1 && <span className="px-2 font-mono text-xs text-text-muted" aria-hidden="true">...</span>}
 
       {pages.map((page) => (
         <button
@@ -56,18 +58,21 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
               ? 'bg-accent-blue text-bg-primary'
               : 'bg-bg-tertiary text-text-secondary hover:bg-bg-tertiary/70'
           )}
+          aria-label={`Page ${page}`}
+          aria-current={page === currentPage ? 'page' : undefined}
         >
           {page}
         </button>
       ))}
 
-      {endPage < totalPages && <span className="px-2 font-mono text-xs text-text-muted">...</span>}
+      {endPage < totalPages && <span className="px-2 font-mono text-xs text-text-muted" aria-hidden="true">...</span>}
 
       {/* Next */}
       <button
         onClick={() => onPageChange(currentPage + 1)}
         className="btn-hex h-8 px-3 py-1 text-[10px] disabled:opacity-50"
         disabled={currentPage === totalPages}
+        aria-label="Go to next page"
       >
         NEXT
       </button>
@@ -78,10 +83,11 @@ export function Pagination({ currentPage, totalPages, onPageChange, className }:
           onClick={() => onPageChange(totalPages)}
           className="btn-hex h-8 px-3 py-1 text-[10px] disabled:opacity-50"
           disabled={currentPage === totalPages}
+          aria-label={`Go to last page, page ${totalPages}`}
         >
           LAST
         </button>
       )}
-    </div>
+    </nav>
   )
 }

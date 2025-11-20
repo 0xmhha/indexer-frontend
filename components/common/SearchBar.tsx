@@ -248,11 +248,18 @@ export function SearchBar() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
+  const selectableSuggestions = suggestions.filter((s) => s.type === 'block' || s.type === 'history')
+  const activeDescendant = selectedIndex >= 0 ? `search-suggestion-${selectedIndex}` : undefined
+
   return (
     <div className="w-full max-w-2xl">
-      <form onSubmit={handleSubmit} className="relative">
+      <form onSubmit={handleSubmit} className="relative" role="search">
+        <label htmlFor="search-input" className="sr-only">
+          Search by block number, transaction hash, or address
+        </label>
         <input
           ref={inputRef}
+          id="search-input"
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -261,10 +268,17 @@ export function SearchBar() {
           placeholder="Search by Block / Txn Hash / Address"
           className="w-full border border-bg-tertiary bg-bg-secondary px-4 py-3 font-mono text-sm text-text-primary placeholder-text-muted focus:border-accent-blue focus:outline-none"
           autoComplete="off"
+          role="combobox"
+          aria-expanded={showSuggestions && suggestions.length > 0}
+          aria-controls="search-suggestions"
+          aria-autocomplete="list"
+          aria-activedescendant={activeDescendant}
+          aria-describedby={error ? 'search-error' : undefined}
         />
         <button
           type="submit"
           className="absolute right-2 top-1/2 -translate-y-1/2 bg-accent-blue px-4 py-1.5 font-mono text-xs uppercase tracking-wider text-bg-primary transition-colors hover:bg-accent-cyan"
+          aria-label="Submit search"
         >
           SEARCH
         </button>
@@ -273,10 +287,12 @@ export function SearchBar() {
         {showSuggestions && suggestions.length > 0 && (
           <div
             ref={suggestionsRef}
+            id="search-suggestions"
+            role="listbox"
+            aria-label="Search suggestions"
             className="absolute top-full left-0 right-0 mt-1 border border-bg-tertiary bg-bg-secondary shadow-lg z-50 max-h-96 overflow-y-auto"
           >
             {suggestions.map((suggestion, index) => {
-              const selectableSuggestions = suggestions.filter((s) => s.type === 'block' || s.type === 'history')
               const selectableIndex = (suggestion.type === 'block' || suggestion.type === 'history') ? selectableSuggestions.indexOf(suggestion) : -1
               const isSelected = selectableIndex === selectedIndex
               const isSelectable = suggestion.type === 'block' || suggestion.type === 'history'
@@ -284,6 +300,9 @@ export function SearchBar() {
               return (
                 <div
                   key={`${suggestion.type}-${suggestion.label}-${index}`}
+                  id={isSelectable ? `search-suggestion-${selectableIndex}` : undefined}
+                  role={isSelectable ? 'option' : 'presentation'}
+                  aria-selected={isSelectable ? isSelected : undefined}
                   onClick={() => handleSuggestionClick(suggestion)}
                   className={`
                     px-4 py-3 border-b border-bg-tertiary last:border-b-0
@@ -298,7 +317,7 @@ export function SearchBar() {
                           isSelectable ? 'text-accent-blue' : 'text-text-secondary'
                         }`}
                       >
-                        {suggestion.type === 'history' && <span className="text-text-muted mr-2">↺</span>}
+                        {suggestion.type === 'history' && <span className="text-text-muted mr-2" aria-hidden="true">↺</span>}
                         {suggestion.label}
                       </div>
                       {suggestion.description && (
@@ -306,7 +325,7 @@ export function SearchBar() {
                       )}
                     </div>
                     {isSelectable && (
-                      <div className="font-mono text-xs text-text-muted">→</div>
+                      <div className="font-mono text-xs text-text-muted" aria-hidden="true">→</div>
                     )}
                   </div>
                 </div>
@@ -315,7 +334,7 @@ export function SearchBar() {
           </div>
         )}
       </form>
-      {error && <p className="mt-2 font-mono text-xs text-error">{error}</p>}
+      {error && <p id="search-error" className="mt-2 font-mono text-xs text-error" role="alert">{error}</p>}
     </div>
   )
 }

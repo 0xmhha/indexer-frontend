@@ -4,8 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p ${PORT:-3000}",
+    "dev:clean": "pnpm run clean:port && pnpm run dev",
     "build": "next build",
     "start": "next start -p ${PORT:-3000}",
+    "start:clean": "pnpm run clean:port && pnpm run start",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,css,md,json}\"",
@@ -18,11 +20,14 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
-    "codegen": "graphql-codegen --config codegen.ts"
+    "codegen": "graphql-codegen --config codegen.ts",
+    "clean:port": "lsof -ti:${PORT:-3000} | xargs kill -9 2>/dev/null || true",
+    "clean:port:interactive": "./scripts/kill-port.sh ${PORT:-3000}"
   },
   "dependencies": {
     "@apollo/client": "^3.11.0",
     "@tanstack/react-query": "^5.56.0",
+    "@types/react-window": "^2.0.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "ethers": "^6.15.0",
@@ -32,6 +37,7 @@
     "next": "^14.2.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
+    "react-window": "^2.2.3",
     "recharts": "^2.15.4",
     "tailwind-merge": "^2.5.0",
     "zod": "^3.23.0",

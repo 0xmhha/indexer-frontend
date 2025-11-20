@@ -48,6 +48,13 @@ export interface RawBlock {
   size?: string
   transactionCount: number
   transactions?: RawTransaction[]
+  // EIP-1559 fields
+  baseFeePerGas?: string | null
+  // Post-Shanghai fields
+  withdrawalsRoot?: string | null
+  // EIP-4844 Blob fields
+  blobGasUsed?: string | null
+  excessBlobGas?: string | null
 }
 
 /**
@@ -64,6 +71,31 @@ export interface TransformedBlock {
   size: bigint
   transactionCount: number
   transactions?: TransformedTransaction[] | undefined
+  // EIP-1559 fields
+  baseFeePerGas: bigint | null
+  // Post-Shanghai fields
+  withdrawalsRoot: string | null
+  // EIP-4844 Blob fields
+  blobGasUsed: bigint | null
+  excessBlobGas: bigint | null
+}
+
+/**
+ * Raw fee payer signature from GraphQL
+ */
+export interface RawFeePayerSignature {
+  v: string
+  r: string
+  s: string
+}
+
+/**
+ * Transformed fee payer signature
+ */
+export interface TransformedFeePayerSignature {
+  v: bigint
+  r: string
+  s: string
 }
 
 /**
@@ -89,6 +121,9 @@ export interface RawTransaction {
   s?: string
   chainId?: string | null
   receipt?: RawReceipt | null
+  // Fee Delegation fields (type 0x16)
+  feePayer?: string | null
+  feePayerSignatures?: RawFeePayerSignature[] | null
 }
 
 /**
@@ -114,6 +149,9 @@ export interface TransformedTransaction {
   s?: string | undefined
   chainId: bigint | null
   receipt?: TransformedReceipt | null | undefined
+  // Fee Delegation fields (type 0x16)
+  feePayer: string | null
+  feePayerSignatures: TransformedFeePayerSignature[] | null
 }
 
 /**
@@ -199,6 +237,24 @@ export function transformBlock(raw: RawBlock): TransformedBlock {
     size: toBigInt(raw.size),
     transactionCount: raw.transactionCount,
     transactions: raw.transactions?.map(transformTransaction),
+    // EIP-1559 fields
+    baseFeePerGas: raw.baseFeePerGas ? toBigInt(raw.baseFeePerGas) : null,
+    // Post-Shanghai fields
+    withdrawalsRoot: raw.withdrawalsRoot ?? null,
+    // EIP-4844 Blob fields
+    blobGasUsed: raw.blobGasUsed ? toBigInt(raw.blobGasUsed) : null,
+    excessBlobGas: raw.excessBlobGas ? toBigInt(raw.excessBlobGas) : null,
+  }
+}
+
+/**
+ * Transform raw fee payer signature to typed signature
+ */
+export function transformFeePayerSignature(raw: RawFeePayerSignature): TransformedFeePayerSignature {
+  return {
+    v: toBigInt(raw.v),
+    r: raw.r,
+    s: raw.s,
   }
 }
 
@@ -226,6 +282,9 @@ export function transformTransaction(raw: RawTransaction): TransformedTransactio
     s: raw.s,
     chainId: raw.chainId ? toBigInt(raw.chainId) : null,
     receipt: raw.receipt ? transformReceipt(raw.receipt) : null,
+    // Fee Delegation fields (type 0x16)
+    feePayer: raw.feePayer ?? null,
+    feePayerSignatures: raw.feePayerSignatures?.map(transformFeePayerSignature) ?? null,
   }
 }
 

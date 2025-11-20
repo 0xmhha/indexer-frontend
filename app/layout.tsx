@@ -3,11 +3,17 @@ import '@/styles/globals.css'
 import { Header } from '@/components/layout/Header'
 import { Footer } from '@/components/layout/Footer'
 import { Providers } from '@/lib/providers/Providers'
+import { WebSiteJsonLd } from '@/components/seo/JsonLd'
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
+const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'Stable-One Explorer'
+const siteDescription = 'Real-time blockchain explorer for Stable-One chain. View blocks, transactions, addresses, and smart contracts.'
 
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: {
-    default: 'Stable-One Explorer | Blockchain Indexer',
-    template: '%s | Stable-One Explorer',
+    default: `${siteName} | Blockchain Indexer`,
+    template: `%s | ${siteName}`,
   },
   description:
     'Crystalline Infrastructure - Production-ready blockchain explorer for Stable-One (Ethereum-based) chain. Real-time blockchain data, transactions, blocks, and smart contracts.',
@@ -26,15 +32,15 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://explorer.stable-one.com',
-    title: 'Stable-One Explorer | Blockchain Indexer',
+    url: siteUrl,
+    title: `${siteName} | Blockchain Indexer`,
     description:
       'Real-time blockchain explorer for Stable-One chain. View blocks, transactions, addresses, and smart contracts.',
-    siteName: 'Stable-One Explorer',
+    siteName: siteName,
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Stable-One Explorer | Blockchain Indexer',
+    title: `${siteName} | Blockchain Indexer`,
     description:
       'Real-time blockchain explorer for Stable-One chain. View blocks, transactions, addresses, and smart contracts.',
   },
@@ -60,6 +66,13 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en">
+      <head>
+        <WebSiteJsonLd
+          name={siteName}
+          url={siteUrl}
+          description={siteDescription}
+        />
+      </head>
       <body className="flex min-h-screen flex-col bg-bg-primary font-sans text-text-primary antialiased">
         {/* Skip Navigation Link for keyboard users */}
         <a

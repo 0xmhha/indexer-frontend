@@ -1,7 +1,7 @@
 'use client'
 
-import { use } from 'react'
 import Link from 'next/link'
+import { useParams } from 'next/navigation'
 import { useTransaction } from '@/lib/hooks/useTransaction'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Table, TableBody, TableRow, TableCell } from '@/components/ui/table'
@@ -9,15 +9,12 @@ import { TransactionDetailSkeleton } from '@/components/skeletons/TransactionDet
 import { NotFound } from '@/components/common/ErrorBoundary'
 import { formatNumber, formatCurrency, formatGasPrice } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
-import type { Log } from '@/types/graphql'
+import type { Log, TransformedFeePayerSignature } from '@/types/graphql'
+import { TransactionTypeBadge } from '@/components/transactions/TransactionTypeBadge'
 
-interface PageProps {
-  params: Promise<{ hash: string }>
-}
-
-export default function TransactionPage({ params }: PageProps) {
-  const resolvedParams = use(params)
-  const hash = resolvedParams.hash
+export default function TransactionPage() {
+  const params = useParams()
+  const hash = params.hash as string
 
   const { transaction, loading, error } = useTransaction(hash)
 
@@ -31,6 +28,10 @@ export default function TransactionPage({ params }: PageProps) {
 
   const value = BigInt(transaction.value)
   const status = transaction.receipt?.status === '1' ? 'Success' : 'Failed'
+  const isFeeDelegation = Number(transaction.type) === 0x16
+  const showFeeDelegation = Boolean(
+    transaction.feePayer || (transaction.feePayerSignatures && transaction.feePayerSignatures.length > 0) || isFeeDelegation,
+  )
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -42,15 +43,18 @@ export default function TransactionPage({ params }: PageProps) {
         </h1>
 
         {/* Status */}
-        <div className="inline-flex items-center gap-2 rounded border px-3 py-1">
-          <div
-            className={`h-2 w-2 rounded-full ${status === 'Success' ? 'bg-success' : 'bg-error'}`}
-          ></div>
-          <span
-            className={`font-mono text-xs ${status === 'Success' ? 'text-success' : 'text-error'}`}
-          >
-            {status.toUpperCase()}
-          </span>
+        <div className="flex flex-wrap gap-3">
+          <div className="inline-flex items-center gap-2 rounded border px-3 py-1">
+            <div
+              className={`h-2 w-2 rounded-full ${status === 'Success' ? 'bg-success' : 'bg-error'}`}
+            ></div>
+            <span
+              className={`font-mono text-xs ${status === 'Success' ? 'text-success' : 'text-error'}`}
+            >
+              {status.toUpperCase()}
+            </span>
+          </div>
+          <TransactionTypeBadge type={transaction.type} />
         </div>
       </div>
 
@@ -181,11 +185,17 @@ export default function TransactionPage({ params }: PageProps) {
             <TableBody>
               <TableRow>
                 <TableCell className="font-bold">Type</TableCell>
-                <TableCell className="font-mono">{transaction.type}</TableCell>
+                <TableCell>
+                  <TransactionTypeBadge type={transaction.type} />
+                </TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="font-bold">Nonce</TableCell>
                 <TableCell className="font-mono">{transaction.nonce}</TableCell>
+              </TableRow>
+              <TableRow>
+                <TableCell className="font-bold">Chain ID</TableCell>
+                <TableCell className="font-mono">{transaction.chainId ?? 'N/A'}</TableCell>
               </TableRow>
               <TableRow>
                 <TableCell className="font-bold">Input Data</TableCell>
@@ -212,6 +222,64 @@ export default function TransactionPage({ params }: PageProps) {
           </Table>
         </CardContent>
       </Card>
+
+      {showFeeDelegation && (
+        <Card className="mb-6">
+          <CardHeader className="border-b border-bg-tertiary">
+            <CardTitle>FEE DELEGATION</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <Table>
+              <TableBody>
+                <TableRow>
+                  <TableCell className="font-bold">Fee Payer</TableCell>
+                  <TableCell>
+                    {transaction.feePayer ? (
+                      <Link
+                        href={`/address/${transaction.feePayer}`}
+                        className="font-mono text-accent-blue hover:text-accent-cyan"
+                      >
+                        {transaction.feePayer}
+                      </Link>
+                    ) : (
+                      <span className="font-mono text-text-muted">Not available</span>
+                    )}
+                  </TableCell>
+                </TableRow>
+                <TableRow>
+                  <TableCell className="font-bold">Fee Payer Signatures</TableCell>
+                  <TableCell>
+                    {transaction.feePayerSignatures && transaction.feePayerSignatures.length > 0 ? (
+                      <div className="space-y-2">
+                        {transaction.feePayerSignatures.map(
+                          (signature: TransformedFeePayerSignature, index: number) => (
+                          <div key={`${signature.r}-${index}`} className="rounded border border-bg-tertiary p-2">
+                            <div className="annotation mb-1">SIGNATURE #{index + 1}</div>
+                            <div className="space-y-1 font-mono text-xs">
+                              <div>
+                                <span className="text-text-muted">v:</span> {signature.v}
+                              </div>
+                              <div className="break-all">
+                                <span className="text-text-muted">r:</span> {signature.r}
+                              </div>
+                              <div className="break-all">
+                                <span className="text-text-muted">s:</span> {signature.s}
+                              </div>
+                            </div>
+                          </div>
+                          ),
+                        )}
+                      </div>
+                    ) : (
+                      <span className="font-mono text-text-muted">No signatures</span>
+                    )}
+                  </TableCell>
+                </TableRow>
+              </TableBody>
+            </Table>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Logs */}
       {transaction.receipt?.logs && transaction.receipt.logs.length > 0 && (

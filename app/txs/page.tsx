@@ -18,6 +18,7 @@ import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { formatNumber, formatHash, formatCurrency } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
 import type { Transaction } from '@/types/graphql'
+import { TransactionTypeBadge } from '@/components/transactions/TransactionTypeBadge'
 
 const ITEMS_PER_PAGE = 20
 
@@ -181,7 +182,7 @@ export default function TransactionsListPage() {
                           </span>
                         </TableCell>
                         <TableCell>
-                          <span className="font-mono text-xs text-text-muted">{tx.type}</span>
+                          <TransactionTypeBadge type={tx.type} />
                         </TableCell>
                       </TableRow>
                     )

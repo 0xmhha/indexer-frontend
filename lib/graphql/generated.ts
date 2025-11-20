@@ -44,7 +44,10 @@ export type BalanceSnapshot = {
 
 export type Block = {
   __typename?: 'Block';
+  baseFeePerGas?: Maybe<Scalars['BigInt']['output']>;
+  blobGasUsed?: Maybe<Scalars['BigInt']['output']>;
   difficulty: Scalars['BigInt']['output'];
+  excessBlobGas?: Maybe<Scalars['BigInt']['output']>;
   extraData: Scalars['Bytes']['output'];
   gasLimit: Scalars['BigInt']['output'];
   gasUsed: Scalars['BigInt']['output'];
@@ -59,6 +62,7 @@ export type Block = {
   transactionCount: Scalars['Int']['output'];
   transactions: Array<Transaction>;
   uncles: Array<Scalars['Hash']['output']>;
+  withdrawalsRoot?: Maybe<Scalars['Hash']['output']>;
 };
 
 export type BlockConnection = {
@@ -74,6 +78,13 @@ export type BlockFilter = {
   numberTo?: InputMaybe<Scalars['BigInt']['input']>;
   timestampFrom?: InputMaybe<Scalars['BigInt']['input']>;
   timestampTo?: InputMaybe<Scalars['BigInt']['input']>;
+};
+
+export type FeePayerSignature = {
+  __typename?: 'FeePayerSignature';
+  r: Scalars['Bytes']['output'];
+  s: Scalars['Bytes']['output'];
+  v: Scalars['BigInt']['output'];
 };
 
 export type HistoricalTransactionFilter = {
@@ -112,6 +123,13 @@ export type LogFilter = {
   topics?: InputMaybe<Array<Scalars['Hash']['input']>>;
 };
 
+export type MinerStats = {
+  __typename?: 'MinerStats';
+  address: Scalars['Address']['output'];
+  blockCount: Scalars['BigInt']['output'];
+  lastBlockNumber: Scalars['BigInt']['output'];
+};
+
 export type PageInfo = {
   __typename?: 'PageInfo';
   endCursor?: Maybe<Scalars['String']['output']>;
@@ -139,6 +157,8 @@ export type Query = {
   logs: LogConnection;
   receipt?: Maybe<Receipt>;
   receiptsByBlock: Array<Receipt>;
+  tokenBalances: Array<TokenBalance>;
+  topMiners: Array<MinerStats>;
   transaction?: Maybe<Transaction>;
   transactionCount: Scalars['BigInt']['output'];
   transactions: TransactionConnection;
@@ -205,6 +225,16 @@ export type QueryReceiptsByBlockArgs = {
 };
 
 
+export type QueryTokenBalancesArgs = {
+  address: Scalars['Address']['input'];
+};
+
+
+export type QueryTopMinersArgs = {
+  limit?: InputMaybe<Scalars['Int']['input']>;
+};
+
+
 export type QueryTransactionArgs = {
   hash: Scalars['Hash']['input'];
 };
@@ -243,12 +273,22 @@ export type Receipt = {
   transactionIndex: Scalars['Int']['output'];
 };
 
+export type TokenBalance = {
+  __typename?: 'TokenBalance';
+  balance: Scalars['BigInt']['output'];
+  contractAddress: Scalars['Address']['output'];
+  tokenId?: Maybe<Scalars['BigInt']['output']>;
+  tokenType: Scalars['String']['output'];
+};
+
 export type Transaction = {
   __typename?: 'Transaction';
   accessList?: Maybe<Array<AccessListEntry>>;
   blockHash: Scalars['Hash']['output'];
   blockNumber: Scalars['BigInt']['output'];
   chainId?: Maybe<Scalars['BigInt']['output']>;
+  feePayer?: Maybe<Scalars['Address']['output']>;
+  feePayerSignatures?: Maybe<Array<FeePayerSignature>>;
   from: Scalars['Address']['output'];
   gas: Scalars['BigInt']['output'];
   gasPrice?: Maybe<Scalars['BigInt']['output']>;
@@ -292,21 +332,21 @@ export type GetBlockQueryVariables = Exact<{
 }>;
 
 
-export type GetBlockQuery = { __typename?: 'Query', block?: { __typename?: 'Block', number: string, hash: string, parentHash: string, timestamp: string, miner: string, gasUsed: string, gasLimit: string, size: string, transactionCount: number, transactions: Array<{ __typename?: 'Transaction', hash: string, from: string, to?: string | null, value: string, gas: string, gasPrice?: string | null, type: number, nonce: string }> } | null };
+export type GetBlockQuery = { __typename?: 'Query', block?: { __typename?: 'Block', number: string, hash: string, parentHash: string, timestamp: string, miner: string, gasUsed: string, gasLimit: string, size: string, transactionCount: number, baseFeePerGas?: string | null, withdrawalsRoot?: string | null, blobGasUsed?: string | null, excessBlobGas?: string | null, transactions: Array<{ __typename?: 'Transaction', hash: string, from: string, to?: string | null, value: string, gas: string, gasPrice?: string | null, type: number, nonce: string }> } | null };
 
 export type GetBlockByHashQueryVariables = Exact<{
   hash: Scalars['Hash']['input'];
 }>;
 
 
-export type GetBlockByHashQuery = { __typename?: 'Query', blockByHash?: { __typename?: 'Block', number: string, hash: string, parentHash: string, timestamp: string, miner: string, gasUsed: string, gasLimit: string, size: string, transactionCount: number, transactions: Array<{ __typename?: 'Transaction', hash: string, from: string, to?: string | null, value: string }> } | null };
+export type GetBlockByHashQuery = { __typename?: 'Query', blockByHash?: { __typename?: 'Block', number: string, hash: string, parentHash: string, timestamp: string, miner: string, gasUsed: string, gasLimit: string, size: string, transactionCount: number, baseFeePerGas?: string | null, withdrawalsRoot?: string | null, blobGasUsed?: string | null, excessBlobGas?: string | null, transactions: Array<{ __typename?: 'Transaction', hash: string, from: string, to?: string | null, value: string }> } | null };
 
 export type GetTransactionQueryVariables = Exact<{
   hash: Scalars['Hash']['input'];
 }>;
 
 
-export type GetTransactionQuery = { __typename?: 'Query', transaction?: { __typename?: 'Transaction', hash: string, blockNumber: string, blockHash: string, transactionIndex: number, from: string, to?: string | null, value: string, gas: string, gasPrice?: string | null, maxFeePerGas?: string | null, maxPriorityFeePerGas?: string | null, type: number, input: string, nonce: string, v: string, r: string, s: string, chainId?: string | null, receipt?: { __typename?: 'Receipt', status: number, gasUsed: string, cumulativeGasUsed: string, effectiveGasPrice: string, contractAddress?: string | null, logs: Array<{ __typename?: 'Log', address: string, topics: Array<string>, data: string, logIndex: number }> } | null } | null };
+export type GetTransactionQuery = { __typename?: 'Query', transaction?: { __typename?: 'Transaction', hash: string, blockNumber: string, blockHash: string, transactionIndex: number, from: string, to?: string | null, value: string, gas: string, gasPrice?: string | null, maxFeePerGas?: string | null, maxPriorityFeePerGas?: string | null, type: number, input: string, nonce: string, v: string, r: string, s: string, chainId?: string | null, feePayer?: string | null, feePayerSignatures?: Array<{ __typename?: 'FeePayerSignature', v: string, r: string, s: string }> | null, receipt?: { __typename?: 'Receipt', status: number, gasUsed: string, cumulativeGasUsed: string, effectiveGasPrice: string, contractAddress?: string | null, logs: Array<{ __typename?: 'Log', address: string, topics: Array<string>, data: string, logIndex: number }> } | null } | null };
 
 export type GetTransactionsByAddressQueryVariables = Exact<{
   address: Scalars['Address']['input'];
@@ -337,10 +377,10 @@ export type GetBalanceHistoryQueryVariables = Exact<{
 export type GetBalanceHistoryQuery = { __typename?: 'Query', balanceHistory: { __typename?: 'BalanceHistoryConnection', totalCount: number, nodes: Array<{ __typename?: 'BalanceSnapshot', blockNumber: string, balance: string, delta: string, transactionHash?: string | null }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean } } };
 
 export type GetLogsQueryVariables = Exact<{
-  address?: InputMaybe<Scalars['Address']['input']>;
-  topics?: InputMaybe<Array<Scalars['Hash']['input']> | Scalars['Hash']['input']>;
-  blockNumberFrom?: InputMaybe<Scalars['BigInt']['input']>;
-  blockNumberTo?: InputMaybe<Scalars['BigInt']['input']>;
+  address?: InputMaybe<Scalars['String']['input']>;
+  topics?: InputMaybe<Array<Scalars['String']['input']> | Scalars['String']['input']>;
+  blockNumberFrom?: InputMaybe<Scalars['String']['input']>;
+  blockNumberTo?: InputMaybe<Scalars['String']['input']>;
   limit?: InputMaybe<Scalars['Int']['input']>;
   offset?: InputMaybe<Scalars['Int']['input']>;
 }>;
@@ -349,8 +389,8 @@ export type GetLogsQueryVariables = Exact<{
 export type GetLogsQuery = { __typename?: 'Query', logs: { __typename?: 'LogConnection', totalCount: number, nodes: Array<{ __typename?: 'Log', address: string, topics: Array<string>, data: string, blockNumber: string, transactionHash: string, logIndex: number }> } };
 
 export type GetBlocksByTimeRangeQueryVariables = Exact<{
-  fromTime: Scalars['BigInt']['input'];
-  toTime: Scalars['BigInt']['input'];
+  fromTime: Scalars['String']['input'];
+  toTime: Scalars['String']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
 }>;
 
@@ -361,6 +401,45 @@ export type GetNetworkMetricsQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type GetNetworkMetricsQuery = { __typename?: 'Query', blockCount: string, transactionCount: string };
+
+export type GetBlocksQueryVariables = Exact<{
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  numberFrom?: InputMaybe<Scalars['String']['input']>;
+  numberTo?: InputMaybe<Scalars['String']['input']>;
+  miner?: InputMaybe<Scalars['String']['input']>;
+}>;
+
+
+export type GetBlocksQuery = { __typename?: 'Query', blocks: { __typename?: 'BlockConnection', totalCount: number, nodes: Array<{ __typename?: 'Block', number: string, hash: string, timestamp: string, miner: string, gasUsed: string, gasLimit: string, size: string, transactionCount: number }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean } } };
+
+export type GetFilteredTransactionsQueryVariables = Exact<{
+  address: Scalars['String']['input'];
+  fromBlock: Scalars['String']['input'];
+  toBlock: Scalars['String']['input'];
+  minValue?: InputMaybe<Scalars['String']['input']>;
+  maxValue?: InputMaybe<Scalars['String']['input']>;
+  txType?: InputMaybe<Scalars['Int']['input']>;
+  successOnly?: InputMaybe<Scalars['Boolean']['input']>;
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetFilteredTransactionsQuery = { __typename?: 'Query', transactionsByAddressFiltered: { __typename?: 'TransactionConnection', totalCount: number, nodes: Array<{ __typename?: 'Transaction', hash: string, blockNumber: string, from: string, to?: string | null, value: string, gas: string, gasPrice?: string | null, type: number, receipt?: { __typename?: 'Receipt', status: number, gasUsed: string } | null }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean } } };
+
+export type GetTransactionsQueryVariables = Exact<{
+  limit?: InputMaybe<Scalars['Int']['input']>;
+  offset?: InputMaybe<Scalars['Int']['input']>;
+  blockNumberFrom?: InputMaybe<Scalars['String']['input']>;
+  blockNumberTo?: InputMaybe<Scalars['String']['input']>;
+  from?: InputMaybe<Scalars['String']['input']>;
+  to?: InputMaybe<Scalars['String']['input']>;
+  type?: InputMaybe<Scalars['Int']['input']>;
+}>;
+
+
+export type GetTransactionsQuery = { __typename?: 'Query', transactions: { __typename?: 'TransactionConnection', totalCount: number, nodes: Array<{ __typename?: 'Transaction', hash: string, blockNumber: string, from: string, to?: string | null, value: string, gas: string, gasPrice?: string | null, type: number }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean } } };
 
 
 export const GetLatestHeightDocument = gql`
@@ -412,6 +491,10 @@ export const GetBlockDocument = gql`
     gasLimit
     size
     transactionCount
+    baseFeePerGas
+    withdrawalsRoot
+    blobGasUsed
+    excessBlobGas
     transactions {
       hash
       from
@@ -470,6 +553,10 @@ export const GetBlockByHashDocument = gql`
     gasLimit
     size
     transactionCount
+    baseFeePerGas
+    withdrawalsRoot
+    blobGasUsed
+    excessBlobGas
     transactions {
       hash
       from
@@ -533,6 +620,12 @@ export const GetTransactionDocument = gql`
     r
     s
     chainId
+    feePayer
+    feePayerSignatures {
+      v
+      r
+      s
+    }
     receipt {
       status
       gasUsed
@@ -738,7 +831,7 @@ export type GetBalanceHistoryLazyQueryHookResult = ReturnType<typeof useGetBalan
 export type GetBalanceHistorySuspenseQueryHookResult = ReturnType<typeof useGetBalanceHistorySuspenseQuery>;
 export type GetBalanceHistoryQueryResult = Apollo.QueryResult<GetBalanceHistoryQuery, GetBalanceHistoryQueryVariables>;
 export const GetLogsDocument = gql`
-    query GetLogs($address: Address, $topics: [Hash!], $blockNumberFrom: BigInt, $blockNumberTo: BigInt, $limit: Int, $offset: Int) {
+    query GetLogs($address: String, $topics: [String!], $blockNumberFrom: String, $blockNumberTo: String, $limit: Int, $offset: Int) {
   logs(
     filter: {address: $address, topics: $topics, blockNumberFrom: $blockNumberFrom, blockNumberTo: $blockNumberTo}
     pagination: {limit: $limit, offset: $offset}
@@ -794,7 +887,7 @@ export type GetLogsLazyQueryHookResult = ReturnType<typeof useGetLogsLazyQuery>;
 export type GetLogsSuspenseQueryHookResult = ReturnType<typeof useGetLogsSuspenseQuery>;
 export type GetLogsQueryResult = Apollo.QueryResult<GetLogsQuery, GetLogsQueryVariables>;
 export const GetBlocksByTimeRangeDocument = gql`
-    query GetBlocksByTimeRange($fromTime: BigInt!, $toTime: BigInt!, $limit: Int) {
+    query GetBlocksByTimeRange($fromTime: String!, $toTime: String!, $limit: Int) {
   blocksByTimeRange(
     fromTime: $fromTime
     toTime: $toTime
@@ -886,3 +979,197 @@ export type GetNetworkMetricsQueryHookResult = ReturnType<typeof useGetNetworkMe
 export type GetNetworkMetricsLazyQueryHookResult = ReturnType<typeof useGetNetworkMetricsLazyQuery>;
 export type GetNetworkMetricsSuspenseQueryHookResult = ReturnType<typeof useGetNetworkMetricsSuspenseQuery>;
 export type GetNetworkMetricsQueryResult = Apollo.QueryResult<GetNetworkMetricsQuery, GetNetworkMetricsQueryVariables>;
+export const GetBlocksDocument = gql`
+    query GetBlocks($limit: Int, $offset: Int, $numberFrom: String, $numberTo: String, $miner: String) {
+  blocks(
+    pagination: {limit: $limit, offset: $offset}
+    filter: {numberFrom: $numberFrom, numberTo: $numberTo, miner: $miner}
+  ) {
+    nodes {
+      number
+      hash
+      timestamp
+      miner
+      gasUsed
+      gasLimit
+      size
+      transactionCount
+    }
+    totalCount
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetBlocksQuery__
+ *
+ * To run a query within a React component, call `useGetBlocksQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetBlocksQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetBlocksQuery({
+ *   variables: {
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *      numberFrom: // value for 'numberFrom'
+ *      numberTo: // value for 'numberTo'
+ *      miner: // value for 'miner'
+ *   },
+ * });
+ */
+export function useGetBlocksQuery(baseOptions?: Apollo.QueryHookOptions<GetBlocksQuery, GetBlocksQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetBlocksQuery, GetBlocksQueryVariables>(GetBlocksDocument, options);
+      }
+export function useGetBlocksLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetBlocksQuery, GetBlocksQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetBlocksQuery, GetBlocksQueryVariables>(GetBlocksDocument, options);
+        }
+export function useGetBlocksSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetBlocksQuery, GetBlocksQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetBlocksQuery, GetBlocksQueryVariables>(GetBlocksDocument, options);
+        }
+export type GetBlocksQueryHookResult = ReturnType<typeof useGetBlocksQuery>;
+export type GetBlocksLazyQueryHookResult = ReturnType<typeof useGetBlocksLazyQuery>;
+export type GetBlocksSuspenseQueryHookResult = ReturnType<typeof useGetBlocksSuspenseQuery>;
+export type GetBlocksQueryResult = Apollo.QueryResult<GetBlocksQuery, GetBlocksQueryVariables>;
+export const GetFilteredTransactionsDocument = gql`
+    query GetFilteredTransactions($address: String!, $fromBlock: String!, $toBlock: String!, $minValue: String, $maxValue: String, $txType: Int, $successOnly: Boolean, $limit: Int, $offset: Int) {
+  transactionsByAddressFiltered(
+    address: $address
+    filter: {fromBlock: $fromBlock, toBlock: $toBlock, minValue: $minValue, maxValue: $maxValue, txType: $txType, successOnly: $successOnly}
+    pagination: {limit: $limit, offset: $offset}
+  ) {
+    nodes {
+      hash
+      blockNumber
+      from
+      to
+      value
+      gas
+      gasPrice
+      type
+      receipt {
+        status
+        gasUsed
+      }
+    }
+    totalCount
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetFilteredTransactionsQuery__
+ *
+ * To run a query within a React component, call `useGetFilteredTransactionsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetFilteredTransactionsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetFilteredTransactionsQuery({
+ *   variables: {
+ *      address: // value for 'address'
+ *      fromBlock: // value for 'fromBlock'
+ *      toBlock: // value for 'toBlock'
+ *      minValue: // value for 'minValue'
+ *      maxValue: // value for 'maxValue'
+ *      txType: // value for 'txType'
+ *      successOnly: // value for 'successOnly'
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *   },
+ * });
+ */
+export function useGetFilteredTransactionsQuery(baseOptions: Apollo.QueryHookOptions<GetFilteredTransactionsQuery, GetFilteredTransactionsQueryVariables> & ({ variables: GetFilteredTransactionsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetFilteredTransactionsQuery, GetFilteredTransactionsQueryVariables>(GetFilteredTransactionsDocument, options);
+      }
+export function useGetFilteredTransactionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetFilteredTransactionsQuery, GetFilteredTransactionsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetFilteredTransactionsQuery, GetFilteredTransactionsQueryVariables>(GetFilteredTransactionsDocument, options);
+        }
+export function useGetFilteredTransactionsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetFilteredTransactionsQuery, GetFilteredTransactionsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetFilteredTransactionsQuery, GetFilteredTransactionsQueryVariables>(GetFilteredTransactionsDocument, options);
+        }
+export type GetFilteredTransactionsQueryHookResult = ReturnType<typeof useGetFilteredTransactionsQuery>;
+export type GetFilteredTransactionsLazyQueryHookResult = ReturnType<typeof useGetFilteredTransactionsLazyQuery>;
+export type GetFilteredTransactionsSuspenseQueryHookResult = ReturnType<typeof useGetFilteredTransactionsSuspenseQuery>;
+export type GetFilteredTransactionsQueryResult = Apollo.QueryResult<GetFilteredTransactionsQuery, GetFilteredTransactionsQueryVariables>;
+export const GetTransactionsDocument = gql`
+    query GetTransactions($limit: Int, $offset: Int, $blockNumberFrom: String, $blockNumberTo: String, $from: String, $to: String, $type: Int) {
+  transactions(
+    pagination: {limit: $limit, offset: $offset}
+    filter: {blockNumberFrom: $blockNumberFrom, blockNumberTo: $blockNumberTo, from: $from, to: $to, type: $type}
+  ) {
+    nodes {
+      hash
+      blockNumber
+      from
+      to
+      value
+      gas
+      gasPrice
+      type
+    }
+    totalCount
+    pageInfo {
+      hasNextPage
+      hasPreviousPage
+    }
+  }
+}
+    `;
+
+/**
+ * __useGetTransactionsQuery__
+ *
+ * To run a query within a React component, call `useGetTransactionsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetTransactionsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetTransactionsQuery({
+ *   variables: {
+ *      limit: // value for 'limit'
+ *      offset: // value for 'offset'
+ *      blockNumberFrom: // value for 'blockNumberFrom'
+ *      blockNumberTo: // value for 'blockNumberTo'
+ *      from: // value for 'from'
+ *      to: // value for 'to'
+ *      type: // value for 'type'
+ *   },
+ * });
+ */
+export function useGetTransactionsQuery(baseOptions?: Apollo.QueryHookOptions<GetTransactionsQuery, GetTransactionsQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetTransactionsQuery, GetTransactionsQueryVariables>(GetTransactionsDocument, options);
+      }
+export function useGetTransactionsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetTransactionsQuery, GetTransactionsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetTransactionsQuery, GetTransactionsQueryVariables>(GetTransactionsDocument, options);
+        }
+export function useGetTransactionsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetTransactionsQuery, GetTransactionsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetTransactionsQuery, GetTransactionsQueryVariables>(GetTransactionsDocument, options);
+        }
+export type GetTransactionsQueryHookResult = ReturnType<typeof useGetTransactionsQuery>;
+export type GetTransactionsLazyQueryHookResult = ReturnType<typeof useGetTransactionsLazyQuery>;
+export type GetTransactionsSuspenseQueryHookResult = ReturnType<typeof useGetTransactionsSuspenseQuery>;
+export type GetTransactionsQueryResult = Apollo.QueryResult<GetTransactionsQuery, GetTransactionsQueryVariables>;

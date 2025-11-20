@@ -3,7 +3,8 @@ import { gql } from '@apollo/client'
 /**
  * GraphQL Queries for Blockchain Explorer
  *
- * Note: Backend uses String for all custom scalars (BigInt, Hash, Address, Bytes)
+ * Note: Custom scalars (BigInt, Hash, Address, Bytes) are serialized as strings by the backend.
+ * Therefore, all query variables use String types instead of custom scalar types.
  */
 
 // Get latest indexed block height
@@ -26,6 +27,10 @@ export const GET_BLOCK = gql`
       gasLimit
       size
       transactionCount
+      baseFeePerGas
+      withdrawalsRoot
+      blobGasUsed
+      excessBlobGas
       transactions {
         hash
         from
@@ -53,6 +58,10 @@ export const GET_BLOCK_BY_HASH = gql`
       gasLimit
       size
       transactionCount
+      baseFeePerGas
+      withdrawalsRoot
+      blobGasUsed
+      excessBlobGas
       transactions {
         hash
         from
@@ -85,6 +94,12 @@ export const GET_TRANSACTION = gql`
       r
       s
       chainId
+      feePayer
+      feePayerSignatures {
+        v
+        r
+        s
+      }
       receipt {
         status
         gasUsed

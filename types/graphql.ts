@@ -11,6 +11,7 @@ export type {
   TransformedReceipt as Receipt,
   TransformedLog as Log,
   TransformedBalanceSnapshot as BalanceSnapshot,
+  TransformedFeePayerSignature,
 } from '@/lib/utils/graphql-transforms'
 
 // Export raw types for cases where string-based data is needed

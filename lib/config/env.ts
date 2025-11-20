@@ -16,9 +16,15 @@ interface ChainConfig {
   currencySymbol?: string
 }
 
-const { api = {} as ApiConfig, chain = {} as ChainConfig } = appConfig as {
+interface SiteConfig {
+  url?: string
+  name?: string
+}
+
+const { api = {} as ApiConfig, chain = {} as ChainConfig, site = {} as SiteConfig } = appConfig as {
   api?: ApiConfig
   chain?: ChainConfig
+  site?: SiteConfig
 }
 
 function getEnvVar(key: string, defaultValue?: string): string {
@@ -39,6 +45,10 @@ export const env = {
   chainName: getEnvVar('NEXT_PUBLIC_CHAIN_NAME', chain.name),
   chainId: getEnvVar('NEXT_PUBLIC_CHAIN_ID', chain.id),
   currencySymbol: getEnvVar('NEXT_PUBLIC_CURRENCY_SYMBOL', chain.currencySymbol),
+
+  // Site Configuration
+  siteUrl: getEnvVar('NEXT_PUBLIC_SITE_URL', site.url),
+  siteName: getEnvVar('NEXT_PUBLIC_SITE_NAME', site.name),
 
   // Optional APIs
   priceApiUrl: process.env.NEXT_PUBLIC_PRICE_API_URL,
