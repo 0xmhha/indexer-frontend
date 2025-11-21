@@ -122,6 +122,37 @@ export function formatDate(timestamp: bigint | number, includeTime = true): stri
 }
 
 /**
+ * Format timestamp to date and time string (alias for formatDate with time)
+ * @param timestamp - Unix timestamp (seconds) or ISO string
+ * @returns Formatted date and time string
+ */
+export function formatDateTime(timestamp: bigint | number | string): string {
+  if (typeof timestamp === 'string') {
+    // If ISO string, parse it
+    const date = new Date(timestamp)
+    return date.toLocaleString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    })
+  }
+  return formatDate(timestamp, true)
+}
+
+/**
+ * Truncate address to show first and last characters
+ * Alias for formatAddress for better semantics
+ * @param address - Full address string
+ * @returns Truncated address
+ */
+export function truncateAddress(address: string): string {
+  return formatAddress(address, true)
+}
+
+/**
  * Format number with thousand separators
  * @param num - Number to format
  * @returns Formatted number string

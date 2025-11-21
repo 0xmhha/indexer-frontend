@@ -1,18 +1,11 @@
 'use client'
 
 import { cn } from '@/lib/utils'
+import { getTxTypeName, getTxTypeColor, isValidTxType } from '@/lib/constants/transactions'
 
 interface TransactionTypeMeta {
   label: string
   badgeClass: string
-}
-
-const TYPE_META: Record<number, TransactionTypeMeta> = {
-  0: { label: 'Legacy', badgeClass: 'bg-bg-tertiary text-text-secondary' },
-  1: { label: 'Access List', badgeClass: 'bg-accent-blue/10 text-accent-blue' },
-  2: { label: 'EIP-1559', badgeClass: 'bg-accent-cyan/10 text-accent-cyan' },
-  3: { label: 'Blob', badgeClass: 'bg-accent-orange/10 text-accent-orange' },
-  22: { label: 'Fee Delegation', badgeClass: 'bg-accent-cyan/10 text-accent-cyan' },
 }
 
 const DEFAULT_META: TransactionTypeMeta = {
@@ -29,7 +22,14 @@ export function getTransactionTypeMeta(type?: number | null) {
     return { ...DEFAULT_META, hex: '0x??' }
   }
 
-  const meta = TYPE_META[type] ?? DEFAULT_META
+  // Use centralized transaction type utilities
+  const meta: TransactionTypeMeta = isValidTxType(type)
+    ? {
+        label: getTxTypeName(type),
+        badgeClass: getTxTypeColor(type),
+      }
+    : DEFAULT_META
+
   return {
     ...meta,
     hex: formatHexType(type),

@@ -4,6 +4,8 @@ import { LatestBlockCard } from '@/components/blocks/LatestBlockCard'
 import { RecentBlocksList } from '@/components/blocks/RecentBlocksList'
 import { NetworkStats } from '@/components/common/NetworkStats'
 import { LiveIndicator } from '@/components/common/LiveIndicator'
+import { AdvancedPendingTransactionsPanel } from '@/components/transactions/AdvancedPendingTransactionsPanel'
+import { RealtimeActivityChart } from '@/components/charts/RealtimeActivityChart'
 
 // Force dynamic rendering for real-time WebSocket features
 export const dynamic = 'force-dynamic'
@@ -26,6 +28,11 @@ export default function HomePage() {
         <NetworkStats />
       </div>
 
+      {/* Real-time Activity Chart */}
+      <div className="mb-8">
+        <RealtimeActivityChart />
+      </div>
+
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         {/* Latest Block - Spans 1 column */}
@@ -37,6 +44,11 @@ export default function HomePage() {
         <div className="lg:col-span-2">
           <RecentBlocksList />
         </div>
+      </div>
+
+      {/* Advanced Pending Transactions - Full width real-time feed with filters */}
+      <div className="mt-8">
+        <AdvancedPendingTransactionsPanel maxTransactions={20} />
       </div>
 
       {/* Info Footer */}

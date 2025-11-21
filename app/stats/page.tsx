@@ -6,6 +6,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useBlocksByTimeRange, useNetworkMetrics, useTopMiners } from '@/lib/hooks/useAnalytics'
 import { TopMinersTable } from '@/components/stats/TopMinersTable'
+import { AdvancedLogsViewer } from '@/components/logs/AdvancedLogsViewer'
 import { formatNumber } from '@/lib/utils/format'
 
 // Lazy load heavy chart components
@@ -139,6 +140,11 @@ export default function StatsPage() {
           <TopMinersTable miners={miners} loading={minersLoading} />
         </CardContent>
       </Card>
+
+      {/* Advanced Real-time Logs Section with Filters */}
+      <div className="mt-6">
+        <AdvancedLogsViewer maxLogs={50} />
+      </div>
     </div>
   )
 }

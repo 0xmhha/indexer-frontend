@@ -8,6 +8,24 @@ import { toBigInt } from '@/lib/utils/graphql-transforms'
 import type { MinerStats } from '@/types/graphql'
 
 /**
+ * Fee Delegation statistics
+ */
+export interface FeeDelegationStats {
+  totalFeeDelegatedTxs: number
+  totalFeesSaved: bigint
+  topFeePayers: FeePayerStats[]
+  adoptionRate: number
+  avgFeeSaved: bigint
+}
+
+export interface FeePayerStats {
+  address: string
+  txCount: number
+  totalFeesPaid: bigint
+  percentage: number
+}
+
+/**
  * Hook to fetch blocks in a time range for analytics
  */
 export function useBlocksByTimeRange(fromTime: bigint, toTime: bigint, limit = 1000) {
@@ -138,6 +156,82 @@ export function useTopMiners(limit = 10) {
 
   return {
     miners,
+    loading,
+    error: null,
+  }
+}
+
+/**
+ * Hook to fetch Fee Delegation statistics
+ * Note: Uses mock data until backend API is implemented
+ */
+export function useFeeDelegationStats() {
+  const [stats, setStats] = useState<FeeDelegationStats | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    // Simulate API call with mock data
+    const timer = setTimeout(() => {
+      const mockFeePayers: FeePayerStats[] = [
+        {
+          address: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
+          txCount: 2543,
+          totalFeesPaid: BigInt('15230000000000000000'), // 15.23 ETH
+          percentage: 32.5,
+        },
+        {
+          address: '0x8932Eb23BAD9bDdB5cF81426F78279A53c6c3b71',
+          txCount: 1876,
+          totalFeesPaid: BigInt('11890000000000000000'), // 11.89 ETH
+          percentage: 24.0,
+        },
+        {
+          address: '0x95222290DD7278Aa3Ddd389Cc1E1d165CC4BAfe5',
+          txCount: 1432,
+          totalFeesPaid: BigInt('8760000000000000000'), // 8.76 ETH
+          percentage: 18.3,
+        },
+        {
+          address: '0x5A0b54D5dc17e0AadC383d2db43B0a0D3E029c4c',
+          txCount: 987,
+          totalFeesPaid: BigInt('6120000000000000000'), // 6.12 ETH
+          percentage: 12.6,
+        },
+        {
+          address: '0x90F8bf6A479f320ead074411a4B0e7944Ea8c9C1',
+          txCount: 654,
+          totalFeesPaid: BigInt('4050000000000000000'), // 4.05 ETH
+          percentage: 8.4,
+        },
+        {
+          address: '0xFFcf8FDEE72ac11b5c542428B35EEF5769C409f0',
+          txCount: 321,
+          totalFeesPaid: BigInt('2010000000000000000'), // 2.01 ETH
+          percentage: 4.1,
+        },
+      ]
+
+      const totalTxs = mockFeePayers.reduce((sum, fp) => sum + fp.txCount, 0)
+      const totalFees = mockFeePayers.reduce((sum, fp) => sum + fp.totalFeesPaid, BigInt(0))
+      const avgFee = totalTxs > 0 ? totalFees / BigInt(totalTxs) : BigInt(0)
+
+      const mockStats: FeeDelegationStats = {
+        totalFeeDelegatedTxs: totalTxs,
+        totalFeesSaved: totalFees,
+        topFeePayers: mockFeePayers,
+        adoptionRate: 12.8, // 12.8% of all transactions use fee delegation
+        avgFeeSaved: avgFee,
+      }
+
+      setStats(mockStats)
+      setLoading(false)
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [])
+
+  return {
+    stats,
     loading,
     error: null,
   }

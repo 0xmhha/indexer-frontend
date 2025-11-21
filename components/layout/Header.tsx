@@ -52,10 +52,47 @@ export function Header() {
               Statistics
             </Link>
             <Link
+              href="/gas"
+              className="font-mono text-xs uppercase tracking-wider text-text-secondary transition-colors hover:text-accent-blue"
+            >
+              Gas Tools
+            </Link>
+            <Link
               href="/contract"
               className="font-mono text-xs uppercase tracking-wider text-text-secondary transition-colors hover:text-accent-blue"
             >
               Contract
+            </Link>
+            <Link
+              href="/system-contracts"
+              className="font-mono text-xs uppercase tracking-wider text-text-secondary transition-colors hover:text-accent-blue"
+            >
+              Tokens
+            </Link>
+            <Link
+              href="/governance"
+              className="font-mono text-xs uppercase tracking-wider text-text-secondary transition-colors hover:text-accent-blue"
+            >
+              Governance
+            </Link>
+            <Link
+              href="/validators"
+              className="font-mono text-xs uppercase tracking-wider text-text-secondary transition-colors hover:text-accent-blue"
+            >
+              Validators
+            </Link>
+            <Link
+              href="/wbft"
+              className="font-mono text-xs uppercase tracking-wider text-text-secondary transition-colors hover:text-accent-blue"
+            >
+              WBFT
+            </Link>
+            <Link
+              href="/settings"
+              className="font-mono text-xs uppercase tracking-wider text-text-secondary transition-colors hover:text-accent-blue"
+              aria-label="Settings"
+            >
+              ⚙
             </Link>
           </nav>
 

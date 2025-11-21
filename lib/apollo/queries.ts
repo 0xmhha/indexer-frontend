@@ -236,3 +236,46 @@ export const GET_NETWORK_METRICS = gql`
     transactionCount
   }
 `
+
+// ============================================================================
+// Subscriptions
+// ============================================================================
+
+/**
+ * Subscribe to new pending transactions in real-time
+ */
+export const SUBSCRIBE_PENDING_TRANSACTIONS = gql`
+  subscription NewPendingTransactions {
+    newPendingTransactions {
+      hash
+      from
+      to
+      value
+      nonce
+      gas
+      type
+      gasPrice
+      maxFeePerGas
+      maxPriorityFeePerGas
+    }
+  }
+`
+
+/**
+ * Subscribe to logs with optional filtering
+ * Variables should be passed as { filter: LogFilterInput }
+ */
+export const SUBSCRIBE_LOGS = gql`
+  subscription Logs($filter: LogFilterInput) {
+    logs(filter: $filter) {
+      address
+      topics
+      data
+      blockNumber
+      blockHash
+      transactionHash
+      logIndex
+      removed
+    }
+  }
+`
