@@ -62,7 +62,7 @@ const wsLink =
           on: {
             connected: () => {
               if (env.isDevelopment) {
-                console.log('[WebSocket]: Connected to', env.wsEndpoint)
+                console.log('[WebSocket]: Connected')
               }
             },
             closed: (event) => {
@@ -72,24 +72,7 @@ const wsLink =
               }
             },
             error: (_error) => {
-              if (env.isDevelopment) {
-                console.warn('[WebSocket]: Connection failed. Subscriptions will not work until backend WebSocket server is running at', env.wsEndpoint)
-              }
-            },
-            message: (message) => {
-              if (env.isDevelopment) {
-                if (typeof message === 'object' && 'type' in message) {
-                  if (message.type === 'next' && 'payload' in message) {
-                    console.log('[WebSocket]: Subscription data received', {
-                      id: message.id,
-                      type: message.type,
-                      payload: message.payload,
-                    })
-                  } else {
-                    console.log('[WebSocket]: Message received', message)
-                  }
-                }
-              }
+              console.error('[WebSocket]: Connection failed')
             },
           },
         })
@@ -113,14 +96,16 @@ const splitLink =
 
 /**
  * Request logging link (development only)
+ * Disabled by default to reduce console noise
  */
 const loggingLink = new ApolloLink((operation, forward) => {
-  if (env.isDevelopment) {
-    const variables = operation.variables
-    const hasVariables = Object.keys(variables).length > 0
-    const variablesStr = hasVariables ? JSON.stringify(variables, null, 2) : '(no variables)'
-    console.log(`[GraphQL Request]: ${operation.operationName}`, variablesStr)
-  }
+  // Uncomment to enable verbose GraphQL request logging
+  // if (env.isDevelopment) {
+  //   const variables = operation.variables
+  //   const hasVariables = Object.keys(variables).length > 0
+  //   const variablesStr = hasVariables ? JSON.stringify(variables, null, 2) : '(no variables)'
+  //   console.log(`[GraphQL Request]: ${operation.operationName}`, variablesStr)
+  // }
   return forward(operation)
 })
 

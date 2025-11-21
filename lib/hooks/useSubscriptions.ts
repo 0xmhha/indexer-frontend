@@ -180,8 +180,6 @@ export function useNewBlocks(maxBlocks = 20) {
         }
       }
 
-      console.log('[useNewBlocks] Fetching initial blocks:', blocksToFetch)
-
       // Fetch blocks in parallel
       Promise.all(
         blocksToFetch.map(async (blockNum) => {
@@ -220,7 +218,6 @@ export function useNewBlocks(maxBlocks = 20) {
         })
       ).then((fetchedBlocks) => {
         const validBlocks = fetchedBlocks.filter((b): b is Block => b !== null)
-        console.log('[useNewBlocks] Fetched initial blocks:', validBlocks.length)
         if (validBlocks.length > 0) {
           setBlocks(validBlocks)
           const firstBlock = validBlocks[0]
@@ -234,32 +231,15 @@ export function useNewBlocks(maxBlocks = 20) {
 
   // Update from subscription (real-time updates)
   useEffect(() => {
-    console.log('[useNewBlocks] Subscription data changed:', {
-      hasData: !!subscriptionData,
-      hasNewBlock: !!subscriptionData?.newBlock,
-      maxBlocks,
-    })
-
     if (subscriptionData?.newBlock) {
       const rawBlock = subscriptionData.newBlock as RawBlock
       const transformedBlock = transformBlock(rawBlock)
-
-      console.log('[useNewBlocks] New block from subscription:', {
-        number: transformedBlock.number.toString(),
-        hash: transformedBlock.hash,
-        timestamp: transformedBlock.timestamp.toString(),
-      })
 
       // Legitimate use case: updating state from external subscription data
       setLatestBlock(transformedBlock)
 
       // Legitimate use case: updating state from external subscription data
       setBlocks((prev) => {
-        console.log('[useNewBlocks] Updating blocks list:', {
-          currentCount: prev.length,
-          newBlockNumber: transformedBlock.number.toString(),
-          willKeep: maxBlocks,
-        })
         // Add new block at the beginning
         const updated = [transformedBlock, ...prev]
         // Keep only the most recent maxBlocks
