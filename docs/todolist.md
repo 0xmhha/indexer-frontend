@@ -4,127 +4,6 @@
 
 ---
 
-## ✅ 완료된 기능 (Phases 1-9)
-
-### Phase 1-3: 기본 인프라 및 UI
-- ✅ Next.js 14 프로젝트 설정
-- ✅ Apollo Client GraphQL 설정
-- ✅ 기본 레이아웃 (Header, Footer)
-- ✅ 다크/라이트 테마 토글
-- ✅ 반응형 디자인
-- ✅ 기본 페이지 구조 (Home, Blocks, Transactions, Stats)
-
-### Phase 4: WebSocket 및 실시간 기능
-- ✅ WebSocket 구독 시스템 (useSubscriptions.ts)
-- ✅ 알림 시스템 (Toast, NotificationContext)
-- ✅ 실시간 활동 차트 (RealtimeActivityChart)
-- ✅ 고급 로그 뷰어 (AdvancedLogsViewer)
-- ✅ 고급 대기 트랜잭션 패널 (AdvancedPendingTransactionsPanel)
-- ✅ 알림 설정 페이지
-
-### Phase 5: System Contracts
-- ✅ System Contracts GraphQL 쿼리 (useSystemContracts.ts)
-- ✅ Token Supply 대시보드
-- ✅ Mint/Burn 이벤트 뷰어
-- ✅ Active Minters 패널
-- ✅ System Contracts 페이지 (/system-contracts)
-
-### Phase 6: Governance
-- ✅ Governance GraphQL 쿼리 (useGovernance.ts)
-- ✅ Proposals 목록 페이지
-  - 상태별 필터링 (voting, approved, executed, rejected, etc.)
-  - 제안자 주소 필터링
-  - 승인 진행률 표시
-- ✅ Proposal 상세 페이지
-  - 제안 상세 정보
-  - 투표 목록 (승인/거부)
-  - 진행 상황 시각화
-- ✅ Governance 대시보드
-  - 제안 통계
-  - Active Validators 목록
-  - 블랙리스트 주소 목록
-- ✅ Governance 페이지 (/governance)
-
-### Phase 7: WBFT & Validators
-- ✅ WBFT/Validator GraphQL 쿼리 (useWBFT.ts)
-- ✅ Validators 목록 페이지
-  - Validator 정보 (stake, voting power)
-  - Active/Inactive 상태 필터링
-  - Epoch별 필터링
-- ✅ Blacklist 주소 뷰어
-- ✅ WBFT 블록 메타데이터 뷰어
-  - 합의 정보 (round, step, proposer)
-  - Validator 세트
-  - 블록 서명자 목록
-- ✅ Epoch 정보 디스플레이
-  - 현재 Epoch 통계
-  - Epoch 검색 기능
-  - Validator 분포 및 voting power
-- ✅ Validator 서명 통계 대시보드
-  - 서명 성능 지표
-  - 블록 서명율 추적
-  - 성능 기반 시각화
-- ✅ Validators 페이지 (/validators)
-- ✅ WBFT 페이지 (/wbft)
-
-### Phase 8: Address Indexing API
-- ✅ Address Indexing GraphQL 쿼리 및 타입 정의
-  - Contract Creation Tracking
-    - `contractCreation`: 컨트랙트 생성 정보 조회
-    - `contractsByCreator`: 생성자별 컨트랙트 목록
-  - Internal Transactions
-    - `internalTransactions`: 내부 트랜잭션 조회
-    - `internalTransactionsByAddress`: 주소별 내부 트랜잭션
-  - ERC20 Token Transfers
-    - `erc20Transfer`: 개별 ERC20 전송 조회
-    - `erc20TransfersByToken`: 토큰별 전송 내역
-    - `erc20TransfersByAddress`: 주소별 ERC20 전송 내역
-  - ERC721 NFT Transfers
-    - `erc721Transfer`: 개별 NFT 전송 조회
-    - `erc721TransfersByToken`: NFT 컬렉션별 전송 내역
-    - `erc721TransfersByAddress`: 주소별 NFT 전송 내역
-    - `erc721Owner`: NFT 소유자 조회
-- ✅ Custom React Hooks (useAddressIndexing.ts)
-  - 11개의 전문화된 hooks
-  - BigInt 자동 변환
-  - 페이지네이션 지원 (loadMore)
-  - previousData 캐싱 지원
-- ✅ TypeScript 타입 정의 (types/address-indexing.ts)
-  - Raw/Transformed 타입 분리
-  - Filter 및 Pagination 타입
-  - 완전한 타입 안정성
-
-### Phase 9: WebSocket Subscriptions 완성
-- ✅ WebSocket 엔드포인트 수정
-  - `ws://localhost:8080/ws` → `ws://localhost:8080/graphql/ws`
-  - 백엔드 GraphQL WebSocket 서버와 정확히 일치
-- ✅ 새로운 실시간 구독 쿼리
-  - `SUBSCRIBE_NEW_BLOCK`: 새로운 블록 실시간 업데이트
-  - `SUBSCRIBE_NEW_TRANSACTION`: 확정된 트랜잭션 알림
-  - `SUBSCRIBE_PENDING_TRANSACTIONS`: Pending 트랜잭션 (feePayer 추가)
-  - `SUBSCRIBE_LOGS`: 로그 이벤트 구독 (기존)
-- ✅ 새로운 React Hooks (useSubscriptions.ts 확장)
-  - `useNewBlocks()`: 실시간 블록 구독 + latestBlock 추적
-  - `useNewTransactions()`: 확정 트랜잭션 구독
-  - `usePendingTransactions()`: Pending 트랜잭션 구독 (업데이트)
-  - `useLogs()`: 로그 구독 (기존)
-- ✅ 자동 메모리 관리
-  - 설정 가능한 최대 항목 수
-  - Clear 함수 제공
-  - 효율적인 상태 관리
-
-### 추가 기능
-- ✅ Gas Tools 페이지 (/gas)
-  - Gas Calculator
-  - Fee Efficiency Analyzer
-  - Transaction Simulator
-  - Fee Delegation Dashboard
-- ✅ Settings 페이지 (/settings)
-  - 알림 설정
-  - 테마 설정
-
----
-
 ## 📊 현재 상태
 
 ### 구현된 페이지 (18개)
@@ -134,6 +13,11 @@
 4. `/txs` - 트랜잭션 목록
 5. `/tx/[hash]` - 트랜잭션 상세
 6. `/address/[address]` - 주소 상세
+   - 일반 트랜잭션
+   - 내부 트랜잭션
+   - ERC20 토큰 전송
+   - ERC721 NFT 전송
+   - 컨트랙트 생성 정보
 7. `/stats` - 통계
 8. `/gas` - Gas Tools
 9. `/contract` - Contract 조회
@@ -174,7 +58,29 @@
 
 다음 API가 백엔드에 추가되면 프론트엔드 기능을 확장할 수 있습니다:
 
-### 1. Top Miners 집계 쿼리 (우선순위: 중)
+### 1. Search API (우선순위: 높)
+통합 검색 기능을 위해 필요합니다.
+
+```graphql
+type SearchResult {
+  type: String!           # "block", "transaction", "address", "contract"
+  value: String!
+  label: String
+  metadata: String        # JSON string with additional info
+}
+
+type Query {
+  search(
+    query: String!
+    types: [String!]      # Filter by type
+    limit: Int = 10
+  ): [SearchResult!]!
+}
+```
+
+**사용 위치**: Header의 SearchBar 컴포넌트
+
+### 2. Top Miners 집계 쿼리 (우선순위: 중)
 현재 Stats 페이지의 Top Miners 섹션 구현을 위해 필요합니다.
 
 ```graphql
@@ -204,7 +110,7 @@ type TopMinersResult {
 
 **사용 위치**: `/stats` 페이지
 
-### 2. Token Balance API (우선순위: 중)
+### 3. Token Balance API (우선순위: 중)
 주소 페이지에서 토큰 잔액 표시를 위해 필요합니다.
 
 ```graphql
@@ -229,7 +135,7 @@ type Query {
 
 **사용 위치**: `/address/[address]` 페이지
 
-### 3. Contract Verification API (우선순위: 낮)
+### 4. Contract Verification API (우선순위: 낮)
 Contract 페이지의 소스 코드 검증 기능을 위해 필요합니다.
 
 ```graphql
@@ -261,28 +167,6 @@ type Mutation {
 ```
 
 **사용 위치**: `/contract` 페이지
-
-### 4. Search API (우선순위: 높)
-통합 검색 기능을 위해 필요합니다.
-
-```graphql
-type SearchResult {
-  type: String!           # "block", "transaction", "address", "contract"
-  value: String!
-  label: String
-  metadata: String        # JSON string with additional info
-}
-
-type Query {
-  search(
-    query: String!
-    types: [String!]      # Filter by type
-    limit: Int = 10
-  ): [SearchResult!]!
-}
-```
-
-**사용 위치**: Header의 SearchBar 컴포넌트
 
 ---
 
@@ -365,40 +249,3 @@ type Query {
 - [Apollo Client Documentation](https://www.apollographql.com/docs/react)
 - [Tailwind CSS Documentation](https://tailwindcss.com/docs)
 - [TypeScript Documentation](https://www.typescriptlang.org/docs)
-
----
-
-## 📦 최근 업데이트
-
-### Phase 8: Address Indexing API (2025-11-21)
-**Commit**: `d0bf84c` - feat: add Address Indexing API integration
-
-새로운 파일:
-- `types/address-indexing.ts` (177 lines)
-- `lib/graphql/queries/address-indexing.ts` (217 lines)
-- `lib/hooks/useAddressIndexing.ts` (565 lines)
-
-주요 기능:
-- 11개의 GraphQL 쿼리 및 custom hooks
-- 컨트랙트 생성 추적, 내부 트랜잭션, ERC20/ERC721 전송 지원
-- BigInt 자동 변환 및 페이지네이션
-
-### Phase 9: WebSocket Subscriptions (2025-11-21)
-**Commit**: `9516a5e` - feat: implement WebSocket subscriptions for real-time data
-
-수정된 파일:
-- `config/app.config.json` - WebSocket 엔드포인트 수정
-- `lib/apollo/queries.ts` - 새로운 구독 쿼리 추가
-- `lib/hooks/useSubscriptions.ts` - 새로운 hooks 추가
-- `lib/graphql/subscriptions.ts` (새 파일)
-
-주요 기능:
-- 실시간 블록/트랜잭션 구독
-- 백엔드 WebSocket 서버와 완벽한 호환성
-- 자동 메모리 관리 및 상태 추적
-
----
-
-**Status**: Phase 9 완료 ✅
-**Last Commit**: `9516a5e` - feat: implement WebSocket subscriptions for real-time data
-**Next Steps**: 백엔드 WebSocket 서버 실행 시 실시간 기능 활성화
