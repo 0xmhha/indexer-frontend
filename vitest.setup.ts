@@ -1,6 +1,6 @@
-import '@testing-library/jest-dom/vitest'
-import { cleanup } from '@testing-library/react'
+import '@testing-library/jest-dom'
 import { afterEach, vi } from 'vitest'
+import { cleanup } from '@testing-library/react'
 
 // Cleanup after each test
 afterEach(() => {
@@ -16,31 +16,17 @@ vi.mock('next/navigation', () => ({
     back: vi.fn(),
     pathname: '/',
     query: {},
-    asPath: '/',
+  }),
+  useSearchParams: () => ({
+    get: vi.fn(),
   }),
   usePathname: () => '/',
-  useSearchParams: () => new URLSearchParams(),
 }))
-
-// Mock Next.js Link
-vi.mock('next/link', () => ({
-  default: ({ children, href }: { children: unknown; href: string }) => {
-    return { props: { href }, children }
-  },
-}))
-
-// Mock environment variables
-process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT = 'http://localhost:8080/graphql'
-process.env.NEXT_PUBLIC_WS_ENDPOINT = 'ws://localhost:8080/ws'
-process.env.NEXT_PUBLIC_JSONRPC_ENDPOINT = 'http://localhost:8080/rpc'
-process.env.NEXT_PUBLIC_CHAIN_NAME = 'Stable-One'
-process.env.NEXT_PUBLIC_CHAIN_ID = '111133'
-process.env.NEXT_PUBLIC_CURRENCY_SYMBOL = 'WEMIX'
 
 // Mock window.matchMedia
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
-  value: vi.fn().mockImplementation((query) => ({
+  value: vi.fn().mockImplementation((query: string) => ({
     matches: false,
     media: query,
     onchange: null,
@@ -51,3 +37,14 @@ Object.defineProperty(window, 'matchMedia', {
     dispatchEvent: vi.fn(),
   })),
 })
+
+// Mock IntersectionObserver
+global.IntersectionObserver = class IntersectionObserver {
+  constructor() {}
+  disconnect() {}
+  observe() {}
+  takeRecords() {
+    return []
+  }
+  unobserve() {}
+} as unknown as typeof IntersectionObserver

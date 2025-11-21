@@ -61,9 +61,17 @@ export function PendingTransactionsPanel({
         ) : error ? (
           <div className="p-6">
             <ErrorDisplay
-              title="Failed to load pending transactions"
-              message={error.message || 'WebSocket connection error'}
+              title="WebSocket connection unavailable"
+              message="Pending transactions require WebSocket connection. Please ensure the backend server is running with WebSocket support."
             />
+            <div className="mt-4 rounded border border-bg-tertiary bg-bg-secondary p-4">
+              <p className="font-mono text-xs text-text-secondary">
+                <span className="font-bold">Backend WebSocket endpoint:</span> {env.wsEndpoint}
+              </p>
+              <p className="mt-2 font-mono text-xs text-text-muted">
+                Real-time features will be available once WebSocket server is running.
+              </p>
+            </div>
           </div>
         ) : pendingTransactions.length === 0 ? (
           <div className="flex h-64 items-center justify-center">

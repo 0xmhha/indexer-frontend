@@ -33,29 +33,48 @@ const httpLink = new HttpLink({
 
 /**
  * WebSocket link for GraphQL subscriptions
- * Converts http/https URLs to ws/wss for WebSocket connection
+ * Uses dedicated WebSocket endpoint (env.wsEndpoint)
  */
 const wsLink =
   typeof window !== 'undefined'
     ? new GraphQLWsLink(
         createClient({
-          url: env.graphqlEndpoint.replace(/^http/, 'ws'),
+          url: env.wsEndpoint,
           connectionParams: {
             // Add authentication headers if needed
+          },
+          lazy: true, // Connect only when subscriptions are needed
+          keepAlive: 10_000, // Send ping every 10 seconds to keep connection alive
+          retryAttempts: 3, // Reduce retry attempts to fail faster
+          retryWait: async (retries) => {
+            // Exponential backoff: 1s, 2s, 4s
+            await new Promise((resolve) => setTimeout(resolve, Math.min(1000 * 2 ** retries, 4000)))
+          },
+          shouldRetry: (errOrCloseEvent) => {
+            // Only retry on certain close codes (not on authentication failures)
+            if (errOrCloseEvent && typeof errOrCloseEvent === 'object' && 'code' in errOrCloseEvent) {
+              const code = (errOrCloseEvent as CloseEvent).code
+              // Don't retry on normal closure or going away
+              return code !== 1000 && code !== 1001
+            }
+            return true
           },
           on: {
             connected: () => {
               if (env.isDevelopment) {
-                console.log('[WebSocket]: Connected')
+                console.log('[WebSocket]: Connected to', env.wsEndpoint)
               }
             },
-            closed: () => {
+            closed: (event) => {
               if (env.isDevelopment) {
-                console.log('[WebSocket]: Closed')
+                const closeEvent = event as CloseEvent | undefined
+                console.log('[WebSocket]: Closed', closeEvent?.code, closeEvent?.reason)
               }
             },
-            error: (error) => {
-              console.error('[WebSocket Error]:', error)
+            error: (_error) => {
+              if (env.isDevelopment) {
+                console.warn('[WebSocket]: Connection failed. Subscriptions will not work until backend WebSocket server is running at', env.wsEndpoint)
+              }
             },
           },
         })
