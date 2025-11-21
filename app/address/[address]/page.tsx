@@ -25,6 +25,11 @@ import { TransactionTypeBadge } from '@/components/transactions/TransactionTypeB
 import { ContractVerificationStatus } from '@/components/contract/ContractVerificationStatus'
 import { SourceCodeViewer } from '@/components/contract/SourceCodeViewer'
 import { TokenBalancesTable } from '@/components/address/TokenBalancesTable'
+import { InternalTransactionsTable } from '@/components/address/InternalTransactionsTable'
+import { ERC20TransfersTable } from '@/components/address/ERC20TransfersTable'
+import { ERC721TransfersTable } from '@/components/address/ERC721TransfersTable'
+import { ContractCreationInfo } from '@/components/address/ContractCreationInfo'
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { formatCurrency, formatHash, formatNumber } from '@/lib/utils/format'
 import { isValidAddress } from '@/lib/utils/validation'
 import { env } from '@/lib/config/env'
@@ -247,6 +252,9 @@ export default function AddressPage() {
         </CardContent>
       </Card>
 
+      {/* Contract Creation Info */}
+      <ContractCreationInfo address={address} />
+
       {/* Token Balances */}
       <Card className="mb-6">
         <CardHeader className="border-b border-bg-tertiary">
@@ -257,128 +265,176 @@ export default function AddressPage() {
         </CardContent>
       </Card>
 
-      {/* Transaction Filters */}
-      <TransactionFilters
-        onApply={handleApplyFilters}
-        onReset={handleResetFilters}
-        initialValues={activeFilters || undefined}
-        isLoading={txLoading}
-      />
+      {/* Transaction Tabs */}
+      <Tabs defaultValue="transactions" className="w-full">
+        <TabsList className="mb-6">
+          <TabsTrigger value="transactions">Regular Transactions</TabsTrigger>
+          <TabsTrigger value="internal">Internal Transactions</TabsTrigger>
+          <TabsTrigger value="erc20">ERC20 Transfers</TabsTrigger>
+          <TabsTrigger value="erc721">ERC721 Transfers</TabsTrigger>
+        </TabsList>
 
-      {/* Transactions */}
-      <Card>
-        <CardHeader className="border-b border-bg-tertiary">
-          <CardTitle className="flex items-center justify-between">
-            <span>TRANSACTIONS {activeFilters && '(FILTERED)'}</span>
-            {totalCount > 0 && (
-              <span className="font-mono text-xs text-text-secondary">
-                {formatNumber(totalCount)} total
-              </span>
-            )}
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          {txLoading ? (
-            <div className="flex h-64 items-center justify-center">
-              <LoadingSpinner />
-            </div>
-          ) : txError ? (
-            <div className="p-6">
-              <ErrorDisplay title="Failed to load transactions" message={txError.message} />
-            </div>
-          ) : transactions.length === 0 ? (
-            <div className="p-6 text-center">
-              <p className="text-sm text-text-muted">No transactions found for this address</p>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>TX HASH</TableHead>
-                  <TableHead>BLOCK</TableHead>
-                  <TableHead>FROM</TableHead>
-                  <TableHead>TO</TableHead>
-                  <TableHead className="text-right">VALUE</TableHead>
-                  <TableHead>TYPE</TableHead>
-                  {activeFilters && <TableHead>STATUS</TableHead>}
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {transactions.map((tx: Transaction) => (
-                  <TableRow key={tx.hash}>
-                    <TableCell>
-                      <Link
-                        href={`/tx/${tx.hash}`}
-                        className="font-mono text-accent-blue hover:text-accent-cyan"
-                      >
-                        {formatHash(tx.hash)}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <Link
-                        href={`/block/${tx.blockNumber}`}
-                        className="font-mono text-accent-blue hover:text-accent-cyan"
-                      >
-                        {formatNumber(BigInt(tx.blockNumber))}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      {tx.from === address ? (
-                        <span className="font-mono text-text-secondary">Self</span>
-                      ) : (
-                        <Link
-                          href={`/address/${tx.from}`}
-                          className="font-mono text-accent-blue hover:text-accent-cyan"
-                        >
-                          {formatHash(tx.from, true)}
-                        </Link>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {tx.to === address ? (
-                        <span className="font-mono text-text-secondary">Self</span>
-                      ) : tx.to ? (
-                        <Link
-                          href={`/address/${tx.to}`}
-                          className="font-mono text-accent-blue hover:text-accent-cyan"
-                        >
-                          {formatHash(tx.to, true)}
-                        </Link>
-                      ) : (
-                        <span className="font-mono text-text-muted">[Contract]</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right font-mono">
-                      {formatCurrency(BigInt(tx.value), env.currencySymbol)}
-                    </TableCell>
-                    <TableCell>
-                      <TransactionTypeBadge type={tx.type} />
-                    </TableCell>
-                    {activeFilters && (
-                      <TableCell>
-                        {tx.receipt?.status === 1 ? (
-                          <span className="font-mono text-xs text-accent-green">SUCCESS</span>
-                        ) : tx.receipt?.status === 0 ? (
-                          <span className="font-mono text-xs text-accent-orange">FAILED</span>
-                        ) : (
-                          <span className="font-mono text-xs text-text-muted">-</span>
+        {/* Regular Transactions Tab */}
+        <TabsContent value="transactions">
+          {/* Transaction Filters */}
+          <TransactionFilters
+            onApply={handleApplyFilters}
+            onReset={handleResetFilters}
+            initialValues={activeFilters || undefined}
+            isLoading={txLoading}
+          />
+
+          <Card>
+            <CardHeader className="border-b border-bg-tertiary">
+              <CardTitle className="flex items-center justify-between">
+                <span>TRANSACTIONS {activeFilters && '(FILTERED)'}</span>
+                {totalCount > 0 && (
+                  <span className="font-mono text-xs text-text-secondary">
+                    {formatNumber(totalCount)} total
+                  </span>
+                )}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              {txLoading ? (
+                <div className="flex h-64 items-center justify-center">
+                  <LoadingSpinner />
+                </div>
+              ) : txError ? (
+                <div className="p-6">
+                  <ErrorDisplay title="Failed to load transactions" message={txError.message} />
+                </div>
+              ) : transactions.length === 0 ? (
+                <div className="p-6 text-center">
+                  <p className="text-sm text-text-muted">No transactions found for this address</p>
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>TX HASH</TableHead>
+                      <TableHead>BLOCK</TableHead>
+                      <TableHead>FROM</TableHead>
+                      <TableHead>TO</TableHead>
+                      <TableHead className="text-right">VALUE</TableHead>
+                      <TableHead>TYPE</TableHead>
+                      {activeFilters && <TableHead>STATUS</TableHead>}
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {transactions.map((tx: Transaction) => (
+                      <TableRow key={tx.hash}>
+                        <TableCell>
+                          <Link
+                            href={`/tx/${tx.hash}`}
+                            className="font-mono text-accent-blue hover:text-accent-cyan"
+                          >
+                            {formatHash(tx.hash)}
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          <Link
+                            href={`/block/${tx.blockNumber}`}
+                            className="font-mono text-accent-blue hover:text-accent-cyan"
+                          >
+                            {formatNumber(BigInt(tx.blockNumber))}
+                          </Link>
+                        </TableCell>
+                        <TableCell>
+                          {tx.from === address ? (
+                            <span className="font-mono text-text-secondary">Self</span>
+                          ) : (
+                            <Link
+                              href={`/address/${tx.from}`}
+                              className="font-mono text-accent-blue hover:text-accent-cyan"
+                            >
+                              {formatHash(tx.from, true)}
+                            </Link>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          {tx.to === address ? (
+                            <span className="font-mono text-text-secondary">Self</span>
+                          ) : tx.to ? (
+                            <Link
+                              href={`/address/${tx.to}`}
+                              className="font-mono text-accent-blue hover:text-accent-cyan"
+                            >
+                              {formatHash(tx.to, true)}
+                            </Link>
+                          ) : (
+                            <span className="font-mono text-text-muted">[Contract]</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right font-mono">
+                          {formatCurrency(BigInt(tx.value), env.currencySymbol)}
+                        </TableCell>
+                        <TableCell>
+                          <TransactionTypeBadge type={tx.type} />
+                        </TableCell>
+                        {activeFilters && (
+                          <TableCell>
+                            {tx.receipt?.status === 1 ? (
+                              <span className="font-mono text-xs text-accent-green">SUCCESS</span>
+                            ) : tx.receipt?.status === 0 ? (
+                              <span className="font-mono text-xs text-accent-orange">FAILED</span>
+                            ) : (
+                              <span className="font-mono text-xs text-text-muted">-</span>
+                            )}
+                          </TableCell>
                         )}
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
+            </CardContent>
+          </Card>
 
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-6">
-          <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
-        </div>
-      )}
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="mt-6">
+              <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Internal Transactions Tab */}
+        <TabsContent value="internal">
+          <Card>
+            <CardHeader className="border-b border-bg-tertiary">
+              <CardTitle>INTERNAL TRANSACTIONS</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <InternalTransactionsTable address={address} limit={20} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ERC20 Transfers Tab */}
+        <TabsContent value="erc20">
+          <Card>
+            <CardHeader className="border-b border-bg-tertiary">
+              <CardTitle>ERC20 TOKEN TRANSFERS</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ERC20TransfersTable address={address} limit={20} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ERC721 Transfers Tab */}
+        <TabsContent value="erc721">
+          <Card>
+            <CardHeader className="border-b border-bg-tertiary">
+              <CardTitle>ERC721 NFT TRANSFERS</CardTitle>
+            </CardHeader>
+            <CardContent className="p-0">
+              <ERC721TransfersTable address={address} limit={20} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   )
 }

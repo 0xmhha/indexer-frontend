@@ -160,7 +160,6 @@ export function useNewBlocks(maxBlocks = 20) {
       setLatestBlock(transformedBlock)
 
       // Legitimate use case: updating state from external subscription data
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setBlocks((prev) => {
         // Add new block at the beginning
         const updated = [transformedBlock, ...prev]
