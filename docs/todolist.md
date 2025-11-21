@@ -4,7 +4,7 @@
 
 ---
 
-## ✅ 완료된 기능 (Phases 1-7)
+## ✅ 완료된 기능 (Phases 1-9)
 
 ### Phase 1-3: 기본 인프라 및 UI
 - ✅ Next.js 14 프로젝트 설정
@@ -67,6 +67,52 @@
 - ✅ Validators 페이지 (/validators)
 - ✅ WBFT 페이지 (/wbft)
 
+### Phase 8: Address Indexing API
+- ✅ Address Indexing GraphQL 쿼리 및 타입 정의
+  - Contract Creation Tracking
+    - `contractCreation`: 컨트랙트 생성 정보 조회
+    - `contractsByCreator`: 생성자별 컨트랙트 목록
+  - Internal Transactions
+    - `internalTransactions`: 내부 트랜잭션 조회
+    - `internalTransactionsByAddress`: 주소별 내부 트랜잭션
+  - ERC20 Token Transfers
+    - `erc20Transfer`: 개별 ERC20 전송 조회
+    - `erc20TransfersByToken`: 토큰별 전송 내역
+    - `erc20TransfersByAddress`: 주소별 ERC20 전송 내역
+  - ERC721 NFT Transfers
+    - `erc721Transfer`: 개별 NFT 전송 조회
+    - `erc721TransfersByToken`: NFT 컬렉션별 전송 내역
+    - `erc721TransfersByAddress`: 주소별 NFT 전송 내역
+    - `erc721Owner`: NFT 소유자 조회
+- ✅ Custom React Hooks (useAddressIndexing.ts)
+  - 11개의 전문화된 hooks
+  - BigInt 자동 변환
+  - 페이지네이션 지원 (loadMore)
+  - previousData 캐싱 지원
+- ✅ TypeScript 타입 정의 (types/address-indexing.ts)
+  - Raw/Transformed 타입 분리
+  - Filter 및 Pagination 타입
+  - 완전한 타입 안정성
+
+### Phase 9: WebSocket Subscriptions 완성
+- ✅ WebSocket 엔드포인트 수정
+  - `ws://localhost:8080/ws` → `ws://localhost:8080/graphql/ws`
+  - 백엔드 GraphQL WebSocket 서버와 정확히 일치
+- ✅ 새로운 실시간 구독 쿼리
+  - `SUBSCRIBE_NEW_BLOCK`: 새로운 블록 실시간 업데이트
+  - `SUBSCRIBE_NEW_TRANSACTION`: 확정된 트랜잭션 알림
+  - `SUBSCRIBE_PENDING_TRANSACTIONS`: Pending 트랜잭션 (feePayer 추가)
+  - `SUBSCRIBE_LOGS`: 로그 이벤트 구독 (기존)
+- ✅ 새로운 React Hooks (useSubscriptions.ts 확장)
+  - `useNewBlocks()`: 실시간 블록 구독 + latestBlock 추적
+  - `useNewTransactions()`: 확정 트랜잭션 구독
+  - `usePendingTransactions()`: Pending 트랜잭션 구독 (업데이트)
+  - `useLogs()`: 로그 구독 (기존)
+- ✅ 자동 메모리 관리
+  - 설정 가능한 최대 항목 수
+  - Clear 함수 제공
+  - 효율적인 상태 관리
+
 ### 추가 기능
 - ✅ Gas Tools 페이지 (/gas)
   - Gas Calculator
@@ -101,16 +147,17 @@
 17. `/sitemap.xml` - SEO
 18. `/_not-found` - 404 페이지
 
-### GraphQL Hooks (9개)
+### GraphQL Hooks (10개)
 1. `useBlocks` - 블록 목록 조회
 2. `useBlock` - 블록 상세 조회
 3. `useTransactions` - 트랜잭션 목록 조회
 4. `useTransaction` - 트랜잭션 상세 조회
 5. `useAnalytics` - 통계 데이터 조회
-6. `useSubscriptions` - WebSocket 구독
+6. `useSubscriptions` - WebSocket 실시간 구독 (블록, 트랜잭션, 로그)
 7. `useSystemContracts` - System Contracts 데이터
 8. `useGovernance` - Governance 데이터
 9. `useWBFT` - WBFT 및 Validator 데이터
+10. `useAddressIndexing` - Address Indexing (컨트랙트, 내부 TX, ERC20/721)
 
 ### 빌드 정보
 - 빌드 상태: ✅ 성공
@@ -321,6 +368,37 @@ type Query {
 
 ---
 
-**Status**: Phase 7 완료 ✅
-**Last Commit**: `1d0d87b` - feat: implement Phase 6 (Governance) and Phase 7 (WBFT & Validators)
-**Next Steps**: 백엔드 API 구현 대기 중
+## 📦 최근 업데이트
+
+### Phase 8: Address Indexing API (2025-11-21)
+**Commit**: `d0bf84c` - feat: add Address Indexing API integration
+
+새로운 파일:
+- `types/address-indexing.ts` (177 lines)
+- `lib/graphql/queries/address-indexing.ts` (217 lines)
+- `lib/hooks/useAddressIndexing.ts` (565 lines)
+
+주요 기능:
+- 11개의 GraphQL 쿼리 및 custom hooks
+- 컨트랙트 생성 추적, 내부 트랜잭션, ERC20/ERC721 전송 지원
+- BigInt 자동 변환 및 페이지네이션
+
+### Phase 9: WebSocket Subscriptions (2025-11-21)
+**Commit**: `9516a5e` - feat: implement WebSocket subscriptions for real-time data
+
+수정된 파일:
+- `config/app.config.json` - WebSocket 엔드포인트 수정
+- `lib/apollo/queries.ts` - 새로운 구독 쿼리 추가
+- `lib/hooks/useSubscriptions.ts` - 새로운 hooks 추가
+- `lib/graphql/subscriptions.ts` (새 파일)
+
+주요 기능:
+- 실시간 블록/트랜잭션 구독
+- 백엔드 WebSocket 서버와 완벽한 호환성
+- 자동 메모리 관리 및 상태 추적
+
+---
+
+**Status**: Phase 9 완료 ✅
+**Last Commit**: `9516a5e` - feat: implement WebSocket subscriptions for real-time data
+**Next Steps**: 백엔드 WebSocket 서버 실행 시 실시간 기능 활성화
