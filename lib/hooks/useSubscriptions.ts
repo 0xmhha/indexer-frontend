@@ -2,9 +2,14 @@
 
 import { useState, useEffect } from 'react'
 import { useSubscription } from '@apollo/client'
-import { SUBSCRIBE_PENDING_TRANSACTIONS, SUBSCRIBE_LOGS } from '@/lib/apollo/queries'
-import { transformTransaction } from '@/lib/utils/graphql-transforms'
-import type { RawTransaction, Transaction, RawLog, Log } from '@/types/graphql'
+import {
+  SUBSCRIBE_NEW_BLOCK,
+  SUBSCRIBE_NEW_TRANSACTION,
+  SUBSCRIBE_PENDING_TRANSACTIONS,
+  SUBSCRIBE_LOGS,
+} from '@/lib/apollo/queries'
+import { transformBlock, transformTransaction } from '@/lib/utils/graphql-transforms'
+import type { RawBlock, Block, RawTransaction, Transaction, RawLog, Log } from '@/types/graphql'
 
 /**
  * Log filter options for subscription
@@ -121,5 +126,114 @@ export function useLogs(filter?: LogFilter, maxLogs = 100) {
     loading,
     error,
     clearLogs,
+  }
+}
+
+/**
+ * Hook to subscribe to new blocks in real-time
+ *
+ * @param maxBlocks - Maximum number of blocks to keep in memory (default: 20)
+ * @returns Object containing blocks array, loading state, error, and latest block
+ *
+ * @example
+ * ```tsx
+ * const { blocks, latestBlock, loading, error } = useNewBlocks(50)
+ * ```
+ */
+export function useNewBlocks(maxBlocks = 20) {
+  const [blocks, setBlocks] = useState<Block[]>([])
+  const [latestBlock, setLatestBlock] = useState<Block | null>(null)
+
+  const { data, loading, error } = useSubscription(SUBSCRIBE_NEW_BLOCK, {
+    onError: (error) => {
+      console.error('[New Block Subscription Error]:', error)
+    },
+  })
+
+  useEffect(() => {
+    if (data?.newBlock) {
+      const rawBlock = data.newBlock as RawBlock
+      const transformedBlock = transformBlock(rawBlock)
+
+      // Legitimate use case: updating state from external subscription data
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLatestBlock(transformedBlock)
+
+      // Legitimate use case: updating state from external subscription data
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setBlocks((prev) => {
+        // Add new block at the beginning
+        const updated = [transformedBlock, ...prev]
+        // Keep only the most recent maxBlocks
+        return updated.slice(0, maxBlocks)
+      })
+    }
+  }, [data, maxBlocks])
+
+  /**
+   * Clear all accumulated blocks
+   */
+  const clearBlocks = () => {
+    setBlocks([])
+    setLatestBlock(null)
+  }
+
+  return {
+    blocks,
+    latestBlock,
+    loading,
+    error,
+    clearBlocks,
+  }
+}
+
+/**
+ * Hook to subscribe to new confirmed transactions in real-time
+ *
+ * @param maxTransactions - Maximum number of transactions to keep in memory (default: 50)
+ * @returns Object containing transactions array, loading state, and error
+ *
+ * @example
+ * ```tsx
+ * const { transactions, loading, error } = useNewTransactions(100)
+ * ```
+ */
+export function useNewTransactions(maxTransactions = 50) {
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+
+  const { data, loading, error } = useSubscription(SUBSCRIBE_NEW_TRANSACTION, {
+    onError: (error) => {
+      console.error('[New Transaction Subscription Error]:', error)
+    },
+  })
+
+  useEffect(() => {
+    if (data?.newTransaction) {
+      const rawTx = data.newTransaction as RawTransaction
+      const transformedTx = transformTransaction(rawTx)
+
+      // Legitimate use case: updating state from external subscription data
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setTransactions((prev) => {
+        // Add new transaction at the beginning
+        const updated = [transformedTx, ...prev]
+        // Keep only the most recent maxTransactions
+        return updated.slice(0, maxTransactions)
+      })
+    }
+  }, [data, maxTransactions])
+
+  /**
+   * Clear all accumulated transactions
+   */
+  const clearTransactions = () => {
+    setTransactions([])
+  }
+
+  return {
+    transactions,
+    loading,
+    error,
+    clearTransactions,
   }
 }

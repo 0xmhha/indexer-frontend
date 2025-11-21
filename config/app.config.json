@@ -6,7 +6,7 @@
   },
   "api": {
     "graphqlEndpoint": "http://localhost:8080/graphql",
-    "wsEndpoint": "ws://localhost:8080/ws",
+    "wsEndpoint": "ws://localhost:8080/graphql/ws",
     "jsonRpcEndpoint": "http://localhost:8080/rpc"
   },
   "site": {

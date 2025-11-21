@@ -242,6 +242,55 @@ export const GET_NETWORK_METRICS = gql`
 // ============================================================================
 
 /**
+ * Subscribe to new blocks in real-time
+ */
+export const SUBSCRIBE_NEW_BLOCK = gql`
+  subscription NewBlock {
+    newBlock {
+      number
+      hash
+      parentHash
+      timestamp
+      miner
+      gasLimit
+      gasUsed
+      difficulty
+      totalDifficulty
+      size
+      transactionCount
+      baseFeePerGas
+      withdrawalsRoot
+      blobGasUsed
+      excessBlobGas
+    }
+  }
+`
+
+/**
+ * Subscribe to new confirmed transactions in real-time
+ */
+export const SUBSCRIBE_NEW_TRANSACTION = gql`
+  subscription NewTransaction {
+    newTransaction {
+      hash
+      from
+      to
+      value
+      nonce
+      gas
+      type
+      gasPrice
+      maxFeePerGas
+      maxPriorityFeePerGas
+      blockNumber
+      blockHash
+      transactionIndex
+      feePayer
+    }
+  }
+`
+
+/**
  * Subscribe to new pending transactions in real-time
  */
 export const SUBSCRIBE_PENDING_TRANSACTIONS = gql`
@@ -257,6 +306,7 @@ export const SUBSCRIBE_PENDING_TRANSACTIONS = gql`
       gasPrice
       maxFeePerGas
       maxPriorityFeePerGas
+      feePayer
     }
   }
 `
