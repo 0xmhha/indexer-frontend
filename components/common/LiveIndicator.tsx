@@ -1,9 +1,15 @@
 'use client'
 
-import { useWebSocket } from '@/lib/providers/WebSocketProvider'
+import { useSubscription } from '@apollo/client'
+import { SUBSCRIBE_NEW_BLOCK } from '@/lib/apollo/queries'
 
 export function LiveIndicator() {
-  const { isConnected } = useWebSocket()
+  // Use Apollo Client subscription to check connection status
+  const { loading, error } = useSubscription(SUBSCRIBE_NEW_BLOCK, {
+    fetchPolicy: 'no-cache',
+  })
+
+  const isConnected = !loading && !error
 
   return (
     <div className="flex items-center gap-2">

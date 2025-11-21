@@ -1,15 +1,15 @@
 'use client'
 
-import { useLatestHeight } from '@/lib/hooks/useLatestHeight'
-import { useBlock } from '@/lib/hooks/useBlock'
+import { useNewBlocks } from '@/lib/hooks/useSubscriptions'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { BlockCard } from './BlockCard'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 
 export function RecentBlocksList() {
-  const { latestHeight, loading } = useLatestHeight()
+  // Use subscription for real-time updates (no polling)
+  const { blocks, loading } = useNewBlocks(5)
 
-  if (loading || !latestHeight) {
+  if (loading && blocks.length === 0) {
     return (
       <Card>
         <CardHeader className="border-b border-bg-tertiary">
@@ -22,9 +22,6 @@ export function RecentBlocksList() {
     )
   }
 
-  // Generate array of last 5 block numbers
-  const recentBlockNumbers = Array.from({ length: 5 }, (_, i) => latestHeight - BigInt(i))
-
   return (
     <Card>
       <CardHeader className="border-b border-bg-tertiary">
@@ -32,21 +29,11 @@ export function RecentBlocksList() {
       </CardHeader>
       <CardContent className="p-4">
         <div className="space-y-3">
-          {recentBlockNumbers.map((blockNumber) => (
-            <RecentBlockItem key={blockNumber.toString()} blockNumber={blockNumber} />
+          {blocks.slice(0, 5).map((block) => (
+            <BlockCard key={block.hash} block={block} />
           ))}
         </div>
       </CardContent>
     </Card>
   )
-}
-
-function RecentBlockItem({ blockNumber }: { blockNumber: bigint }) {
-  const { block, loading } = useBlock(blockNumber)
-
-  if (loading || !block) {
-    return <div className="h-24 animate-pulse rounded bg-bg-tertiary"></div>
-  }
-
-  return <BlockCard block={block} />
 }

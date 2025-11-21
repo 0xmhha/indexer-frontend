@@ -1,12 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSubscription } from '@apollo/client'
+import { useSubscription, useQuery } from '@apollo/client'
 import {
   SUBSCRIBE_NEW_BLOCK,
   SUBSCRIBE_NEW_TRANSACTION,
   SUBSCRIBE_PENDING_TRANSACTIONS,
   SUBSCRIBE_LOGS,
+  GET_LATEST_HEIGHT,
 } from '@/lib/apollo/queries'
 import { transformBlock, transformTransaction } from '@/lib/utils/graphql-transforms'
 import type { RawBlock, Block, RawTransaction, Transaction, RawLog, Log } from '@/types/graphql'
@@ -37,6 +38,7 @@ export function usePendingTransactions(maxTransactions = 50) {
   const [pendingTransactions, setPendingTransactions] = useState<Transaction[]>([])
 
   const { data, loading, error } = useSubscription(SUBSCRIBE_PENDING_TRANSACTIONS, {
+    fetchPolicy: 'no-cache',
     onError: (error) => {
       console.error('[Pending Transactions Subscription Error]:', error)
     },
@@ -66,9 +68,9 @@ export function usePendingTransactions(maxTransactions = 50) {
 }
 
 /**
- * Hook to subscribe to logs with optional filtering
+ * Hook to subscribe to logs with filtering
  *
- * @param filter - Optional filter for logs (address, topics, block range)
+ * @param filter - Filter for logs (address, topics, block range). All fields are optional but filter object is required.
  * @param maxLogs - Maximum number of logs to keep in memory (default: 100)
  * @returns Object containing logs array, loading state, and error
  *
@@ -79,13 +81,17 @@ export function usePendingTransactions(maxTransactions = 50) {
  *   address: '0x...',
  *   topics: ['0xddf252ad...'] // Transfer event signature
  * })
+ *
+ * // Subscribe to all logs (empty filter)
+ * const { logs, loading, error } = useLogs({})
  * ```
  */
-export function useLogs(filter?: LogFilter, maxLogs = 100) {
+export function useLogs(filter: LogFilter = {}, maxLogs = 100) {
   const [logs, setLogs] = useState<Log[]>([])
 
   const { data, loading, error } = useSubscription(SUBSCRIBE_LOGS, {
-    ...(filter && { variables: { filter } }),
+    fetchPolicy: 'no-cache',
+    variables: { filter },
     onError: (error) => {
       console.error('[Logs Subscription Error]:', error)
     },
@@ -130,7 +136,7 @@ export function useLogs(filter?: LogFilter, maxLogs = 100) {
 }
 
 /**
- * Hook to subscribe to new blocks in real-time
+ * Hook to subscribe to new blocks in real-time with initial data loading
  *
  * @param maxBlocks - Maximum number of blocks to keep in memory (default: 20)
  * @returns Object containing blocks array, loading state, error, and latest block
@@ -143,31 +149,124 @@ export function useLogs(filter?: LogFilter, maxLogs = 100) {
 export function useNewBlocks(maxBlocks = 20) {
   const [blocks, setBlocks] = useState<Block[]>([])
   const [latestBlock, setLatestBlock] = useState<Block | null>(null)
+  const [initialized, setInitialized] = useState(false)
 
-  const { data, loading, error } = useSubscription(SUBSCRIBE_NEW_BLOCK, {
+  // Get latest height for initial data loading
+  const { data: heightData } = useQuery(GET_LATEST_HEIGHT, {
+    fetchPolicy: 'cache-first',
+  })
+
+  // Subscribe to new blocks
+  const { data: subscriptionData, loading, error } = useSubscription(SUBSCRIBE_NEW_BLOCK, {
+    fetchPolicy: 'no-cache',
     onError: (error) => {
       console.error('[New Block Subscription Error]:', error)
     },
   })
 
+  // Load initial blocks when we have the latest height (only once)
   useEffect(() => {
-    if (data?.newBlock) {
-      const rawBlock = data.newBlock as RawBlock
+    if (heightData?.latestHeight && !initialized) {
+      setInitialized(true) // Set immediately to prevent re-execution
+
+      const latestHeight = BigInt(heightData.latestHeight)
+      const blocksToFetch: bigint[] = []
+
+      // Calculate block numbers to fetch (latest N blocks)
+      for (let i = 0; i < maxBlocks; i++) {
+        const blockNum = latestHeight - BigInt(i)
+        if (blockNum >= 0n) {
+          blocksToFetch.push(blockNum)
+        }
+      }
+
+      console.log('[useNewBlocks] Fetching initial blocks:', blocksToFetch)
+
+      // Fetch blocks in parallel
+      Promise.all(
+        blocksToFetch.map(async (blockNum) => {
+          try {
+            const response = await fetch(
+              `http://localhost:8080/graphql`,
+              {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  query: `
+                    query GetBlock($number: String!) {
+                      block(number: $number) {
+                        number
+                        hash
+                        parentHash
+                        timestamp
+                        miner
+                        gasUsed
+                        gasLimit
+                        size
+                        transactionCount
+                      }
+                    }
+                  `,
+                  variables: { number: blockNum.toString() },
+                }),
+              }
+            )
+            const result = await response.json()
+            return result.data?.block ? transformBlock(result.data.block as RawBlock) : null
+          } catch (err) {
+            console.error('[useNewBlocks] Failed to fetch block', blockNum, err)
+            return null
+          }
+        })
+      ).then((fetchedBlocks) => {
+        const validBlocks = fetchedBlocks.filter((b): b is Block => b !== null)
+        console.log('[useNewBlocks] Fetched initial blocks:', validBlocks.length)
+        if (validBlocks.length > 0) {
+          setBlocks(validBlocks)
+          const firstBlock = validBlocks[0]
+          if (firstBlock) {
+            setLatestBlock(firstBlock)
+          }
+        }
+      })
+    }
+  }, [heightData, initialized, maxBlocks])
+
+  // Update from subscription (real-time updates)
+  useEffect(() => {
+    console.log('[useNewBlocks] Subscription data changed:', {
+      hasData: !!subscriptionData,
+      hasNewBlock: !!subscriptionData?.newBlock,
+      maxBlocks,
+    })
+
+    if (subscriptionData?.newBlock) {
+      const rawBlock = subscriptionData.newBlock as RawBlock
       const transformedBlock = transformBlock(rawBlock)
 
+      console.log('[useNewBlocks] New block from subscription:', {
+        number: transformedBlock.number.toString(),
+        hash: transformedBlock.hash,
+        timestamp: transformedBlock.timestamp.toString(),
+      })
+
       // Legitimate use case: updating state from external subscription data
-      // eslint-disable-next-line react-hooks/set-state-in-effect
       setLatestBlock(transformedBlock)
 
       // Legitimate use case: updating state from external subscription data
       setBlocks((prev) => {
+        console.log('[useNewBlocks] Updating blocks list:', {
+          currentCount: prev.length,
+          newBlockNumber: transformedBlock.number.toString(),
+          willKeep: maxBlocks,
+        })
         // Add new block at the beginning
         const updated = [transformedBlock, ...prev]
         // Keep only the most recent maxBlocks
         return updated.slice(0, maxBlocks)
       })
     }
-  }, [data, maxBlocks])
+  }, [subscriptionData, maxBlocks])
 
   /**
    * Clear all accumulated blocks
@@ -175,12 +274,13 @@ export function useNewBlocks(maxBlocks = 20) {
   const clearBlocks = () => {
     setBlocks([])
     setLatestBlock(null)
+    setInitialized(false)
   }
 
   return {
     blocks,
     latestBlock,
-    loading,
+    loading: loading && !initialized,
     error,
     clearBlocks,
   }
@@ -201,6 +301,7 @@ export function useNewTransactions(maxTransactions = 50) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
 
   const { data, loading, error } = useSubscription(SUBSCRIBE_NEW_TRANSACTION, {
+    fetchPolicy: 'no-cache',
     onError: (error) => {
       console.error('[New Transaction Subscription Error]:', error)
     },

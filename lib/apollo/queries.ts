@@ -312,11 +312,12 @@ export const SUBSCRIBE_PENDING_TRANSACTIONS = gql`
 `
 
 /**
- * Subscribe to logs with optional filtering
- * Variables should be passed as { filter: LogFilterInput }
+ * Subscribe to logs with filtering
+ * Variables must be passed as { filter: LogFilterInput }
+ * Note: filter argument is required by backend (non-null)
  */
 export const SUBSCRIBE_LOGS = gql`
-  subscription Logs($filter: LogFilterInput) {
+  subscription Logs($filter: LogFilterInput!) {
     logs(filter: $filter) {
       address
       topics

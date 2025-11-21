@@ -1,24 +1,15 @@
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatTimeAgo, formatNumber } from '@/lib/utils/format'
-
-interface Block {
-  number: string
-  hash: string
-  timestamp: string
-  miner: string
-  transactionCount: number
-  gasUsed: string
-  gasLimit: string
-}
+import type { Block } from '@/types/graphql'
 
 interface BlockCardProps {
   block: Block
 }
 
 export function BlockCard({ block }: BlockCardProps) {
-  const blockNumber = BigInt(block.number)
-  const timestamp = BigInt(block.timestamp)
+  const blockNumber = block.number
+  const timestamp = block.timestamp
 
   return (
     <Card className="transition-all hover:border-accent-blue/50">

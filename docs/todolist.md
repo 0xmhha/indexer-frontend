@@ -170,6 +170,54 @@ type Mutation {
 
 ---
 
+## ⚠️ 코드 내 TODO 항목
+
+### 에러 모니터링 통합 (우선순위: 낮음)
+**파일**: `lib/errors/logger.ts:121`
+
+현재 기본 콘솔 로깅만 구현되어 있으며, 프로덕션 환경을 위한 에러 모니터링 서비스 통합이 필요합니다.
+
+```typescript
+/**
+ * Send error to external monitoring service
+ * TODO: Integrate with Sentry, LogRocket, or similar
+ */
+private sendToMonitoring(log: ErrorLog): void {
+  // 현재: 콘솔 로깅만
+  // 필요: Sentry, LogRocket 등 통합
+}
+```
+
+**권장 서비스**:
+- [Sentry](https://sentry.io/) - 에러 추적 및 성능 모니터링
+- [LogRocket](https://logrocket.com/) - 세션 리플레이 및 에러 추적
+- [Datadog](https://www.datadoghq.com/) - 종합 모니터링
+
+**작업 시기**: 프로덕션 배포 전
+
+### Contract Verification API 연동 (우선순위: 중간)
+**파일**: `components/contract/ContractVerificationStatus.tsx:28`
+
+현재 Mock 데이터를 사용 중이며, 백엔드 API 준비 시 실제 API 호출로 교체 필요합니다.
+
+```typescript
+// TODO: Replace with actual API call
+// const { data, loading, error } = useQuery(GET_CONTRACT_VERIFICATION, { variables: { address } })
+
+// Mock data for demonstration (현재)
+const mockVerified = address.toLowerCase().endsWith('0')
+```
+
+**필요 작업**:
+1. 백엔드 Contract Verification API 구현 대기
+2. GraphQL Query 작성 (`GET_CONTRACT_VERIFICATION`)
+3. Mock 로직 제거 및 실제 API 호출로 교체
+4. 로딩/에러 상태 처리 추가
+
+**작업 시기**: 백엔드 API 완료 후
+
+---
+
 ## 🎯 향후 개선 사항 (선택적)
 
 ### UI/UX 개선

@@ -1,7 +1,6 @@
 'use client'
 
-import { useLatestHeight } from '@/lib/hooks/useLatestHeight'
-import { useBlock } from '@/lib/hooks/useBlock'
+import { useNewBlocks } from '@/lib/hooks/useSubscriptions'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
@@ -9,10 +8,10 @@ import { formatNumber, formatTimeAgo } from '@/lib/utils/format'
 import Link from 'next/link'
 
 export function LatestBlockCard() {
-  const { latestHeight, loading: heightLoading, error: heightError } = useLatestHeight()
-  const { block, loading: blockLoading, error: blockError } = useBlock(latestHeight)
+  // Use subscription for real-time updates (no polling)
+  const { latestBlock, loading, error } = useNewBlocks(1)
 
-  if (heightLoading || blockLoading) {
+  if (loading && !latestBlock) {
     return (
       <Card>
         <CardContent className="flex h-48 items-center justify-center">
@@ -22,20 +21,20 @@ export function LatestBlockCard() {
     )
   }
 
-  if (heightError || blockError) {
+  if (error) {
     return (
       <Card>
         <CardContent className="p-6">
           <ErrorDisplay
             title="Failed to load latest block"
-            message={heightError?.message || blockError?.message || 'Unknown error'}
+            message={error.message || 'Unknown error'}
           />
         </CardContent>
       </Card>
     )
   }
 
-  if (!block) {
+  if (!latestBlock) {
     return (
       <Card>
         <CardContent className="p-6">
@@ -45,8 +44,8 @@ export function LatestBlockCard() {
     )
   }
 
-  const blockNumber = BigInt(block.number)
-  const timestamp = BigInt(block.timestamp)
+  const blockNumber = latestBlock.number
+  const timestamp = latestBlock.timestamp
 
   return (
     <Card className="border-accent-blue/30">
@@ -64,7 +63,7 @@ export function LatestBlockCard() {
           <div>
             <div className="annotation mb-2">BLOCK NUMBER</div>
             <Link
-              href={`/block/${block.number}`}
+              href={`/block/${latestBlock.number}`}
               className="font-mono text-2xl font-bold text-accent-blue hover:text-accent-cyan"
             >
               #{formatNumber(blockNumber)}
@@ -80,15 +79,15 @@ export function LatestBlockCard() {
             </div>
             <div>
               <div className="annotation mb-1">TRANSACTIONS</div>
-              <div className="font-mono text-xs text-text-secondary">{block.transactionCount}</div>
+              <div className="font-mono text-xs text-text-secondary">{latestBlock.transactionCount}</div>
             </div>
             <div className="col-span-2">
               <div className="annotation mb-1">MINER</div>
               <Link
-                href={`/address/${block.miner}`}
+                href={`/address/${latestBlock.miner}`}
                 className="font-mono text-xs text-accent-blue hover:text-accent-cyan"
               >
-                {block.miner}
+                {latestBlock.miner}
               </Link>
             </div>
           </div>

@@ -76,6 +76,21 @@ const wsLink =
                 console.warn('[WebSocket]: Connection failed. Subscriptions will not work until backend WebSocket server is running at', env.wsEndpoint)
               }
             },
+            message: (message) => {
+              if (env.isDevelopment) {
+                if (typeof message === 'object' && 'type' in message) {
+                  if (message.type === 'next' && 'payload' in message) {
+                    console.log('[WebSocket]: Subscription data received', {
+                      id: message.id,
+                      type: message.type,
+                      payload: message.payload,
+                    })
+                  } else {
+                    console.log('[WebSocket]: Message received', message)
+                  }
+                }
+              }
+            },
           },
         })
       )
@@ -146,6 +161,10 @@ export const apolloClient = new ApolloClient({
             },
           },
         },
+      },
+      // Subscription type - don't cache subscription data
+      Subscription: {
+        fields: {},
       },
     },
   }),
