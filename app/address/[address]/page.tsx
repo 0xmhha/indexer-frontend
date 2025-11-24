@@ -1,12 +1,13 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import dynamic from 'next/dynamic'
 import { useRouter, useSearchParams, useParams } from 'next/navigation'
 import { useAddressBalance, useAddressTransactions, useBalanceHistory, useTokenBalances } from '@/lib/hooks/useAddress'
 import { useFilteredTransactions } from '@/lib/hooks/useFilteredTransactions'
 import { useLatestHeight } from '@/lib/hooks/useLatestHeight'
+import { usePagination } from '@/lib/hooks/usePagination'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
   Table,
@@ -16,7 +17,7 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table'
-import { Pagination } from '@/components/ui/pagination'
+import { PaginationControls } from '@/components/ui/pagination-controls'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { AddressDetailSkeleton } from '@/components/skeletons/AddressDetailSkeleton'
@@ -48,15 +49,11 @@ const BalanceHistoryChart = dynamic(
   }
 )
 
-export default function AddressPage() {
+function AddressPageContent() {
   const params = useParams()
   const address = params.address as string
   const router = useRouter()
   const searchParams = useSearchParams()
-
-  // Pagination state
-  const [currentPage, setCurrentPage] = useState(1)
-  const itemsPerPage = 20
 
   // Parse initial filters from URL
   const getFiltersFromURL = useCallback((): TransactionFilterValues | null => {
@@ -102,13 +99,20 @@ export default function AddressPage() {
   // Call hooks unconditionally
   const { balance, loading: balanceLoading, error: balanceError } = useAddressBalance(address)
 
+  // Get pagination params from URL
+  const pageParam = searchParams.get('page')
+  const limitParam = searchParams.get('limit')
+  const currentPageFromURL = pageParam ? parseInt(pageParam, 10) : 1
+  const itemsPerPageFromURL = limitParam ? parseInt(limitParam, 10) : 20
+  const offsetFromURL = (currentPageFromURL - 1) * itemsPerPageFromURL
+
   // Unfiltered transactions
   const {
     transactions: unfilteredTransactions,
     totalCount: unfilteredTotalCount,
     loading: unfilteredTxLoading,
     error: unfilteredTxError,
-  } = useAddressTransactions(address, itemsPerPage, (currentPage - 1) * itemsPerPage)
+  } = useAddressTransactions(address, itemsPerPageFromURL, offsetFromURL)
 
   // Filtered transactions (only when filters are active)
   const {
@@ -124,8 +128,8 @@ export default function AddressPage() {
     maxValue: activeFilters?.maxValue,
     txType: activeFilters?.txType,
     successOnly: activeFilters?.successOnly,
-    limit: itemsPerPage,
-    offset: (currentPage - 1) * itemsPerPage,
+    limit: itemsPerPageFromURL,
+    offset: offsetFromURL,
   })
 
   // Use filtered or unfiltered data based on active filters
@@ -133,6 +137,18 @@ export default function AddressPage() {
   const totalCount = activeFilters ? filteredTotalCount : unfilteredTotalCount
   const txLoading = activeFilters ? filteredTxLoading : unfilteredTxLoading
   const txError = activeFilters ? filteredTxError : unfilteredTxError
+
+  // Setup pagination with URL support
+  const {
+    currentPage,
+    itemsPerPage,
+    totalPages,
+    setPage,
+    setItemsPerPage,
+  } = usePagination({
+    totalCount,
+    defaultItemsPerPage: 20,
+  })
 
   const {
     history,
@@ -151,7 +167,7 @@ export default function AddressPage() {
       toBlock: filters.toBlock || (latestHeight?.toString() || '0'),
     }
     setActiveFilters(appliedFilters)
-    setCurrentPage(1)
+    setPage(1)
 
     // Update URL with filter parameters
     const params = new URLSearchParams()
@@ -180,13 +196,10 @@ export default function AddressPage() {
 
   const handleResetFilters = () => {
     setActiveFilters(null)
-    setCurrentPage(1)
+    setPage(1)
     // Clear URL parameters
     router.push('', { scroll: false })
   }
-
-  // Calculate total pages
-  const totalPages = Math.ceil(totalCount / itemsPerPage)
 
   // Validate address
   if (!isValidAddress(address)) {
@@ -394,7 +407,17 @@ export default function AddressPage() {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="mt-6">
-              <Pagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+              <PaginationControls
+                currentPage={currentPage}
+                totalPages={totalPages}
+                totalCount={totalCount}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setPage}
+                onItemsPerPageChange={setItemsPerPage}
+                showItemsPerPage={true}
+                showResultsInfo={true}
+                showPageInput={false}
+              />
             </div>
           )}
         </TabsContent>
@@ -436,5 +459,13 @@ export default function AddressPage() {
         </TabsContent>
       </Tabs>
     </div>
+  )
+}
+
+export default function AddressPage() {
+  return (
+    <Suspense fallback={<AddressDetailSkeleton />}>
+      <AddressPageContent />
+    </Suspense>
   )
 }

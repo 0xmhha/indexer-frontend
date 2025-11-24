@@ -1,8 +1,10 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useBlocks } from '@/lib/hooks/useBlocks'
+import { usePagination } from '@/lib/hooks/usePagination'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
   Table,
@@ -12,27 +14,41 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table'
-import { Pagination } from '@/components/ui/pagination'
+import { PaginationControls } from '@/components/ui/pagination-controls'
 import { ListPageSkeleton } from '@/components/skeletons/ListPageSkeleton'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { formatNumber, formatTimeAgo } from '@/lib/utils/format'
 import type { Block } from '@/types/graphql'
 
-const ITEMS_PER_PAGE = 20
-
-export default function BlocksListPage() {
-  const [currentPage, setCurrentPage] = useState(1)
+function BlocksListContent() {
+  const searchParams = useSearchParams()
   const [orderBy, setOrderBy] = useState<'number' | 'timestamp'>('number')
   const [orderDirection, setOrderDirection] = useState<'asc' | 'desc'>('desc')
 
-  const offset = (currentPage - 1) * ITEMS_PER_PAGE
+  // Get pagination params from URL
+  const pageParam = searchParams.get('page')
+  const limitParam = searchParams.get('limit')
+  const currentPageFromURL = pageParam ? parseInt(pageParam, 10) : 1
+  const itemsPerPageFromURL = limitParam ? parseInt(limitParam, 10) : 20
+  const offsetFromURL = (currentPageFromURL - 1) * itemsPerPageFromURL
 
+  // Fetch blocks with URL params
   const { blocks: rawBlocks, totalCount, loading, error } = useBlocks({
-    limit: ITEMS_PER_PAGE,
-    offset,
+    limit: itemsPerPageFromURL,
+    offset: offsetFromURL,
   })
 
-  const totalPages = Math.ceil(totalCount / ITEMS_PER_PAGE)
+  // Setup pagination with URL support
+  const {
+    currentPage,
+    itemsPerPage,
+    totalPages,
+    setPage,
+    setItemsPerPage,
+  } = usePagination({
+    totalCount,
+    defaultItemsPerPage: 20,
+  })
 
   // Sort blocks based on orderBy and orderDirection
   const blocks = [...rawBlocks].sort((a, b) => {
@@ -45,11 +61,6 @@ export default function BlocksListPage() {
     return orderDirection === 'desc' ? -comparison : comparison
   })
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page)
-    window.scrollTo({ top: 0, behavior: 'smooth' })
-  }
-
   const handleSort = (field: 'number' | 'timestamp') => {
     if (orderBy === field) {
       setOrderDirection(orderDirection === 'asc' ? 'desc' : 'asc')
@@ -57,7 +68,7 @@ export default function BlocksListPage() {
       setOrderBy(field)
       setOrderDirection('desc')
     }
-    setCurrentPage(1)
+    setPage(1)
   }
 
   if (loading && blocks.length === 0) {
@@ -197,10 +208,16 @@ export default function BlocksListPage() {
               {/* Pagination */}
               {totalPages > 1 && (
                 <div className="border-t border-bg-tertiary p-4">
-                  <Pagination
+                  <PaginationControls
                     currentPage={currentPage}
                     totalPages={totalPages}
-                    onPageChange={handlePageChange}
+                    totalCount={totalCount}
+                    itemsPerPage={itemsPerPage}
+                    onPageChange={setPage}
+                    onItemsPerPageChange={setItemsPerPage}
+                    showItemsPerPage={true}
+                    showResultsInfo={true}
+                    showPageInput={false}
                   />
                 </div>
               )}
@@ -209,5 +226,13 @@ export default function BlocksListPage() {
         </CardContent>
       </Card>
     </div>
+  )
+}
+
+export default function BlocksListPage() {
+  return (
+    <Suspense fallback={<ListPageSkeleton />}>
+      <BlocksListContent />
+    </Suspense>
   )
 }
