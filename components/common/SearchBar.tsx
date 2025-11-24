@@ -8,7 +8,7 @@ import { useSearchHistory } from '@/lib/hooks/useSearchHistory'
 import { formatNumber, formatHash } from '@/lib/utils/format'
 
 interface Suggestion {
-  type: 'block' | 'hint' | 'history'
+  type: 'block' | 'hint' | 'history' | 'search-all'
   label: string
   value: string
   description?: string
@@ -106,8 +106,18 @@ export function SearchBar() {
         }
       }
 
-      // Show format hint based on what they're typing
+      // Add "View All Results" option when query is valid
       const detectedType = detectInputType(trimmed)
+      if (detectedType) {
+        suggestions.push({
+          type: 'search-all',
+          label: '🔍 View All Results',
+          value: trimmed,
+          description: 'See all matching blocks, transactions, and addresses',
+        })
+      }
+
+      // Show format hint based on what they're typing
       if (detectedType === 'blockNumber') {
         suggestions.push({
           type: 'hint',
@@ -202,6 +212,11 @@ export function SearchBar() {
       if (detectedType) {
         navigateToResult(suggestion.value, detectedType)
       }
+    } else if (suggestion.type === 'search-all') {
+      // Navigate to search results page
+      router.push(`/search?q=${encodeURIComponent(suggestion.value)}`)
+      setQuery('')
+      setShowSuggestions(false)
     } else if (suggestion.type === 'hint' && suggestion.value) {
       setQuery(suggestion.value)
       setShowSuggestions(false)
@@ -211,7 +226,9 @@ export function SearchBar() {
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (!showSuggestions) return
 
-    const selectableSuggestions = suggestions.filter((s) => s.type === 'block' || s.type === 'history')
+    const selectableSuggestions = suggestions.filter(
+      (s) => s.type === 'block' || s.type === 'history' || s.type === 'search-all'
+    )
 
     if (e.key === 'ArrowDown') {
       e.preventDefault()
@@ -248,7 +265,9 @@ export function SearchBar() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const selectableSuggestions = suggestions.filter((s) => s.type === 'block' || s.type === 'history')
+  const selectableSuggestions = suggestions.filter(
+    (s) => s.type === 'block' || s.type === 'history' || s.type === 'search-all'
+  )
   const activeDescendant = selectedIndex >= 0 ? `search-suggestion-${selectedIndex}` : undefined
 
   return (
@@ -293,9 +312,13 @@ export function SearchBar() {
             className="absolute top-full left-0 right-0 mt-1 border border-bg-tertiary bg-bg-secondary shadow-lg z-50 max-h-96 overflow-y-auto"
           >
             {suggestions.map((suggestion, index) => {
-              const selectableIndex = (suggestion.type === 'block' || suggestion.type === 'history') ? selectableSuggestions.indexOf(suggestion) : -1
+              const selectableIndex =
+                suggestion.type === 'block' || suggestion.type === 'history' || suggestion.type === 'search-all'
+                  ? selectableSuggestions.indexOf(suggestion)
+                  : -1
               const isSelected = selectableIndex === selectedIndex
-              const isSelectable = suggestion.type === 'block' || suggestion.type === 'history'
+              const isSelectable =
+                suggestion.type === 'block' || suggestion.type === 'history' || suggestion.type === 'search-all'
 
               return (
                 <div
