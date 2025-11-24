@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { NotificationSettings } from '@/components/settings/NotificationSettings'
+import { UserPreferencesSettings } from '@/components/settings/UserPreferencesSettings'
 
 export const metadata: Metadata = {
   title: 'Settings',
@@ -23,7 +24,8 @@ export default function SettingsPage() {
         </p>
       </div>
 
-      <div className="max-w-4xl">
+      <div className="max-w-4xl space-y-6">
+        <UserPreferencesSettings />
         <NotificationSettings />
       </div>
     </div>

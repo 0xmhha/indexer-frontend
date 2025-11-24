@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { AreaChart } from '@/components/charts/AreaChart'
 import { formatCurrency, formatNumber } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
 
@@ -45,54 +45,32 @@ export function BalanceHistoryChart({ history, currencySymbol = env.currencySymb
     )
   }
 
-  // Calculate min/max for Y axis
-  const balances = chartData.map((d) => d.balance)
-  const minBalance = Math.min(...balances)
-  const maxBalance = Math.max(...balances)
-  const padding = (maxBalance - minBalance) * 0.1 || 1 // 10% padding or 1 if same
+  // Format data with readable labels
+  const formattedData = chartData.map((d) => ({
+    ...d,
+    blockLabel: formatNumber(BigInt(d.blockNumber)),
+    balanceLabel: formatCurrency(d.balanceRaw, currencySymbol),
+  }))
 
   return (
     <div className="h-64 w-full">
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#2D3748" opacity={0.3} />
-          <XAxis
-            dataKey="blockNumber"
-            stroke="#718096"
-            style={{ fontSize: '10px', fontFamily: 'monospace' }}
-            tickFormatter={(value: number) => formatNumber(BigInt(value))}
-          />
-          <YAxis
-            stroke="#718096"
-            style={{ fontSize: '10px', fontFamily: 'monospace' }}
-            domain={[minBalance - padding, maxBalance + padding]}
-            tickFormatter={(value: number) => value.toFixed(4)}
-          />
-          <Tooltip
-            contentStyle={{
-              backgroundColor: '#1A202C',
-              border: '1px solid #2D3748',
-              borderRadius: 0,
-              fontFamily: 'monospace',
-              fontSize: '11px',
-            }}
-            labelStyle={{ color: '#00D4FF', marginBottom: '4px' }}
-            formatter={(_value: number, _name: string, props) => {
-              const dataPoint = props.payload as ChartDataPoint
-              return [formatCurrency(dataPoint.balanceRaw, currencySymbol), 'Balance']
-            }}
-            labelFormatter={(label: number) => `Block #${formatNumber(BigInt(label))}`}
-          />
-          <Line
-            type="monotone"
-            dataKey="balance"
-            stroke="#00D4FF"
-            strokeWidth={2}
-            dot={{ fill: '#00D4FF', r: 3 }}
-            activeDot={{ r: 5, fill: '#00D4FF' }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+      <AreaChart
+        data={formattedData}
+        xKey="blockLabel"
+        yKeys={[
+          {
+            key: 'balance',
+            color: '#00D4FF',
+            name: 'Balance',
+            fillOpacity: 0.3,
+          },
+        ]}
+        height={256}
+        showGrid={true}
+        showLegend={false}
+        xAxisLabel="Block Number"
+        yAxisLabel="Balance"
+      />
     </div>
   )
 }

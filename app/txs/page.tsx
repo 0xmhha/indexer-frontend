@@ -15,6 +15,7 @@ import {
   TableCell,
 } from '@/components/ui/table'
 import { PaginationControls } from '@/components/ui/pagination-controls'
+import { ExportButton } from '@/components/common/ExportButton'
 import { ListPageSkeleton } from '@/components/skeletons/ListPageSkeleton'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { formatNumber, formatHash, formatCurrency } from '@/lib/utils/format'
@@ -90,9 +91,24 @@ function TransactionsListContent() {
         <CardHeader className="border-b border-bg-tertiary">
           <CardTitle className="flex items-center justify-between">
             <span>TRANSACTIONS LIST</span>
-            <span className="font-mono text-xs text-text-secondary">
-              Page {currentPage} of {totalPages}
-            </span>
+            <div className="flex items-center gap-4">
+              <span className="font-mono text-xs text-text-secondary">
+                Page {currentPage} of {totalPages}
+              </span>
+              <ExportButton
+                data={transactions.map((tx) => ({
+                  hash: tx.hash,
+                  blockNumber: tx.blockNumber,
+                  from: tx.from,
+                  to: tx.to || '',
+                  value: tx.value,
+                  type: tx.type,
+                }))}
+                filename="transactions"
+                headers={['hash', 'blockNumber', 'from', 'to', 'value', 'type']}
+                disabled={loading}
+              />
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">

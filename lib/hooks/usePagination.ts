@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
+import { getPreference } from '@/lib/store/userPreferences'
 
 export interface UsePaginationOptions {
   totalCount: number
@@ -46,9 +47,12 @@ const MIN_ITEMS_PER_PAGE = 10
  * ```
  */
 export function usePagination(options: UsePaginationOptions): UsePaginationResult {
+  // Get user's preferred items per page from settings, fallback to option or default
+  const userPreferredItemsPerPage = getPreference('itemsPerPage')
+
   const {
     totalCount,
-    defaultItemsPerPage = DEFAULT_ITEMS_PER_PAGE,
+    defaultItemsPerPage = userPreferredItemsPerPage || DEFAULT_ITEMS_PER_PAGE,
     maxItemsPerPage = MAX_ITEMS_PER_PAGE,
     minItemsPerPage = MIN_ITEMS_PER_PAGE,
     scrollToTop = true,
@@ -98,19 +102,13 @@ export function usePagination(options: UsePaginationOptions): UsePaginationResul
     const urlLimit = getItemsPerPageFromURL()
 
     if (urlPage !== currentPage) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setCurrentPage(urlPage)
     }
     if (urlLimit !== itemsPerPage) {
       setItemsPerPageState(urlLimit)
     }
   }, [getPageFromURL, getItemsPerPageFromURL, currentPage, itemsPerPage])
-
-  // Validate current page when total pages changes
-  useEffect(() => {
-    if (currentPage > totalPages && totalPages > 0) {
-      setPage(totalPages)
-    }
-  }, [totalPages, currentPage])
 
   // Update URL with new query params
   const updateURL = useCallback(
@@ -152,6 +150,14 @@ export function usePagination(options: UsePaginationOptions): UsePaginationResul
     },
     [totalPages, itemsPerPage, updateURL]
   )
+
+  // Validate current page when total pages changes
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setPage(totalPages)
+    }
+  }, [totalPages, currentPage, setPage])
 
   // Set items per page
   const setItemsPerPage = useCallback(

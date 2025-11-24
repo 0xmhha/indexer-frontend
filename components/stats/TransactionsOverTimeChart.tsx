@@ -1,6 +1,6 @@
 'use client'
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import { LineChart } from '@/components/charts/LineChart'
 import type { Block } from '@/types/graphql'
 
 interface TransactionsOverTimeChartProps {
@@ -48,44 +48,31 @@ export function TransactionsOverTimeChart({ blocks }: TransactionsOverTimeChartP
     )
   }
 
+  // Format data with readable time labels
+  const formattedData = chartData.map((d) => ({
+    ...d,
+    timeLabel: (() => {
+      const date = new Date(d.timestamp)
+      return `${date.getHours().toString().padStart(2, '0')}:00`
+    })(),
+  }))
+
   return (
-    <ResponsiveContainer width="100%" height={300}>
-      <LineChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="#1a1a1a" />
-        <XAxis
-          dataKey="timestamp"
-          stroke="#808080"
-          tick={{ fill: '#808080', fontSize: 12 }}
-          tickFormatter={(timestamp) => {
-            const date = new Date(timestamp)
-            return `${date.getHours()}:00`
-          }}
-        />
-        <YAxis stroke="#808080" tick={{ fill: '#808080', fontSize: 12 }} />
-        <Tooltip
-          contentStyle={{
-            backgroundColor: '#0a0a0a',
-            border: '1px solid #1a1a1a',
-            borderRadius: '4px',
-            fontFamily: 'monospace',
-          }}
-          labelStyle={{ color: '#00d9ff', fontSize: 12 }}
-          itemStyle={{ color: '#ffffff', fontSize: 12 }}
-          labelFormatter={(timestamp) => {
-            const date = new Date(timestamp)
-            return `${date.toLocaleDateString()} ${date.getHours()}:00`
-          }}
-          formatter={(value: number) => [value.toLocaleString(), 'Transactions']}
-        />
-        <Line
-          type="monotone"
-          dataKey="transactions"
-          stroke="#00d9ff"
-          strokeWidth={2}
-          dot={false}
-          activeDot={{ r: 4 }}
-        />
-      </LineChart>
-    </ResponsiveContainer>
+    <LineChart
+      data={formattedData}
+      xKey="timeLabel"
+      yKeys={[
+        {
+          key: 'transactions',
+          color: '#00d9ff',
+          name: 'Transactions',
+        },
+      ]}
+      height={300}
+      showGrid={true}
+      showLegend={false}
+      xAxisLabel="Time (24h)"
+      yAxisLabel="Transaction Count"
+    />
   )
 }

@@ -18,6 +18,7 @@ import {
   TableCell,
 } from '@/components/ui/table'
 import { PaginationControls } from '@/components/ui/pagination-controls'
+import { ExportButton } from '@/components/common/ExportButton'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { AddressDetailSkeleton } from '@/components/skeletons/AddressDetailSkeleton'
@@ -301,11 +302,26 @@ function AddressPageContent() {
             <CardHeader className="border-b border-bg-tertiary">
               <CardTitle className="flex items-center justify-between">
                 <span>TRANSACTIONS {activeFilters && '(FILTERED)'}</span>
-                {totalCount > 0 && (
-                  <span className="font-mono text-xs text-text-secondary">
-                    {formatNumber(totalCount)} total
-                  </span>
-                )}
+                <div className="flex items-center gap-4">
+                  {totalCount > 0 && (
+                    <span className="font-mono text-xs text-text-secondary">
+                      {formatNumber(totalCount)} total
+                    </span>
+                  )}
+                  <ExportButton
+                    data={transactions.map((tx: Transaction) => ({
+                      hash: tx.hash,
+                      blockNumber: tx.blockNumber,
+                      from: tx.from,
+                      to: tx.to || '',
+                      value: tx.value,
+                      type: tx.type,
+                    }))}
+                    filename={`address-${address}-transactions`}
+                    headers={['hash', 'blockNumber', 'from', 'to', 'value', 'type']}
+                    disabled={txLoading}
+                  />
+                </div>
               </CardTitle>
             </CardHeader>
             <CardContent className="p-0">

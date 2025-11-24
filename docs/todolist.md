@@ -221,12 +221,23 @@ const mockVerified = address.toLowerCase().endsWith('0')
 ## 🎯 향후 개선 사항 (선택적)
 
 ### UI/UX 개선
-- [ ] 페이지네이션 컴포넌트 통합
+- [x] 페이지네이션 컴포넌트 통합 ✅
+  - 아이콘 기반 모던한 디자인
+  - 키보드 내비게이션 (←, →, Home, End)
+  - 로딩 상태 지원
+  - 반응형 디자인
 - [ ] 무한 스크롤 옵션 추가
-- [ ] 고급 차트 라이브러리 통합 (Chart.js, Recharts)
-- [ ] 데이터 내보내기 기능 (CSV, JSON)
+- [x] 고급 차트 라이브러리 통합 (Recharts) ✅
+  - 재사용 가능한 LineChart, AreaChart, BarChart 컴포넌트
+  - Stats 페이지 차트 개선
+  - Address 페이지 Balance History 차트 개선
+- [x] 데이터 내보내기 기능 (CSV, JSON) ✅
+  - Blocks, Transactions, Address 페이지 지원
+  - CSV 및 JSON 형식 내보내기
 - [ ] 즐겨찾기/북마크 기능
-- [ ] 사용자 프리퍼런스 저장 (localStorage)
+- [x] 사용자 프리퍼런스 저장 (localStorage) ✅
+  - 테마, 언어, 페이지당 항목 수, 날짜 형식 등
+  - Import/Export 기능
 
 ### 성능 최적화
 - [ ] React Query로 마이그레이션 (Apollo Client 대체)
@@ -242,8 +253,10 @@ const mockVerified = address.toLowerCase().endsWith('0')
 - [ ] Visual Regression Tests
 
 ### 접근성
-- [ ] ARIA 레이블 개선
-- [ ] 키보드 내비게이션 강화
+- [x] ARIA 레이블 개선 ✅ (Pagination 컴포넌트)
+- [x] 키보드 내비게이션 강화 ✅
+  - Pagination 키보드 단축키 (←, →, Home, End)
+  - 키보드 힌트 표시
 - [ ] 스크린 리더 테스트
 - [ ] WCAG 2.1 AA 준수 검증
 
@@ -267,10 +280,12 @@ const mockVerified = address.toLowerCase().endsWith('0')
 - Tailwind CSS 3.4.17
 - Radix UI (Dialog, Dropdown Menu, Tabs)
 - Lucide Icons
+- Recharts (Data Visualization)
 
 ### State Management
 - Apollo Client Cache
 - React Context (Notifications, Theme)
+- LocalStorage (User Preferences)
 
 ### Development Tools
 - ESLint 9

@@ -1,7 +1,14 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
+import {
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
+  ArrowUpDown,
+} from 'lucide-react'
 
 export interface PaginationControlsProps {
   currentPage: number
@@ -15,6 +22,7 @@ export interface PaginationControlsProps {
   showResultsInfo?: boolean
   showPageInput?: boolean
   itemsPerPageOptions?: number[]
+  loading?: boolean
 }
 
 export function PaginationControls({
@@ -29,10 +37,11 @@ export function PaginationControls({
   showResultsInfo = true,
   showPageInput = false,
   itemsPerPageOptions = [10, 20, 50, 100],
+  loading = false,
 }: PaginationControlsProps) {
   const [pageInput, setPageInput] = useState('')
 
-  const maxVisible = 5
+  const maxVisible = 7
   const halfVisible = Math.floor(maxVisible / 2)
 
   let startPage = Math.max(1, currentPage - halfVisible)
@@ -57,32 +66,77 @@ export function PaginationControls({
     }
   }
 
+  // Keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Only handle if not focused on an input/textarea
+      if (
+        document.activeElement?.tagName === 'INPUT' ||
+        document.activeElement?.tagName === 'TEXTAREA'
+      ) {
+        return
+      }
+
+      if (e.key === 'ArrowLeft' && currentPage > 1) {
+        e.preventDefault()
+        onPageChange(currentPage - 1)
+      } else if (e.key === 'ArrowRight' && currentPage < totalPages) {
+        e.preventDefault()
+        onPageChange(currentPage + 1)
+      } else if (e.key === 'Home' && currentPage > 1) {
+        e.preventDefault()
+        onPageChange(1)
+      } else if (e.key === 'End' && currentPage < totalPages) {
+        e.preventDefault()
+        onPageChange(totalPages)
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [currentPage, totalPages, onPageChange])
+
   return (
-    <div className={cn('space-y-4', className)}>
+    <div className={cn('space-y-4', loading && 'pointer-events-none opacity-50', className)}>
       {/* Results Info and Items Per Page */}
       <div className="flex flex-col items-center justify-between gap-4 sm:flex-row">
         {/* Results Info */}
         {showResultsInfo && totalCount !== undefined && (
-          <div className="font-mono text-xs text-text-secondary">
-            Showing <span className="font-semibold text-text-primary">{showingStart}</span> -{' '}
-            <span className="font-semibold text-text-primary">{showingEnd}</span> of{' '}
-            <span className="font-semibold text-text-primary">{totalCount}</span> results
+          <div className="flex items-center gap-2 font-mono text-xs text-text-secondary">
+            <span>Showing</span>
+            <span className="rounded bg-bg-tertiary px-2 py-0.5 font-semibold text-accent-blue">
+              {showingStart}
+            </span>
+            <span>-</span>
+            <span className="rounded bg-bg-tertiary px-2 py-0.5 font-semibold text-accent-blue">
+              {showingEnd}
+            </span>
+            <span>of</span>
+            <span className="rounded bg-bg-tertiary px-2 py-0.5 font-semibold text-accent-blue">
+              {totalCount.toLocaleString()}
+            </span>
+            <span>results</span>
           </div>
         )}
 
         {/* Items Per Page Selector */}
         {showItemsPerPage && onItemsPerPageChange && (
           <div className="flex items-center gap-2">
-            <label htmlFor="items-per-page" className="font-mono text-xs text-text-secondary">
-              Show:
+            <label
+              htmlFor="items-per-page"
+              className="flex items-center gap-1.5 font-mono text-xs text-text-secondary"
+            >
+              <ArrowUpDown className="h-3 w-3" aria-hidden="true" />
+              <span>Show:</span>
             </label>
             <select
               id="items-per-page"
               name="items-per-page"
               value={itemsPerPage}
               onChange={(e) => onItemsPerPageChange(Number(e.target.value))}
-              className="border border-bg-tertiary bg-bg-secondary px-2 py-1 font-mono text-xs text-text-primary transition-colors hover:border-accent-blue focus:border-accent-blue focus:outline-none"
+              className="rounded border border-bg-tertiary bg-bg-secondary px-3 py-1.5 font-mono text-xs text-text-primary shadow-sm transition-all hover:border-accent-blue hover:shadow-md focus:border-accent-blue focus:outline-none focus:ring-2 focus:ring-accent-blue/20"
               aria-label="Items per page"
+              disabled={loading}
             >
               {itemsPerPageOptions.map((option) => (
                 <option key={option} value={option}>
@@ -101,34 +155,48 @@ export function PaginationControls({
         className="flex flex-col items-center justify-center gap-4 sm:flex-row"
       >
         {/* Page Numbers and Navigation */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center justify-center gap-1.5">
           {/* First Page */}
           {currentPage > 1 && (
             <button
               onClick={() => onPageChange(1)}
-              className="btn-hex h-8 px-3 py-1 text-[10px] disabled:opacity-50"
-              disabled={currentPage === 1}
+              className="flex h-9 items-center gap-1.5 rounded border border-bg-tertiary bg-bg-secondary px-3 py-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-text-secondary shadow-sm transition-all hover:border-accent-blue hover:bg-bg-tertiary hover:text-accent-blue hover:shadow-md focus:outline-none focus:ring-2 focus:ring-accent-blue/20 disabled:cursor-not-allowed disabled:opacity-40"
+              disabled={currentPage === 1 || loading}
               aria-label="Go to first page"
+              title="First page (Home key)"
             >
-              FIRST
+              <ChevronsLeft className="h-3.5 w-3.5" aria-hidden="true" />
+              <span className="hidden sm:inline">First</span>
             </button>
           )}
 
           {/* Previous */}
           <button
             onClick={() => onPageChange(currentPage - 1)}
-            className="btn-hex h-8 px-3 py-1 text-[10px] disabled:opacity-50"
-            disabled={currentPage === 1}
+            className="flex h-9 items-center gap-1.5 rounded border border-bg-tertiary bg-bg-secondary px-3 py-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-text-secondary shadow-sm transition-all hover:border-accent-blue hover:bg-bg-tertiary hover:text-accent-blue hover:shadow-md focus:outline-none focus:ring-2 focus:ring-accent-blue/20 disabled:cursor-not-allowed disabled:opacity-40"
+            disabled={currentPage === 1 || loading}
             aria-label="Go to previous page"
+            title="Previous page (← key)"
           >
-            PREV
+            <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
+            <span className="hidden sm:inline">Prev</span>
           </button>
 
           {/* Page Numbers */}
           {startPage > 1 && (
-            <span className="px-2 font-mono text-xs text-text-muted" aria-hidden="true">
-              ...
-            </span>
+            <>
+              <button
+                onClick={() => onPageChange(1)}
+                className="flex h-9 min-w-[36px] items-center justify-center rounded border border-bg-tertiary bg-bg-secondary px-3 py-2 font-mono text-xs text-text-secondary shadow-sm transition-all hover:border-accent-blue hover:bg-bg-tertiary hover:text-accent-blue hover:shadow-md focus:outline-none focus:ring-2 focus:ring-accent-blue/20"
+                aria-label="Page 1"
+                disabled={loading}
+              >
+                1
+              </button>
+              <span className="px-1 font-mono text-xs text-text-muted" aria-hidden="true">
+                ...
+              </span>
+            </>
           )}
 
           {pages.map((page) => (
@@ -136,43 +204,58 @@ export function PaginationControls({
               key={page}
               onClick={() => onPageChange(page)}
               className={cn(
-                'h-8 px-3 py-1 font-mono text-xs transition-colors',
+                'flex h-9 min-w-[36px] items-center justify-center rounded border px-3 py-2 font-mono text-xs shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-accent-blue/20',
                 page === currentPage
-                  ? 'bg-accent-blue text-bg-primary'
-                  : 'bg-bg-tertiary text-text-secondary hover:bg-bg-tertiary/70'
+                  ? 'border-accent-blue bg-accent-blue text-bg-primary shadow-md shadow-accent-blue/20'
+                  : 'border-bg-tertiary bg-bg-secondary text-text-secondary hover:border-accent-blue hover:bg-bg-tertiary hover:text-accent-blue hover:shadow-md'
               )}
-              aria-label={`Page ${page}`}
+              aria-label={`${page === currentPage ? 'Current page, ' : ''}Page ${page}`}
               aria-current={page === currentPage ? 'page' : undefined}
+              disabled={loading}
             >
               {page}
             </button>
           ))}
 
           {endPage < totalPages && (
-            <span className="px-2 font-mono text-xs text-text-muted" aria-hidden="true">
-              ...
-            </span>
+            <>
+              <span className="px-1 font-mono text-xs text-text-muted" aria-hidden="true">
+                ...
+              </span>
+              <button
+                onClick={() => onPageChange(totalPages)}
+                className="flex h-9 min-w-[36px] items-center justify-center rounded border border-bg-tertiary bg-bg-secondary px-3 py-2 font-mono text-xs text-text-secondary shadow-sm transition-all hover:border-accent-blue hover:bg-bg-tertiary hover:text-accent-blue hover:shadow-md focus:outline-none focus:ring-2 focus:ring-accent-blue/20"
+                aria-label={`Page ${totalPages}`}
+                disabled={loading}
+              >
+                {totalPages}
+              </button>
+            </>
           )}
 
           {/* Next */}
           <button
             onClick={() => onPageChange(currentPage + 1)}
-            className="btn-hex h-8 px-3 py-1 text-[10px] disabled:opacity-50"
-            disabled={currentPage === totalPages}
+            className="flex h-9 items-center gap-1.5 rounded border border-bg-tertiary bg-bg-secondary px-3 py-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-text-secondary shadow-sm transition-all hover:border-accent-blue hover:bg-bg-tertiary hover:text-accent-blue hover:shadow-md focus:outline-none focus:ring-2 focus:ring-accent-blue/20 disabled:cursor-not-allowed disabled:opacity-40"
+            disabled={currentPage === totalPages || loading}
             aria-label="Go to next page"
+            title="Next page (→ key)"
           >
-            NEXT
+            <span className="hidden sm:inline">Next</span>
+            <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
 
           {/* Last Page */}
           {currentPage < totalPages && (
             <button
               onClick={() => onPageChange(totalPages)}
-              className="btn-hex h-8 px-3 py-1 text-[10px] disabled:opacity-50"
-              disabled={currentPage === totalPages}
+              className="flex h-9 items-center gap-1.5 rounded border border-bg-tertiary bg-bg-secondary px-3 py-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-text-secondary shadow-sm transition-all hover:border-accent-blue hover:bg-bg-tertiary hover:text-accent-blue hover:shadow-md focus:outline-none focus:ring-2 focus:ring-accent-blue/20 disabled:cursor-not-allowed disabled:opacity-40"
+              disabled={currentPage === totalPages || loading}
               aria-label={`Go to last page, page ${totalPages}`}
+              title="Last page (End key)"
             >
-              LAST
+              <span className="hidden sm:inline">Last</span>
+              <ChevronsRight className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
           )}
         </div>
@@ -181,7 +264,7 @@ export function PaginationControls({
         {showPageInput && (
           <form onSubmit={handlePageInputSubmit} className="flex items-center gap-2">
             <label htmlFor="page-input" className="font-mono text-xs text-text-secondary">
-              Go to:
+              Jump to:
             </label>
             <input
               id="page-input"
@@ -191,19 +274,45 @@ export function PaginationControls({
               value={pageInput}
               onChange={(e) => setPageInput(e.target.value)}
               placeholder={currentPage.toString()}
-              className="w-16 border border-bg-tertiary bg-bg-secondary px-2 py-1 font-mono text-xs text-text-primary transition-colors placeholder-text-muted hover:border-accent-blue focus:border-accent-blue focus:outline-none"
+              className="w-20 rounded border border-bg-tertiary bg-bg-secondary px-3 py-1.5 font-mono text-xs text-text-primary shadow-sm transition-all placeholder-text-muted hover:border-accent-blue hover:shadow-md focus:border-accent-blue focus:outline-none focus:ring-2 focus:ring-accent-blue/20"
               aria-label="Page number"
+              disabled={loading}
             />
             <button
               type="submit"
-              className="btn-hex h-8 px-3 py-1 text-[10px]"
+              className="flex h-9 items-center gap-1.5 rounded border border-accent-blue bg-accent-blue px-3 py-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-bg-primary shadow-sm transition-all hover:bg-accent-blue/90 hover:shadow-md focus:outline-none focus:ring-2 focus:ring-accent-blue/20 disabled:cursor-not-allowed disabled:opacity-40"
               aria-label="Go to page"
+              disabled={loading}
             >
-              GO
+              Go
             </button>
           </form>
         )}
       </nav>
+
+      {/* Keyboard shortcuts hint */}
+      <div className="flex items-center justify-center gap-4 border-t border-bg-tertiary pt-3">
+        <p className="font-mono text-[10px] text-text-muted">
+          <span className="hidden sm:inline">
+            Use{' '}
+            <kbd className="rounded bg-bg-tertiary px-1.5 py-0.5 font-semibold text-text-secondary">
+              ←
+            </kbd>{' '}
+            <kbd className="rounded bg-bg-tertiary px-1.5 py-0.5 font-semibold text-text-secondary">
+              →
+            </kbd>{' '}
+            to navigate pages,{' '}
+            <kbd className="rounded bg-bg-tertiary px-1.5 py-0.5 font-semibold text-text-secondary">
+              Home
+            </kbd>{' '}
+            /{' '}
+            <kbd className="rounded bg-bg-tertiary px-1.5 py-0.5 font-semibold text-text-secondary">
+              End
+            </kbd>{' '}
+            for first/last page
+          </span>
+        </p>
+      </div>
     </div>
   )
 }
