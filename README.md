@@ -201,9 +201,12 @@ This project implements a comprehensive error handling system with custom error 
 
 **Error Logging** (`lib/errors/logger.ts`):
 - Centralized error logging service
+- **Free error monitoring solution** (no paid services required)
+- localStorage persistence (last 50 errors)
+- Batch error reporting to custom API endpoint
 - Automatic console logging in development
-- Production-ready with monitoring service integration (Sentry, LogRocket)
 - Error context tracking (component, action, metadata)
+- SSR-safe with graceful degradation
 
 **Error Recovery** (`lib/errors/recovery.ts`):
 - Retry logic with exponential backoff
@@ -469,14 +472,15 @@ tests/e2e/
 
 ## 🌐 Environment Variables
 
-| Variable                       | Description            | Default                         |
-| ------------------------------ | ---------------------- | ------------------------------- |
-| `NEXT_PUBLIC_GRAPHQL_ENDPOINT` | GraphQL API endpoint   | `http://localhost:8080/graphql` |
-| `NEXT_PUBLIC_WS_ENDPOINT`      | WebSocket endpoint     | `ws://localhost:8080/ws`        |
-| `NEXT_PUBLIC_JSONRPC_ENDPOINT` | JSON-RPC endpoint      | `http://localhost:8080/rpc`     |
-| `NEXT_PUBLIC_CHAIN_NAME`       | Blockchain name        | `Stable-One`                    |
-| `NEXT_PUBLIC_CHAIN_ID`         | Chain identifier       | `111133`                        |
-| `NEXT_PUBLIC_CURRENCY_SYMBOL`  | Native currency symbol | `WEMIX`                         |
+| Variable                            | Description                   | Default                         |
+| ----------------------------------- | ----------------------------- | ------------------------------- |
+| `NEXT_PUBLIC_GRAPHQL_ENDPOINT`      | GraphQL API endpoint          | `http://localhost:8080/graphql` |
+| `NEXT_PUBLIC_WS_ENDPOINT`           | WebSocket endpoint            | `ws://localhost:8080/ws`        |
+| `NEXT_PUBLIC_JSONRPC_ENDPOINT`      | JSON-RPC endpoint             | `http://localhost:8080/rpc`     |
+| `NEXT_PUBLIC_CHAIN_NAME`            | Blockchain name               | `Stable-One`                    |
+| `NEXT_PUBLIC_CHAIN_ID`              | Chain identifier              | `111133`                        |
+| `NEXT_PUBLIC_CURRENCY_SYMBOL`       | Native currency symbol        | `WEMIX`                         |
+| `NEXT_PUBLIC_ERROR_API_ENDPOINT`    | Error monitoring API endpoint | (Optional) Custom error API     |
 
 > 기본값은 `config/app.config.json`에서 관리됩니다. 환경 변수를 지정하면 해당 값이 우선하며, 설정 파일만 수정해도 런타임을 재빌드하지 않고 체인 정보를 변경할 수 있습니다.
 
@@ -507,7 +511,7 @@ tests/e2e/
 
 - [x] Blocks list with pagination and sorting
 - [x] Transactions list with pagination and filtering
-- [x] Global search with autocomplete
+- [x] **Global search with autocomplete** (✨ Backend API integrated 2025-11-24)
 - [x] Network statistics page with charts
 - [x] Gas usage visualization
 - [x] Transaction type indicators
@@ -545,10 +549,16 @@ tests/e2e/
 
 ## 📖 Documentation
 
-- [Implementation Guide](docs/FRONTEND_IMPLEMENTATION_PROMPT.md)
-- [Design Philosophy](docs/frontend-design-philosophy.md)
-- [Visual Reference](docs/blockchain-explorer-visual.pdf)
-- [AI Assistant Guide](CLAUDE.md)
+### Frontend Documentation
+- [Implementation Guide](docs/FRONTEND_IMPLEMENTATION_PROMPT.md) - Development guide and implementation details
+- [Design Philosophy](docs/frontend-design-philosophy.md) - Crystalline Infrastructure design system
+- [Visual Reference](docs/blockchain-explorer-visual.pdf) - Visual design reference
+- [AI Assistant Guide](CLAUDE.md) - Claude AI integration guide
+
+### Error Monitoring & API Integration
+- [Error Monitoring Guide](docs/error-monitoring-guide.md) - Free error monitoring setup and usage
+- [Backend API Requirements](docs/backend-api-requirements.md) - API specifications for backend team
+- [Search API Integration](docs/search-api-integration.md) - **NEW**: Unified Search API implementation guide (✅ 2025-11-24)
 
 ## 📄 License
 

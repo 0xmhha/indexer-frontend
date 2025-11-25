@@ -6,14 +6,14 @@ import { SEARCH, SearchResult, SearchVariables, SearchData } from '@/lib/graphql
 import { GET_BLOCK, GET_BLOCK_BY_HASH } from '@/lib/apollo/queries'
 import { GET_TRANSACTION } from '@/lib/apollo/queries'
 import { detectInputType } from '@/lib/utils/validation'
-import { formatHash, formatNumber } from '@/lib/utils/format'
+import { PAGINATION, TIMING } from '@/lib/config/constants'
 
 // Feature flag to enable/disable backend search API
-// TODO: Set to true when backend search API is ready
-const USE_BACKEND_SEARCH_API = false
+// ✅ Backend search API is ready (2025-11-24)
+const USE_BACKEND_SEARCH_API = true
 
 interface UseSearchOptions {
-  types?: Array<'block' | 'transaction' | 'address' | 'contract'>
+  types?: Array<'block' | 'transaction' | 'address' | 'contract' | 'log'>
   limit?: number
   debounce?: number
 }
@@ -29,11 +29,25 @@ interface UseSearchResult {
 /**
  * Hook for unified search across blocks, transactions, addresses, and contracts
  *
- * Currently uses client-side search with existing queries until backend implements
- * the unified search API. When backend is ready, set USE_BACKEND_SEARCH_API to true.
+ * ✅ Now using backend Search API (implemented 2025-11-24)
+ * Falls back to client-side search if backend API is disabled.
+ *
+ * @param options Search options including types filter, result limit, and debounce delay
+ * @returns Search results, loading state, error state, and search/clear functions
+ *
+ * @example
+ * ```tsx
+ * const { results, loading, error, search } = useSearch({
+ *   types: ['block', 'transaction'],
+ *   limit: 10
+ * })
+ *
+ * // Execute search
+ * search('0x1234...')
+ * ```
  */
 export function useSearch(options: UseSearchOptions = {}): UseSearchResult {
-  const { types, limit = 10, debounce = 300 } = options
+  const { types, limit = PAGINATION.SEARCH_LIMIT, debounce = TIMING.SEARCH_DEBOUNCE } = options
 
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
@@ -102,12 +116,26 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchResult {
       })
 
       if (queryError) {
+        // Handle specific backend errors as per backend documentation
+        const errorMessage = queryError.message || ''
+
+        if (errorMessage.includes('storage does not support')) {
+          throw new Error('Search functionality is temporarily unavailable. Please try again later.')
+        }
+
         throw queryError
       }
 
-      setResults(data?.search ?? [])
+      const searchResults = data?.search ?? []
+      setResults(searchResults)
+
+      // Show friendly message if no results found
+      if (searchResults.length === 0 && query.trim()) {
+        setError(new Error('No results found for your search query.'))
+      }
     } catch (err) {
-      setError(err instanceof Error ? err : new Error('Search failed'))
+      const errorMessage = err instanceof Error ? err.message : 'Search failed'
+      setError(new Error(errorMessage))
       setResults([])
     } finally {
       setLoading(false)
@@ -115,8 +143,9 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchResult {
   }
 
   /**
-   * Client-side search implementation (current)
+   * Client-side search implementation (fallback)
    * Searches across blocks, transactions, and addresses using existing queries
+   * Returns Union Type results to match backend API structure
    */
   const performClientSearch = async (query: string) => {
     setLoading(true)
@@ -127,7 +156,7 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchResult {
       const inputType = detectInputType(query)
 
       // Filter types based on options
-      const searchTypes = types ?? ['block', 'transaction', 'address', 'contract']
+      const searchTypes = types ?? ['block', 'transaction', 'address', 'contract', 'log']
 
       // Search blocks
       if (searchTypes.includes('block') && (inputType === 'blockNumber' || inputType === 'hash')) {
@@ -138,13 +167,16 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchResult {
               const block = data.block
               searchResults.push({
                 type: 'block',
-                value: block.number.toString(),
-                label: `Block #${formatNumber(BigInt(block.number))}`,
-                metadata: JSON.stringify({
+                block: {
+                  number: block.number.toString(),
                   hash: block.hash,
-                  timestamp: block.timestamp,
-                  transactionCount: block.transactionCount,
-                }),
+                  timestamp: block.timestamp.toString(),
+                  parentHash: block.parentHash,
+                  miner: block.miner || '',
+                  gasUsed: block.gasUsed?.toString() || '0',
+                  gasLimit: block.gasLimit?.toString() || '0',
+                  transactionCount: block.transactionCount || 0,
+                },
               })
             }
           } else if (inputType === 'hash') {
@@ -153,14 +185,16 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchResult {
               const block = data.blockByHash
               searchResults.push({
                 type: 'block',
-                value: block.hash,
-                label: `Block #${formatNumber(BigInt(block.number))}`,
-                metadata: JSON.stringify({
-                  number: block.number,
+                block: {
+                  number: block.number.toString(),
                   hash: block.hash,
-                  timestamp: block.timestamp,
-                  transactionCount: block.transactionCount,
-                }),
+                  timestamp: block.timestamp.toString(),
+                  parentHash: block.parentHash,
+                  miner: block.miner || '',
+                  gasUsed: block.gasUsed?.toString() || '0',
+                  gasLimit: block.gasLimit?.toString() || '0',
+                  transactionCount: block.transactionCount || 0,
+                },
               })
             }
           }
@@ -177,15 +211,18 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchResult {
             const tx = data.transaction
             searchResults.push({
               type: 'transaction',
-              value: tx.hash,
-              label: `Transaction ${formatHash(tx.hash)}`,
-              metadata: JSON.stringify({
+              transaction: {
+                hash: tx.hash,
                 from: tx.from,
-                to: tx.to,
-                value: tx.value,
-                blockNumber: tx.blockNumber,
-                timestamp: tx.timestamp,
-              }),
+                to: tx.to || '',
+                value: tx.value?.toString() || '0',
+                gas: tx.gas?.toString() || '0',
+                gasPrice: tx.gasPrice?.toString() || '0',
+                nonce: tx.nonce?.toString() || '0',
+                blockNumber: tx.blockNumber?.toString() || '0',
+                blockHash: tx.blockHash || '',
+                transactionIndex: tx.transactionIndex?.toString() || '0',
+              },
             })
           }
         } catch {
@@ -199,11 +236,9 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchResult {
         // Actual address data will be loaded when navigating to the address page
         searchResults.push({
           type: 'address',
-          value: query,
-          label: `Address ${formatHash(query)}`,
-          metadata: JSON.stringify({
-            address: query,
-          }),
+          address: query,
+          transactionCount: 0, // Will be loaded on address page
+          balance: '0', // Will be loaded on address page
         })
       }
 
@@ -240,6 +275,6 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchResult {
  *
  * Provides real-time search suggestions as user types
  */
-export function useSearchAutocomplete(limit = 5): UseSearchResult {
-  return useSearch({ limit, debounce: 150 })
+export function useSearchAutocomplete(limit = PAGINATION.AUTOCOMPLETE_LIMIT): UseSearchResult {
+  return useSearch({ limit, debounce: 150 }) // Faster debounce for autocomplete
 }

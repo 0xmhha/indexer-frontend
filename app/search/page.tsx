@@ -9,13 +9,14 @@ import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { formatHash, formatNumber } from '@/lib/utils/format'
 import type { SearchResult } from '@/lib/graphql/queries/search'
 
-type SearchType = 'block' | 'transaction' | 'address' | 'contract'
+type SearchType = 'block' | 'transaction' | 'address' | 'contract' | 'log'
 
 const TYPE_LABELS: Record<SearchType, string> = {
   block: 'Blocks',
   transaction: 'Transactions',
   address: 'Addresses',
   contract: 'Contracts',
+  log: 'Event Logs',
 }
 
 const TYPE_ICONS: Record<SearchType, string> = {
@@ -23,6 +24,7 @@ const TYPE_ICONS: Record<SearchType, string> = {
   transaction: '⇄',
   address: '◈',
   contract: '⚙',
+  log: '📋',
 }
 
 function SearchPageContent() {
@@ -70,95 +72,185 @@ function SearchPageContent() {
 
   const renderSearchResult = (result: SearchResult) => {
     let href = ''
-    let metadata: Record<string, unknown> = {}
+    let key = ''
+    let label = ''
 
-    try {
-      metadata = result.metadata ? JSON.parse(result.metadata) : {}
-    } catch {
-      // Ignore parse errors
-    }
-
+    // Type-specific rendering using discriminated union
     switch (result.type) {
-      case 'block':
-        href = `/block/${result.value}`
-        break
-      case 'transaction':
-        href = `/tx/${result.value}`
-        break
-      case 'address':
-        href = `/address/${result.value}`
-        break
-      case 'contract':
-        href = `/address/${result.value}`
-        break
-    }
+      case 'block': {
+        const block = result.block
+        href = `/block/${block.number}`
+        key = `block-${block.number}`
+        label = `Block #${formatNumber(BigInt(block.number))}`
 
-    return (
-      <Link
-        key={`${result.type}-${result.value}`}
-        href={href}
-        className="block border border-bg-tertiary bg-bg-secondary p-4 transition-colors hover:border-accent-blue hover:bg-bg-tertiary"
-      >
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            <div className="mb-1 flex items-center gap-2">
-              <span className="text-text-muted" aria-hidden="true">
-                {TYPE_ICONS[result.type]}
-              </span>
-              <span className="font-mono text-sm font-medium text-accent-blue">
-                {result.label || result.value}
-              </span>
-            </div>
-
-            {/* Metadata */}
-            <div className="mt-2 space-y-1">
-              {result.type === 'block' && (
-                <>
-                  {metadata.hash ? (
-                    <div className="font-mono text-xs text-text-secondary">
-                      Hash: {formatHash(String(metadata.hash))}
-                    </div>
-                  ) : null}
-                  {metadata.transactionCount !== undefined ? (
-                    <div className="font-mono text-xs text-text-muted">
-                      {String(metadata.transactionCount)} transactions
-                    </div>
-                  ) : null}
-                </>
-              )}
-
-              {result.type === 'transaction' && (
-                <>
-                  {metadata.from ? (
-                    <div className="font-mono text-xs text-text-secondary">
-                      From: {formatHash(String(metadata.from))}
-                    </div>
-                  ) : null}
-                  {metadata.to ? (
-                    <div className="font-mono text-xs text-text-secondary">
-                      To: {formatHash(String(metadata.to))}
-                    </div>
-                  ) : null}
-                  {metadata.value ? (
-                    <div className="font-mono text-xs text-text-muted">
-                      Value: {formatNumber(BigInt(String(metadata.value)))} wei
-                    </div>
-                  ) : null}
-                </>
-              )}
-
-              {result.type === 'address' ? (
-                <div className="font-mono text-xs text-text-secondary">
-                  {formatHash(result.value)}
+        return (
+          <Link
+            key={key}
+            href={href}
+            className="block border border-bg-tertiary bg-bg-secondary p-4 transition-colors hover:border-accent-blue hover:bg-bg-tertiary"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="mb-1 flex items-center gap-2">
+                  <span className="text-text-muted" aria-hidden="true">
+                    {TYPE_ICONS.block}
+                  </span>
+                  <span className="font-mono text-sm font-medium text-accent-blue">
+                    {label}
+                  </span>
                 </div>
-              ) : null}
+                <div className="mt-2 space-y-1">
+                  <div className="font-mono text-xs text-text-secondary">
+                    Hash: {formatHash(block.hash)}
+                  </div>
+                  <div className="font-mono text-xs text-text-muted">
+                    {block.transactionCount} transactions
+                  </div>
+                  {block.miner && (
+                    <div className="font-mono text-xs text-text-muted">
+                      Miner: {formatHash(block.miner)}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="ml-4 font-mono text-xs text-text-muted">→</div>
             </div>
-          </div>
+          </Link>
+        )
+      }
 
-          <div className="ml-4 font-mono text-xs text-text-muted">→</div>
-        </div>
-      </Link>
-    )
+      case 'transaction': {
+        const tx = result.transaction
+        href = `/tx/${tx.hash}`
+        key = `transaction-${tx.hash}`
+        label = `Transaction ${formatHash(tx.hash)}`
+
+        return (
+          <Link
+            key={key}
+            href={href}
+            className="block border border-bg-tertiary bg-bg-secondary p-4 transition-colors hover:border-accent-blue hover:bg-bg-tertiary"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="mb-1 flex items-center gap-2">
+                  <span className="text-text-muted" aria-hidden="true">
+                    {TYPE_ICONS.transaction}
+                  </span>
+                  <span className="font-mono text-sm font-medium text-accent-blue">
+                    {label}
+                  </span>
+                </div>
+                <div className="mt-2 space-y-1">
+                  <div className="font-mono text-xs text-text-secondary">
+                    From: {formatHash(tx.from)}
+                  </div>
+                  {tx.to ? (
+                    <div className="font-mono text-xs text-text-secondary">
+                      To: {formatHash(tx.to)}
+                    </div>
+                  ) : (
+                    <div className="font-mono text-xs text-text-secondary">
+                      To: <span className="text-accent-orange">Contract Creation</span>
+                    </div>
+                  )}
+                  <div className="font-mono text-xs text-text-muted">
+                    Value: {formatNumber(BigInt(tx.value))} wei
+                  </div>
+                  <div className="font-mono text-xs text-text-muted">
+                    Block: #{formatNumber(BigInt(tx.blockNumber))}
+                  </div>
+                </div>
+              </div>
+              <div className="ml-4 font-mono text-xs text-text-muted">→</div>
+            </div>
+          </Link>
+        )
+      }
+
+      case 'address': {
+        href = `/address/${result.address}`
+        key = `address-${result.address}`
+        label = `Address ${formatHash(result.address)}`
+
+        return (
+          <Link
+            key={key}
+            href={href}
+            className="block border border-bg-tertiary bg-bg-secondary p-4 transition-colors hover:border-accent-blue hover:bg-bg-tertiary"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="mb-1 flex items-center gap-2">
+                  <span className="text-text-muted" aria-hidden="true">
+                    {TYPE_ICONS.address}
+                  </span>
+                  <span className="font-mono text-sm font-medium text-accent-blue">
+                    {label}
+                  </span>
+                </div>
+                <div className="mt-2 space-y-1">
+                  <div className="font-mono text-xs text-text-secondary">
+                    {formatHash(result.address)}
+                  </div>
+                  {result.transactionCount > 0 && (
+                    <div className="font-mono text-xs text-text-muted">
+                      {result.transactionCount} transactions
+                    </div>
+                  )}
+                  {result.balance !== '0' && (
+                    <div className="font-mono text-xs text-text-muted">
+                      Balance: {formatNumber(BigInt(result.balance))} wei
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div className="ml-4 font-mono text-xs text-text-muted">→</div>
+            </div>
+          </Link>
+        )
+      }
+
+      case 'log': {
+        const log = result.log
+        href = `/tx/${log.transactionHash}`
+        key = `log-${log.transactionHash}-${log.logIndex}`
+        label = `Event Log #${log.logIndex}`
+
+        return (
+          <Link
+            key={key}
+            href={href}
+            className="block border border-bg-tertiary bg-bg-secondary p-4 transition-colors hover:border-accent-blue hover:bg-bg-tertiary"
+          >
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="mb-1 flex items-center gap-2">
+                  <span className="text-text-muted" aria-hidden="true">
+                    📋
+                  </span>
+                  <span className="font-mono text-sm font-medium text-accent-blue">
+                    {label}
+                  </span>
+                </div>
+                <div className="mt-2 space-y-1">
+                  <div className="font-mono text-xs text-text-secondary">
+                    Contract: {formatHash(log.address)}
+                  </div>
+                  <div className="font-mono text-xs text-text-secondary">
+                    Transaction: {formatHash(log.transactionHash)}
+                  </div>
+                  <div className="font-mono text-xs text-text-muted">
+                    Block: #{formatNumber(BigInt(log.blockNumber))}
+                  </div>
+                </div>
+              </div>
+              <div className="ml-4 font-mono text-xs text-text-muted">→</div>
+            </div>
+          </Link>
+        )
+      }
+    }
   }
 
   return (

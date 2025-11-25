@@ -49,7 +49,9 @@ export interface TokenBalance {
   contractAddress: string
   tokenType: string
   balance: bigint
+  tokenId: string | null // Token ID for NFTs (ERC-721, ERC-1155), null for ERC-20
   name: string | null
   symbol: string | null
   decimals: number | null
+  metadata: string | null // JSON string for additional token metadata
 }

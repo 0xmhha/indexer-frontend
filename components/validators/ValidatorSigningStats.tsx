@@ -6,6 +6,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useValidatorSigningStats, type ValidatorSigningStats } from '@/lib/hooks/useWBFT'
 import { formatNumber, truncateAddress, formatHash } from '@/lib/utils/format'
+import { UI } from '@/lib/config/constants'
 
 interface ValidatorSigningStatsProps {
   maxStats?: number
@@ -20,7 +21,7 @@ interface ValidatorSigningStatsProps {
  * - Missed blocks tracking
  * - Performance trends
  */
-export function ValidatorSigningStatsDashboard({ maxStats = 50 }: ValidatorSigningStatsProps) {
+export function ValidatorSigningStatsDashboard({ maxStats = UI.MAX_VIEWER_ITEMS }: ValidatorSigningStatsProps) {
   const [validatorFilter, setValidatorFilter] = useState('')
   const [epochFilter, setEpochFilter] = useState('')
 

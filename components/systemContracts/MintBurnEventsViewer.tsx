@@ -6,6 +6,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useMintEvents, useBurnEvents, type MintEvent, type BurnEvent } from '@/lib/hooks/useSystemContracts'
 import { formatNumber, formatDateTime, truncateAddress } from '@/lib/utils/format'
+import { UI } from '@/lib/config/constants'
 
 type EventType = 'mint' | 'burn'
 
@@ -19,7 +20,7 @@ interface MintBurnEventsViewerProps {
  * Displays mint and burn events with filtering capabilities.
  * Allows switching between mint and burn events.
  */
-export function MintBurnEventsViewer({ maxEvents = 50 }: MintBurnEventsViewerProps) {
+export function MintBurnEventsViewer({ maxEvents = UI.MAX_VIEWER_ITEMS }: MintBurnEventsViewerProps) {
   const [activeTab, setActiveTab] = useState<EventType>('mint')
   const [addressFilter, setAddressFilter] = useState('')
 

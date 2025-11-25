@@ -219,6 +219,213 @@ describe('ErrorLogger', () => {
       vi.unstubAllEnvs()
     })
   })
+
+  describe('localStorage error storage', () => {
+    beforeEach(() => {
+      // Mock localStorage
+      const localStorageMock = {
+        store: {} as Record<string, string>,
+        getItem(key: string) {
+          return this.store[key] || null
+        },
+        setItem(key: string, value: string) {
+          this.store[key] = value
+        },
+        removeItem(key: string) {
+          delete this.store[key]
+        },
+        clear() {
+          this.store = {}
+        },
+      }
+      global.window = {
+        localStorage: localStorageMock,
+        location: { href: 'http://localhost:3000' } as Location,
+      } as unknown as Window & typeof globalThis
+
+      // Clear any stored errors from previous tests
+      errorLogger.clearStoredErrors()
+    })
+
+    afterEach(() => {
+      errorLogger.clearStoredErrors()
+    })
+
+    it('should store errors in localStorage in production', () => {
+      vi.stubEnv('NODE_ENV', 'production')
+
+      errorLogger.error(new Error('Test error'), { component: 'TestComponent' })
+
+      const stored = errorLogger.getStoredErrors()
+      expect(stored).toHaveLength(1)
+      expect(stored[0]?.message).toBe('Test error')
+      expect(stored[0]?.severity).toBe('error')
+      expect(stored[0]?.context).toEqual({ component: 'TestComponent' })
+
+      vi.unstubAllEnvs()
+    })
+
+    it('should limit stored errors to MAX_STORED_ERRORS', () => {
+      vi.stubEnv('NODE_ENV', 'production')
+
+      // Store 60 errors (MAX_STORED_ERRORS is 50)
+      for (let i = 0; i < 60; i++) {
+        errorLogger.error(new Error(`Error ${i}`))
+      }
+
+      const stored = errorLogger.getStoredErrors()
+      expect(stored.length).toBeLessThanOrEqual(50)
+      expect(stored[0]?.message).toBe('Error 10') // First 10 should be trimmed
+
+      vi.unstubAllEnvs()
+    })
+
+    it('should serialize error with optional properties', () => {
+      vi.stubEnv('NODE_ENV', 'production')
+
+      const error = new Error('Test with stack')
+      error.stack = 'Error: Test with stack\n    at test.ts:1:1'
+
+      errorLogger.error(error, { component: 'Test', userId: '123' })
+
+      const stored = errorLogger.getStoredErrors()
+      expect(stored[0]?.stack).toBeDefined()
+      expect(stored[0]?.context?.component).toBe('Test')
+      expect(stored[0]?.context?.userId).toBe('123')
+
+      vi.unstubAllEnvs()
+    })
+
+    it('should handle localStorage errors gracefully', () => {
+      vi.stubEnv('NODE_ENV', 'production')
+
+      // Mock localStorage to throw error
+      const failingStorage = {
+        getItem: () => {
+          throw new Error('Storage full')
+        },
+        setItem: () => {
+          throw new Error('Storage full')
+        },
+        removeItem: vi.fn(),
+        clear: vi.fn(),
+      }
+      global.window = {
+        localStorage: failingStorage,
+        location: { href: 'http://localhost:3000' } as Location,
+      } as unknown as Window & typeof globalThis
+
+      // Should not throw
+      expect(() => {
+        errorLogger.error(new Error('Test'))
+      }).not.toThrow()
+
+      vi.unstubAllEnvs()
+    })
+
+    it('should clear stored errors', () => {
+      vi.stubEnv('NODE_ENV', 'production')
+
+      errorLogger.error(new Error('Error 1'))
+      errorLogger.error(new Error('Error 2'))
+
+      expect(errorLogger.getStoredErrors()).toHaveLength(2)
+
+      errorLogger.clearStoredErrors()
+
+      expect(errorLogger.getStoredErrors()).toHaveLength(0)
+
+      vi.unstubAllEnvs()
+    })
+
+    it('should handle SSR environment (no window)', () => {
+      vi.stubEnv('NODE_ENV', 'production')
+
+      // Remove window global
+      const originalWindow = global.window
+      // @ts-expect-error - Intentionally setting to undefined for test
+      global.window = undefined
+
+      // Should not throw
+      expect(() => {
+        errorLogger.error(new Error('SSR error'))
+      }).not.toThrow()
+
+      // Restore window
+      global.window = originalWindow
+
+      vi.unstubAllEnvs()
+    })
+  })
+
+  describe('error batching and API sending', () => {
+    beforeEach(() => {
+      // Mock localStorage
+      const localStorageMock = {
+        store: {} as Record<string, string>,
+        getItem(key: string) {
+          return this.store[key] || null
+        },
+        setItem(key: string, value: string) {
+          this.store[key] = value
+        },
+        removeItem(key: string) {
+          delete this.store[key]
+        },
+      }
+      global.window = {
+        localStorage: localStorageMock,
+        location: { href: 'http://localhost:3000' } as Location,
+      } as unknown as Window & typeof globalThis
+
+      // Mock fetch
+      global.fetch = vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          status: 200,
+        } as Response)
+      )
+    })
+
+    afterEach(() => {
+      errorLogger.clearStoredErrors()
+      vi.clearAllTimers()
+    })
+
+    it('should not send batch without API endpoint configured', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+      vi.useFakeTimers()
+
+      errorLogger.error(new Error('Test'))
+
+      // Wait for batch timeout
+      vi.advanceTimersByTime(6000)
+
+      expect(global.fetch).not.toHaveBeenCalled()
+
+      vi.useRealTimers()
+      vi.unstubAllEnvs()
+    })
+
+    it('should handle fetch errors gracefully', async () => {
+      vi.stubEnv('NODE_ENV', 'production')
+      vi.stubEnv('NEXT_PUBLIC_ERROR_API_ENDPOINT', 'http://example.com/errors')
+      vi.useFakeTimers()
+
+      // Mock fetch to reject
+      global.fetch = vi.fn(() => Promise.reject(new Error('Network error')))
+
+      // Should not throw
+      expect(() => {
+        errorLogger.error(new Error('Test'))
+      }).not.toThrow()
+
+      vi.advanceTimersByTime(6000)
+
+      vi.useRealTimers()
+      vi.unstubAllEnvs()
+    })
+  })
 })
 
 describe('useErrorLogger', () => {

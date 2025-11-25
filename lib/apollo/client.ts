@@ -4,6 +4,7 @@ import { getMainDefinition } from '@apollo/client/utilities'
 import { onError } from '@apollo/client/link/error'
 import { createClient } from 'graphql-ws'
 import { env } from '@/lib/config/env'
+import { REALTIME } from '@/lib/config/constants'
 
 /**
  * Error handling link for Apollo Client
@@ -44,11 +45,13 @@ const wsLink =
             // Add authentication headers if needed
           },
           lazy: true, // Connect only when subscriptions are needed
-          keepAlive: 10_000, // Send ping every 10 seconds to keep connection alive
-          retryAttempts: 3, // Reduce retry attempts to fail faster
+          keepAlive: REALTIME.WS_KEEPALIVE_INTERVAL, // Send ping every 10 seconds to keep connection alive
+          retryAttempts: REALTIME.WS_RETRY_ATTEMPTS, // Reduce retry attempts to fail faster
           retryWait: async (retries) => {
             // Exponential backoff: 1s, 2s, 4s
-            await new Promise((resolve) => setTimeout(resolve, Math.min(1000 * 2 ** retries, 4000)))
+            await new Promise((resolve) =>
+              setTimeout(resolve, Math.min(1000 * 2 ** retries, REALTIME.WS_RETRY_MAX_WAIT))
+            )
           },
           shouldRetry: (errOrCloseEvent) => {
             // Only retry on certain close codes (not on authentication failures)
@@ -60,17 +63,6 @@ const wsLink =
             return true
           },
           on: {
-            connected: () => {
-              if (env.isDevelopment) {
-                console.log('[WebSocket]: Connected')
-              }
-            },
-            closed: (event) => {
-              if (env.isDevelopment) {
-                const closeEvent = event as CloseEvent | undefined
-                console.log('[WebSocket]: Closed', closeEvent?.code, closeEvent?.reason)
-              }
-            },
             error: (_error) => {
               console.error('[WebSocket]: Connection failed')
             },
@@ -155,15 +147,16 @@ export const apolloClient = new ApolloClient({
   }),
   defaultOptions: {
     watchQuery: {
-      // Use cache-first to prevent flickering, data shows immediately from cache
-      // Components can override with refetch() when needed
-      fetchPolicy: 'cache-first',
-      // Don't notify on network status changes to prevent loading state flicker
-      notifyOnNetworkStatusChange: false,
+      // Use cache-and-network to get fresh data while showing cached data immediately
+      // This ensures pages stay up-to-date without manual refresh
+      fetchPolicy: 'cache-and-network',
+      // Enable network status notifications for better real-time updates
+      notifyOnNetworkStatusChange: true,
       errorPolicy: 'all',
     },
     query: {
-      fetchPolicy: 'cache-first',
+      // @ts-expect-error - Apollo Client type mismatch between WatchQueryFetchPolicy and FetchPolicy
+      fetchPolicy: 'cache-and-network',
       errorPolicy: 'all',
     },
     mutate: {

@@ -42,11 +42,12 @@ export interface RawBlock {
   hash: string
   parentHash?: string
   timestamp: string
-  miner: string
-  gasUsed: string
-  gasLimit: string
+  miner?: string
+  gasUsed?: string
+  gasLimit?: string
   size?: string
-  transactionCount: number
+  txCount?: number  // Subscription uses txCount
+  transactionCount?: number  // Query uses transactionCount
   transactions?: RawTransaction[]
   // EIP-1559 fields
   baseFeePerGas?: string | null
@@ -231,11 +232,12 @@ export function transformBlock(raw: RawBlock): TransformedBlock {
     hash: raw.hash,
     parentHash: raw.parentHash,
     timestamp: toBigInt(raw.timestamp),
-    miner: raw.miner,
-    gasUsed: toBigInt(raw.gasUsed),
-    gasLimit: toBigInt(raw.gasLimit),
-    size: toBigInt(raw.size),
-    transactionCount: raw.transactionCount,
+    miner: raw.miner || '',
+    gasUsed: toBigInt(raw.gasUsed || '0'),
+    gasLimit: toBigInt(raw.gasLimit || '0'),
+    size: toBigInt(raw.size || '0'),
+    // Support both txCount (subscription) and transactionCount (query)
+    transactionCount: raw.txCount ?? raw.transactionCount ?? 0,
     transactions: raw.transactions?.map(transformTransaction),
     // EIP-1559 fields
     baseFeePerGas: raw.baseFeePerGas ? toBigInt(raw.baseFeePerGas) : null,

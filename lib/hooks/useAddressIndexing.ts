@@ -21,7 +21,6 @@ import {
 } from '@/lib/graphql/queries/address-indexing'
 import type {
   ContractCreation,
-  ContractCreationFilter,
   InternalTransaction,
   InternalTransactionFilter,
   ERC20Transfer,
@@ -43,7 +42,7 @@ import type {
 
 function transformContractCreation(raw: RawContractCreation): ContractCreation {
   return {
-    address: raw.address,
+    contractAddress: raw.contractAddress,
     creator: raw.creator,
     transactionHash: raw.transactionHash,
     blockNumber: BigInt(raw.blockNumber),
@@ -124,7 +123,6 @@ export function useContractCreation(address: string) {
 
 export function useContractsByCreator(
   creator: string,
-  filter?: ContractCreationFilter,
   pagination?: PaginationInput
 ) {
   const { data, loading, error, refetch, fetchMore, previousData } = useQuery(
@@ -132,7 +130,6 @@ export function useContractsByCreator(
     {
       variables: {
         creator,
-        filter,
         pagination,
       },
       skip: !creator,

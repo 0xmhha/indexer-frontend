@@ -7,6 +7,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useProposals, type Proposal, ProposalStatus } from '@/lib/hooks/useGovernance'
 import { formatNumber, formatDateTime, truncateAddress } from '@/lib/utils/format'
+import { UI } from '@/lib/config/constants'
 
 interface ProposalsListViewerProps {
   maxProposals?: number
@@ -19,7 +20,7 @@ interface ProposalsListViewerProps {
  * Displays governance proposals with filtering by status and proposer.
  * Shows proposal details, approval progress, and status.
  */
-export function ProposalsListViewer({ maxProposals = 50, contract }: ProposalsListViewerProps) {
+export function ProposalsListViewer({ maxProposals = UI.MAX_VIEWER_ITEMS, contract }: ProposalsListViewerProps) {
   const [statusFilter, setStatusFilter] = useState<ProposalStatus | ''>('')
   const [proposerFilter, setProposerFilter] = useState('')
 

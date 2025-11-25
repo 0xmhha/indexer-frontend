@@ -1,9 +1,10 @@
 'use client'
 
 import { useState, useCallback } from 'react'
+import { PAGINATION } from '@/lib/config/constants'
 
 const STORAGE_KEY = 'search_history'
-const MAX_HISTORY_ITEMS = 10
+const MAX_HISTORY_ITEMS = PAGINATION.SEARCH_LIMIT
 
 export interface SearchHistoryItem {
   query: string

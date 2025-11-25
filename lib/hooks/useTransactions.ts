@@ -2,6 +2,7 @@
 
 import { gql, useQuery } from '@apollo/client'
 import { transformTransactions, type TransformedTransaction } from '@/lib/utils/graphql-transforms'
+import { PAGINATION, POLLING_INTERVALS } from '@/lib/config/constants'
 
 // Query for transactions with pagination
 const GET_TRANSACTIONS = gql`
@@ -51,13 +52,23 @@ interface UseTransactionsParams {
   from?: string
   to?: string
   type?: number
+  pollInterval?: number // Auto-refresh interval in ms
 }
 
 /**
  * Hook to fetch transactions with pagination and filtering
  */
 export function useTransactions(params: UseTransactionsParams = {}) {
-  const { limit = 20, offset = 0, blockNumberFrom, blockNumberTo, from, to, type } = params
+  const {
+    limit = PAGINATION.DEFAULT_PAGE_SIZE,
+    offset = 0,
+    blockNumberFrom,
+    blockNumberTo,
+    from,
+    to,
+    type,
+    pollInterval = POLLING_INTERVALS.VERY_FAST, // Default: 5 seconds
+  } = params
 
   const { data, loading, error, refetch, fetchMore, previousData } = useQuery(GET_TRANSACTIONS, {
     variables: {
@@ -71,6 +82,8 @@ export function useTransactions(params: UseTransactionsParams = {}) {
     },
     // Use previous data while loading to prevent flickering
     returnPartialData: true,
+    // Enable polling for real-time updates
+    pollInterval,
   })
 
   // Use previous data while loading new data to prevent flickering

@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
-import { formatHash, formatNumber } from '@/lib/utils/format'
-import type { MinerStats } from '@/types/graphql'
+import { formatHash, formatNumber, formatDate } from '@/lib/utils/format'
+import type { MinerStats } from '@/lib/graphql/queries/stats'
 
 interface TopMinersTableProps {
   miners: MinerStats[]
@@ -34,7 +34,9 @@ export function TopMinersTable({ miners, loading }: TopMinersTableProps) {
           <TableHead className="w-16">RANK</TableHead>
           <TableHead>MINER ADDRESS</TableHead>
           <TableHead className="text-right">BLOCKS MINED</TableHead>
+          <TableHead className="text-right">TOTAL REWARDS</TableHead>
           <TableHead className="text-right">LAST BLOCK</TableHead>
+          <TableHead className="text-right">LAST ACTIVITY</TableHead>
           <TableHead className="text-right">PERCENTAGE</TableHead>
         </TableRow>
       </TableHeader>
@@ -51,13 +53,19 @@ export function TopMinersTable({ miners, loading }: TopMinersTableProps) {
               </Link>
             </TableCell>
             <TableCell className="text-right font-mono">{formatNumber(miner.blockCount)}</TableCell>
-            <TableCell className="text-right font-mono">
+            <TableCell className="text-right font-mono text-accent-cyan">
+              {formatNumber(BigInt(miner.totalRewards))} wei
+            </TableCell>
+            <TableCell className="text-right">
               <Link
                 href={`/block/${miner.lastBlockNumber}`}
-                className="text-accent-blue hover:text-accent-cyan"
+                className="font-mono text-accent-blue hover:text-accent-cyan"
               >
-                {formatNumber(miner.lastBlockNumber)}
+                {formatNumber(Number(miner.lastBlockNumber))}
               </Link>
+            </TableCell>
+            <TableCell className="text-right font-mono text-xs text-text-secondary">
+              {formatDate(Number(miner.lastBlockTime))}
             </TableCell>
             <TableCell className="text-right font-mono">
               <span className="text-accent-cyan">{miner.percentage.toFixed(2)}%</span>

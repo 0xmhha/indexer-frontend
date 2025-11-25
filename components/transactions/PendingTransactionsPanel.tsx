@@ -16,6 +16,7 @@ import { TransactionTypeBadge } from '@/components/transactions/TransactionTypeB
 import { formatHash, formatCurrency, formatNumber } from '@/lib/utils/format'
 import { usePendingTransactions } from '@/lib/hooks/useSubscriptions'
 import { env } from '@/lib/config/env'
+import { PAGINATION } from '@/lib/config/constants'
 
 interface PendingTransactionsPanelProps {
   maxTransactions?: number
@@ -32,7 +33,7 @@ interface PendingTransactionsPanelProps {
  * @param className - Additional CSS classes
  */
 export function PendingTransactionsPanel({
-  maxTransactions = 20,
+  maxTransactions = PAGINATION.DEFAULT_PAGE_SIZE,
   className,
 }: PendingTransactionsPanelProps) {
   const { pendingTransactions, loading, error } = usePendingTransactions(maxTransactions)

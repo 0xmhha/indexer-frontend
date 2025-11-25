@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { formatHash, formatNumber, formatDate } from '@/lib/utils/format'
+import { PAGINATION } from '@/lib/config/constants'
 import type { ERC20Transfer } from '@/types/address-indexing'
 
 interface ERC20TransfersTableProps {
@@ -22,7 +23,7 @@ interface ERC20TransfersTableProps {
   limit?: number
 }
 
-export function ERC20TransfersTable({ address, limit = 20 }: ERC20TransfersTableProps) {
+export function ERC20TransfersTable({ address, limit = PAGINATION.DEFAULT_PAGE_SIZE }: ERC20TransfersTableProps) {
   const [currentOffset, setCurrentOffset] = useState(0)
 
   const { erc20Transfers, totalCount, pageInfo, loading, error, loadMore } =

@@ -6,6 +6,7 @@ import { GET_BLOCKS_BY_TIME_RANGE, GET_NETWORK_METRICS } from '@/lib/apollo/quer
 import { transformBlocks, type TransformedBlock } from '@/lib/utils/graphql-transforms'
 import { toBigInt } from '@/lib/utils/graphql-transforms'
 import type { MinerStats } from '@/types/graphql'
+import { PAGINATION, TIMING } from '@/lib/config/constants'
 
 /**
  * Fee Delegation statistics
@@ -28,7 +29,7 @@ export interface FeePayerStats {
 /**
  * Hook to fetch blocks in a time range for analytics
  */
-export function useBlocksByTimeRange(fromTime: bigint, toTime: bigint, limit = 1000) {
+export function useBlocksByTimeRange(fromTime: bigint, toTime: bigint, limit = PAGINATION.ANALYTICS_BLOCK_LIMIT) {
   const { data, loading, error, previousData } = useQuery(GET_BLOCKS_BY_TIME_RANGE, {
     variables: {
       fromTime: fromTime.toString(),
@@ -77,7 +78,7 @@ export function useNetworkMetrics() {
  * Hook to fetch top miners statistics
  * Note: Uses mock data until backend API is implemented
  */
-export function useTopMiners(limit = 10) {
+export function useTopMiners(limit = PAGINATION.STATS_LIMIT) {
   const [miners, setMiners] = useState<MinerStats[]>([])
   const [loading, setLoading] = useState(true)
 
@@ -149,7 +150,7 @@ export function useTopMiners(limit = 10) {
 
       setMiners(mockMiners)
       setLoading(false)
-    }, 500)
+    }, TIMING.MOCK_API_DELAY)
 
     return () => clearTimeout(timer)
   }, [limit])
@@ -225,7 +226,7 @@ export function useFeeDelegationStats() {
 
       setStats(mockStats)
       setLoading(false)
-    }, 500)
+    }, TIMING.MOCK_API_DELAY)
 
     return () => clearTimeout(timer)
   }, [])

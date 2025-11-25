@@ -10,7 +10,7 @@
 // ============================================================================
 
 export interface ContractCreation {
-  address: string
+  contractAddress: string
   creator: string
   transactionHash: string
   blockNumber: bigint
@@ -143,7 +143,7 @@ export interface PageInfo {
 // ============================================================================
 
 export interface RawContractCreation {
-  address: string
+  contractAddress: string
   creator: string
   transactionHash: string
   blockNumber: string

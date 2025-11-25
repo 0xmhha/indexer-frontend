@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { cn } from '@/lib/utils'
+import { UI } from '@/lib/config/constants'
 import {
   ChevronLeft,
   ChevronRight,
@@ -41,7 +42,7 @@ export function PaginationControls({
 }: PaginationControlsProps) {
   const [pageInput, setPageInput] = useState('')
 
-  const maxVisible = 7
+  const maxVisible = UI.PAGINATION_MAX_VISIBLE_FULL
   const halfVisible = Math.floor(maxVisible / 2)
 
   let startPage = Math.max(1, currentPage - halfVisible)

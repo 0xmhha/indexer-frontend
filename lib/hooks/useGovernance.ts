@@ -1,6 +1,7 @@
 'use client'
 
 import { gql, useQuery } from '@apollo/client'
+import { PAGINATION } from '@/lib/config/constants'
 
 // Proposal Status enum
 export enum ProposalStatus {
@@ -151,7 +152,7 @@ export function useProposals(
     offset?: number
   } = {}
 ) {
-  const { contract, status, proposer, limit = 20, offset = 0 } = params
+  const { contract, status, proposer, limit = PAGINATION.DEFAULT_PAGE_SIZE, offset = 0 } = params
 
   const { data, loading, error, refetch, fetchMore, previousData } = useQuery(GET_PROPOSALS, {
     variables: {

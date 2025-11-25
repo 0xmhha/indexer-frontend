@@ -18,6 +18,7 @@ import { formatHash, formatCurrency, formatNumber } from '@/lib/utils/format'
 import { usePendingTransactions } from '@/lib/hooks/useSubscriptions'
 import { weiToGwei } from '@/lib/utils/gas'
 import { env } from '@/lib/config/env'
+import { UI } from '@/lib/config/constants'
 import type { Transaction } from '@/types/graphql'
 
 interface AdvancedPendingTransactionsPanelProps {
@@ -54,7 +55,7 @@ const TRANSACTION_TYPES = [
  * @param className - Additional CSS classes
  */
 export function AdvancedPendingTransactionsPanel({
-  maxTransactions = 50,
+  maxTransactions = UI.MAX_VIEWER_ITEMS,
   className,
 }: AdvancedPendingTransactionsPanelProps) {
   // Filter state

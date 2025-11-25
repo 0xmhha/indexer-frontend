@@ -1,6 +1,7 @@
 'use client'
 
 import { gql, useQuery } from '@apollo/client'
+import { PAGINATION } from '@/lib/config/constants'
 
 // Query for total token supply
 const GET_TOTAL_SUPPLY = gql`
@@ -155,7 +156,7 @@ export function useTotalSupply() {
  * Hook to fetch active minters
  */
 export function useActiveMinters(params: { limit?: number; offset?: number } = {}) {
-  const { limit = 20, offset = 0 } = params
+  const { limit = PAGINATION.DEFAULT_PAGE_SIZE, offset = 0 } = params
 
   const { data, loading, error, refetch, fetchMore, previousData } = useQuery(GET_ACTIVE_MINTERS, {
     variables: { limit, offset },
@@ -191,7 +192,7 @@ export function useMintEvents(
     toTimestamp?: string
   } = {}
 ) {
-  const { limit = 20, offset = 0, minter, recipient, fromTimestamp, toTimestamp } = params
+  const { limit = PAGINATION.DEFAULT_PAGE_SIZE, offset = 0, minter, recipient, fromTimestamp, toTimestamp } = params
 
   const { data, loading, error, refetch, fetchMore, previousData } = useQuery(GET_MINT_EVENTS, {
     variables: {
@@ -233,7 +234,7 @@ export function useBurnEvents(
     toTimestamp?: string
   } = {}
 ) {
-  const { limit = 20, offset = 0, burner, fromTimestamp, toTimestamp } = params
+  const { limit = PAGINATION.DEFAULT_PAGE_SIZE, offset = 0, burner, fromTimestamp, toTimestamp } = params
 
   const { data, loading, error, refetch, fetchMore, previousData } = useQuery(GET_BURN_EVENTS, {
     variables: {

@@ -5,9 +5,9 @@ import { gql } from '@apollo/client'
 // ============================================================================
 
 export const GET_CONTRACT_CREATION = gql`
-  query GetContractCreation($address: Address!) {
+  query GetContractCreation($address: String!) {
     contractCreation(address: $address) {
-      address
+      contractAddress
       creator
       transactionHash
       blockNumber
@@ -18,13 +18,12 @@ export const GET_CONTRACT_CREATION = gql`
 
 export const GET_CONTRACTS_BY_CREATOR = gql`
   query GetContractsByCreator(
-    $creator: Address!
-    $filter: ContractCreationFilter
+    $creator: String!
     $pagination: PaginationInput
   ) {
-    contractsByCreator(creator: $creator, filter: $filter, pagination: $pagination) {
+    contractsByCreator(creator: $creator, pagination: $pagination) {
       nodes {
-        address
+        contractAddress
         creator
         transactionHash
         blockNumber
@@ -69,7 +68,7 @@ export const GET_INTERNAL_TRANSACTIONS = gql`
 
 export const GET_INTERNAL_TRANSACTIONS_BY_ADDRESS = gql`
   query GetInternalTransactionsByAddress(
-    $address: Address!
+    $address: String!
     $filter: InternalTransactionFilter
     $pagination: PaginationInput
   ) {
@@ -116,7 +115,7 @@ export const GET_ERC20_TRANSFER = gql`
 
 export const GET_ERC20_TRANSFERS_BY_TOKEN = gql`
   query GetERC20TransfersByToken(
-    $tokenAddress: Address!
+    $tokenAddress: String!
     $filter: ERC20TransferFilter
     $pagination: PaginationInput
   ) {
@@ -142,7 +141,7 @@ export const GET_ERC20_TRANSFERS_BY_TOKEN = gql`
 
 export const GET_ERC20_TRANSFERS_BY_ADDRESS = gql`
   query GetERC20TransfersByAddress(
-    $address: Address!
+    $address: String!
     $filter: ERC20TransferFilter
     $pagination: PaginationInput
   ) {
@@ -187,7 +186,7 @@ export const GET_ERC721_TRANSFER = gql`
 
 export const GET_ERC721_TRANSFERS_BY_TOKEN = gql`
   query GetERC721TransfersByToken(
-    $tokenAddress: Address!
+    $tokenAddress: String!
     $filter: ERC721TransferFilter
     $pagination: PaginationInput
   ) {
@@ -213,7 +212,7 @@ export const GET_ERC721_TRANSFERS_BY_TOKEN = gql`
 
 export const GET_ERC721_TRANSFERS_BY_ADDRESS = gql`
   query GetERC721TransfersByAddress(
-    $address: Address!
+    $address: String!
     $filter: ERC721TransferFilter
     $pagination: PaginationInput
   ) {
@@ -238,7 +237,7 @@ export const GET_ERC721_TRANSFERS_BY_ADDRESS = gql`
 `
 
 export const GET_ERC721_OWNER = gql`
-  query GetERC721Owner($tokenAddress: Address!, $tokenId: BigInt!) {
+  query GetERC721Owner($tokenAddress: String!, $tokenId: String!) {
     erc721Owner(tokenAddress: $tokenAddress, tokenId: $tokenId) {
       tokenAddress
       tokenId

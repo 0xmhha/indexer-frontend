@@ -15,6 +15,7 @@ import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { formatHash, formatNumber, formatDate } from '@/lib/utils/format'
+import { PAGINATION } from '@/lib/config/constants'
 import type { ERC721Transfer } from '@/types/address-indexing'
 
 interface ERC721TransfersTableProps {
@@ -22,7 +23,7 @@ interface ERC721TransfersTableProps {
   limit?: number
 }
 
-export function ERC721TransfersTable({ address, limit = 20 }: ERC721TransfersTableProps) {
+export function ERC721TransfersTable({ address, limit = PAGINATION.DEFAULT_PAGE_SIZE }: ERC721TransfersTableProps) {
   const [currentOffset, setCurrentOffset] = useState(0)
 
   const { erc721Transfers, totalCount, pageInfo, loading, error, loadMore } =

@@ -34,7 +34,7 @@ export function ContractCreationInfo({ address }: ContractCreationInfoProps) {
     totalCount,
     loading: createdLoading,
     error: createdError,
-  } = useContractsByCreator(address, undefined, { limit: 5, offset: 0 })
+  } = useContractsByCreator(address, { limit: 5, offset: 0 })
 
   const hasCreationInfo = contractCreation !== null
   const hasCreatedContracts = createdContracts.length > 0
@@ -130,6 +130,7 @@ export function ContractCreationInfo({ address }: ContractCreationInfoProps) {
                     <TableHeader>
                       <TableRow>
                         <TableHead>CONTRACT ADDRESS</TableHead>
+                        <TableHead>CREATOR</TableHead>
                         <TableHead>TRANSACTION HASH</TableHead>
                         <TableHead>BLOCK</TableHead>
                         <TableHead>TIME</TableHead>
@@ -137,13 +138,21 @@ export function ContractCreationInfo({ address }: ContractCreationInfoProps) {
                     </TableHeader>
                     <TableBody>
                       {createdContracts.map((contract: ContractCreation) => (
-                        <TableRow key={contract.address}>
+                        <TableRow key={contract.transactionHash}>
                           <TableCell>
                             <Link
-                              href={`/address/${contract.address}`}
+                              href={`/address/${contract.contractAddress}`}
                               className="font-mono text-accent-blue hover:text-accent-cyan"
                             >
-                              {formatHash(contract.address)}
+                              {formatHash(contract.contractAddress)}
+                            </Link>
+                          </TableCell>
+                          <TableCell>
+                            <Link
+                              href={`/address/${contract.creator}`}
+                              className="font-mono text-accent-blue hover:text-accent-cyan"
+                            >
+                              {formatHash(contract.creator)}
                             </Link>
                           </TableCell>
                           <TableCell>

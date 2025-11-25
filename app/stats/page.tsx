@@ -4,7 +4,8 @@ import dynamic from 'next/dynamic'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
-import { useBlocksByTimeRange, useNetworkMetrics, useTopMiners } from '@/lib/hooks/useAnalytics'
+import { useBlocksByTimeRange, useNetworkMetrics } from '@/lib/hooks/useAnalytics'
+import { useTopMiners } from '@/lib/hooks/useStats'
 import { TopMinersTable } from '@/components/stats/TopMinersTable'
 import { AdvancedLogsViewer } from '@/components/logs/AdvancedLogsViewer'
 import { formatNumber } from '@/lib/utils/format'
@@ -55,7 +56,7 @@ export default function StatsPage() {
     error: blocksError,
   } = useBlocksByTimeRange(fromTime, toTime, 1000)
 
-  const { miners, loading: minersLoading } = useTopMiners(10)
+  const { miners, loading: minersLoading } = useTopMiners({ limit: 10 })
 
   return (
     <div className="container mx-auto px-4 py-8">

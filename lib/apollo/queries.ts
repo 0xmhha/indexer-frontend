@@ -252,16 +252,7 @@ export const SUBSCRIBE_NEW_BLOCK = gql`
       parentHash
       timestamp
       miner
-      gasLimit
-      gasUsed
-      difficulty
-      totalDifficulty
-      size
-      transactionCount
-      baseFeePerGas
-      withdrawalsRoot
-      blobGasUsed
-      excessBlobGas
+      txCount
     }
   }
 `
@@ -327,6 +318,25 @@ export const SUBSCRIBE_LOGS = gql`
       transactionHash
       logIndex
       removed
+    }
+  }
+`
+
+/**
+ * Get token balances for an address
+ * Supports filtering by tokenType (ERC-20, ERC-721, ERC-1155)
+ */
+export const GET_TOKEN_BALANCES = gql`
+  query GetTokenBalances($address: String!, $tokenType: String) {
+    tokenBalances(address: $address, tokenType: $tokenType) {
+      contractAddress
+      tokenType
+      balance
+      tokenId
+      name
+      symbol
+      decimals
+      metadata
     }
   }
 `

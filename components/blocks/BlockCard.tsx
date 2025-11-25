@@ -12,7 +12,7 @@ export function BlockCard({ block }: BlockCardProps) {
   const timestamp = block.timestamp
 
   return (
-    <Card className="transition-all hover:border-accent-blue/50">
+    <Card className="transition-colors duration-200 hover:border-accent-blue/50">
       <CardContent className="p-4">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -33,12 +33,16 @@ export function BlockCard({ block }: BlockCardProps) {
               </div>
               <div className="flex items-center gap-2 text-text-muted">
                 <span className="w-16">Miner:</span>
-                <Link
-                  href={`/address/${block.miner}`}
-                  className="font-mono text-accent-blue hover:text-accent-cyan"
-                >
-                  {block.miner.slice(0, 10)}...
-                </Link>
+                {block.miner ? (
+                  <Link
+                    href={`/address/${block.miner}`}
+                    className="font-mono text-accent-blue hover:text-accent-cyan"
+                  >
+                    {block.miner.slice(0, 10)}...
+                  </Link>
+                ) : (
+                  <span className="text-text-muted">N/A</span>
+                )}
               </div>
               <div className="flex items-center gap-2 text-text-muted">
                 <span className="w-16">Txns:</span>

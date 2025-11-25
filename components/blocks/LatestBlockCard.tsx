@@ -83,12 +83,16 @@ export function LatestBlockCard() {
             </div>
             <div className="col-span-2">
               <div className="annotation mb-1">MINER</div>
-              <Link
-                href={`/address/${latestBlock.miner}`}
-                className="font-mono text-xs text-accent-blue hover:text-accent-cyan"
-              >
-                {latestBlock.miner}
-              </Link>
+              {latestBlock.miner ? (
+                <Link
+                  href={`/address/${latestBlock.miner}`}
+                  className="font-mono text-xs text-accent-blue hover:text-accent-cyan"
+                >
+                  {latestBlock.miner}
+                </Link>
+              ) : (
+                <span className="font-mono text-xs text-text-muted">N/A</span>
+              )}
             </div>
           </div>
         </div>

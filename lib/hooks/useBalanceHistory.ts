@@ -6,6 +6,7 @@ import {
   transformBalanceSnapshot,
   type TransformedBalanceSnapshot,
 } from '@/lib/utils/graphql-transforms'
+import { PAGINATION } from '@/lib/config/constants'
 
 interface RawBalanceHistoryNode {
   blockNumber: string
@@ -45,7 +46,7 @@ interface BalanceHistoryResult {
  * ```
  */
 export function useBalanceHistory(options: BalanceHistoryOptions): BalanceHistoryResult {
-  const { address, fromBlock, toBlock, limit = 100, offset = 0 } = options
+  const { address, fromBlock, toBlock, limit = PAGINATION.BALANCE_HISTORY_LIMIT, offset = 0 } = options
 
   const { data, loading, error } = useQuery(GET_BALANCE_HISTORY, {
     variables: {

@@ -6,6 +6,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useValidators, type Validator } from '@/lib/hooks/useWBFT'
 import { formatNumber, truncateAddress } from '@/lib/utils/format'
+import { UI } from '@/lib/config/constants'
 
 interface ValidatorsListViewerProps {
   maxValidators?: number
@@ -18,7 +19,7 @@ interface ValidatorsListViewerProps {
  * Displays list of validators with their stake, voting power, and status.
  * Allows filtering by epoch and active status.
  */
-export function ValidatorsListViewer({ maxValidators = 50, epochNumber }: ValidatorsListViewerProps) {
+export function ValidatorsListViewer({ maxValidators = UI.MAX_VIEWER_ITEMS, epochNumber }: ValidatorsListViewerProps) {
   const [showActiveOnly, setShowActiveOnly] = useState(false)
 
   const {

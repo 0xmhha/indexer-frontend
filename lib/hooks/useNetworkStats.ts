@@ -1,6 +1,7 @@
 'use client'
 
 import { useNetworkMetrics } from './useAnalytics'
+import { PAGINATION } from '@/lib/config/constants'
 
 /**
  * Hook to fetch network statistics
@@ -30,7 +31,7 @@ export { useBlocksByTimeRange as useBlocksOverTime } from './useAnalytics'
 /**
  * Placeholder for top miners - not yet implemented in backend
  */
-export function useTopMiners(_limit = 10) {
+export function useTopMiners(_limit = PAGINATION.STATS_LIMIT) {
   return {
     topMiners: [],
     loading: false,

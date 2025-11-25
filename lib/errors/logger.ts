@@ -19,9 +19,25 @@ interface ErrorLog {
   severity: 'error' | 'warning' | 'info'
 }
 
+interface SerializedErrorLog {
+  timestamp: string
+  message: string
+  stack?: string
+  context?: ErrorContext
+  severity: 'error' | 'warning' | 'info'
+  userAgent?: string
+  url?: string
+}
+
 class ErrorLogger {
   private logs: ErrorLog[] = []
   private maxLogs = 100 // Keep last 100 errors in memory
+  private errorQueue: SerializedErrorLog[] = []
+  private batchTimeout: NodeJS.Timeout | null = null
+  private readonly BATCH_DELAY = 5000 // 5 seconds
+  private readonly MAX_BATCH_SIZE = 10
+  private readonly STORAGE_KEY = 'app_error_logs'
+  private readonly MAX_STORED_ERRORS = 50
 
   /**
    * Log an error with context
@@ -117,39 +133,153 @@ class ErrorLogger {
   }
 
   /**
-   * Send error to external monitoring service
-   * TODO: Integrate with Sentry, LogRocket, or similar
+   * Send error to monitoring (localStorage + optional API)
+   * Free solution without external paid services
    */
   private sendToMonitoring(log: ErrorLog): void {
-    const { error, context, severity } = log
+    const serialized = this.serializeError(log)
 
-    // Example: Sentry integration
-    // if (typeof window !== 'undefined' && window.Sentry) {
-    //   window.Sentry.captureException(error, {
-    //     level: severity,
-    //     contexts: {
-    //       custom: context,
-    //     },
-    //   })
-    // }
+    // Store in localStorage for persistence
+    this.storeErrorLocally(serialized)
 
-    // Example: Custom API endpoint
-    // fetch('/api/errors', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify({
-    //     message: error.message,
-    //     stack: error.stack,
-    //     context,
-    //     severity,
-    //   }),
-    // }).catch(() => {
-    //   // Silently fail if error reporting fails
-    // })
+    // Add to batch queue for API endpoint (if configured)
+    this.errorQueue.push(serialized)
 
-    // For now, just log to console in production
-    if (severity === 'error') {
-      console.error('[Production Error]', error.message, context)
+    // Send batch if queue is full or start timer
+    if (this.errorQueue.length >= this.MAX_BATCH_SIZE) {
+      this.flushErrorBatch()
+    } else if (!this.batchTimeout) {
+      this.batchTimeout = setTimeout(() => this.flushErrorBatch(), this.BATCH_DELAY)
+    }
+
+    // Still log critical errors to console
+    if (log.severity === 'error') {
+      console.error('[Production Error]', log.error.message, log.context)
+    }
+  }
+
+  /**
+   * Serialize error log for storage/transmission
+   */
+  private serializeError(log: ErrorLog): SerializedErrorLog {
+    const { timestamp, error, context, severity } = log
+
+    const serialized: SerializedErrorLog = {
+      timestamp: timestamp.toISOString(),
+      message: error.message,
+      severity,
+    }
+
+    // Only add optional properties if they have values
+    if (error.stack) {
+      serialized.stack = error.stack
+    }
+    if (context) {
+      serialized.context = context
+    }
+    if (typeof navigator !== 'undefined' && navigator.userAgent) {
+      serialized.userAgent = navigator.userAgent
+    }
+    if (typeof window !== 'undefined' && window.location.href) {
+      serialized.url = window.location.href
+    }
+
+    return serialized
+  }
+
+  /**
+   * Store error in localStorage
+   */
+  private storeErrorLocally(error: SerializedErrorLog): void {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return
+    }
+
+    try {
+      const stored = localStorage.getItem(this.STORAGE_KEY)
+      const errors: SerializedErrorLog[] = stored ? JSON.parse(stored) : []
+
+      // Add new error
+      errors.push(error)
+
+      // Keep only recent errors
+      const trimmed = errors.slice(-this.MAX_STORED_ERRORS)
+
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(trimmed))
+    } catch (e) {
+      // Silently fail if localStorage is full or unavailable
+      console.warn('Failed to store error in localStorage:', e)
+    }
+  }
+
+  /**
+   * Flush error batch to API endpoint
+   */
+  private flushErrorBatch(): void {
+    if (this.errorQueue.length === 0) {
+      return
+    }
+
+    // Clear timeout
+    if (this.batchTimeout) {
+      clearTimeout(this.batchTimeout)
+      this.batchTimeout = null
+    }
+
+    // Get batch to send
+    const batch = [...this.errorQueue]
+    this.errorQueue = []
+
+    // Send to custom API endpoint if configured
+    const apiEndpoint = process.env.NEXT_PUBLIC_ERROR_API_ENDPOINT
+
+    if (apiEndpoint && typeof fetch !== 'undefined') {
+      fetch(apiEndpoint, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          errors: batch,
+          timestamp: new Date().toISOString(),
+        }),
+        // Don't wait for response
+        keepalive: true,
+      }).catch((e) => {
+        // Silently fail if error reporting fails
+        console.warn('Failed to send error batch to API:', e)
+      })
+    }
+  }
+
+  /**
+   * Get stored errors from localStorage
+   */
+  getStoredErrors(): SerializedErrorLog[] {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return []
+    }
+
+    try {
+      const stored = localStorage.getItem(this.STORAGE_KEY)
+      return stored ? JSON.parse(stored) : []
+    } catch {
+      return []
+    }
+  }
+
+  /**
+   * Clear stored errors from localStorage
+   */
+  clearStoredErrors(): void {
+    if (typeof window === 'undefined' || !window.localStorage) {
+      return
+    }
+
+    try {
+      localStorage.removeItem(this.STORAGE_KEY)
+    } catch (e) {
+      console.warn('Failed to clear stored errors:', e)
     }
   }
 }

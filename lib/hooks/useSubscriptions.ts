@@ -11,6 +11,8 @@ import {
 } from '@/lib/apollo/queries'
 import { transformBlock, transformTransaction } from '@/lib/utils/graphql-transforms'
 import type { RawBlock, Block, RawTransaction, Transaction, RawLog, Log } from '@/types/graphql'
+import { env } from '@/lib/config/env'
+import { REALTIME } from '@/lib/config/constants'
 
 /**
  * Log filter options for subscription
@@ -34,7 +36,7 @@ export interface LogFilter {
  * const { pendingTransactions, loading, error } = usePendingTransactions(100)
  * ```
  */
-export function usePendingTransactions(maxTransactions = 50) {
+export function usePendingTransactions(maxTransactions: number = REALTIME.MAX_PENDING_TRANSACTIONS) {
   const [pendingTransactions, setPendingTransactions] = useState<Transaction[]>([])
 
   const { data, loading, error } = useSubscription(SUBSCRIBE_PENDING_TRANSACTIONS, {
@@ -86,7 +88,7 @@ export function usePendingTransactions(maxTransactions = 50) {
  * const { logs, loading, error } = useLogs({})
  * ```
  */
-export function useLogs(filter: LogFilter = {}, maxLogs = 100) {
+export function useLogs(filter: LogFilter = {}, maxLogs: number = REALTIME.MAX_LOGS) {
   const [logs, setLogs] = useState<Log[]>([])
 
   const { data, loading, error } = useSubscription(SUBSCRIBE_LOGS, {
@@ -146,7 +148,7 @@ export function useLogs(filter: LogFilter = {}, maxLogs = 100) {
  * const { blocks, latestBlock, loading, error } = useNewBlocks(50)
  * ```
  */
-export function useNewBlocks(maxBlocks = 20) {
+export function useNewBlocks(maxBlocks: number = REALTIME.MAX_BLOCKS) {
   const [blocks, setBlocks] = useState<Block[]>([])
   const [latestBlock, setLatestBlock] = useState<Block | null>(null)
   const [initialized, setInitialized] = useState(false)
@@ -167,6 +169,9 @@ export function useNewBlocks(maxBlocks = 20) {
   // Load initial blocks when we have the latest height (only once)
   useEffect(() => {
     if (heightData?.latestHeight && !initialized) {
+      if (env.isDevelopment) {
+        console.log('[useNewBlocks] Loading initial blocks, latest height:', heightData.latestHeight)
+      }
       setInitialized(true) // Set immediately to prevent re-execution
 
       const latestHeight = BigInt(heightData.latestHeight)
@@ -184,31 +189,28 @@ export function useNewBlocks(maxBlocks = 20) {
       Promise.all(
         blocksToFetch.map(async (blockNum) => {
           try {
-            const response = await fetch(
-              `http://localhost:8080/graphql`,
-              {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  query: `
-                    query GetBlock($number: String!) {
-                      block(number: $number) {
-                        number
-                        hash
-                        parentHash
-                        timestamp
-                        miner
-                        gasUsed
-                        gasLimit
-                        size
-                        transactionCount
-                      }
+            const response = await fetch(env.graphqlEndpoint, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                query: `
+                  query GetBlock($number: String!) {
+                    block(number: $number) {
+                      number
+                      hash
+                      parentHash
+                      timestamp
+                      miner
+                      gasUsed
+                      gasLimit
+                      size
+                      transactionCount
                     }
-                  `,
-                  variables: { number: blockNum.toString() },
-                }),
-              }
-            )
+                  }
+                `,
+                variables: { number: blockNum.toString() },
+              }),
+            })
             const result = await response.json()
             return result.data?.block ? transformBlock(result.data.block as RawBlock) : null
           } catch (err) {
@@ -219,6 +221,9 @@ export function useNewBlocks(maxBlocks = 20) {
       ).then((fetchedBlocks) => {
         const validBlocks = fetchedBlocks.filter((b): b is Block => b !== null)
         if (validBlocks.length > 0) {
+          if (env.isDevelopment) {
+            console.log('[useNewBlocks] Initial blocks loaded:', validBlocks.length)
+          }
           setBlocks(validBlocks)
           const firstBlock = validBlocks[0]
           if (firstBlock) {
@@ -277,7 +282,7 @@ export function useNewBlocks(maxBlocks = 20) {
  * const { transactions, loading, error } = useNewTransactions(100)
  * ```
  */
-export function useNewTransactions(maxTransactions = 50) {
+export function useNewTransactions(maxTransactions: number = REALTIME.MAX_TRANSACTIONS) {
   const [transactions, setTransactions] = useState<Transaction[]>([])
 
   const { data, loading, error } = useSubscription(SUBSCRIBE_NEW_TRANSACTION, {

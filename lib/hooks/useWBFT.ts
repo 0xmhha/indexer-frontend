@@ -1,6 +1,7 @@
 'use client'
 
 import { gql, useQuery } from '@apollo/client'
+import { PAGINATION } from '@/lib/config/constants'
 
 // Query for WBFT block metadata
 const GET_WBFT_BLOCK = gql`
@@ -261,7 +262,7 @@ export function useValidatorSigningStats(
     offset?: number
   } = {}
 ) {
-  const { validator, epochNumber, limit = 20, offset = 0 } = params
+  const { validator, epochNumber, limit = PAGINATION.DEFAULT_PAGE_SIZE, offset = 0 } = params
 
   const { data, loading, error, refetch, fetchMore, previousData } = useQuery(
     GET_VALIDATOR_SIGNING_STATS,
@@ -323,7 +324,7 @@ export function useValidators(
     offset?: number
   } = {}
 ) {
-  const { epochNumber, limit = 20, offset = 0 } = params
+  const { epochNumber, limit = PAGINATION.DEFAULT_PAGE_SIZE, offset = 0 } = params
 
   const { data, loading, error, refetch, fetchMore, previousData } = useQuery(GET_VALIDATORS, {
     variables: {

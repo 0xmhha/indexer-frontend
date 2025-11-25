@@ -2,6 +2,7 @@
 
 import { gql, useQuery } from '@apollo/client'
 import { transformTransactions, type TransformedTransaction } from '@/lib/utils/graphql-transforms'
+import { PAGINATION } from '@/lib/config/constants'
 
 // Query for filtered transactions by address using HistoricalTransactionFilter
 const GET_FILTERED_TRANSACTIONS = gql`
@@ -75,7 +76,7 @@ export function useFilteredTransactions(params: FilteredTransactionsParams) {
     maxValue,
     txType,
     successOnly,
-    limit = 20,
+    limit = PAGINATION.DEFAULT_PAGE_SIZE,
     offset = 0,
   } = params
 

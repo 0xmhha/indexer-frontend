@@ -5,6 +5,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useActiveMinters } from '@/lib/hooks/useSystemContracts'
 import { formatNumber, formatDateTime, truncateAddress } from '@/lib/utils/format'
+import { PAGINATION } from '@/lib/config/constants'
 
 interface ActiveMintersPanelProps {
   maxMinters?: number
@@ -15,7 +16,7 @@ interface ActiveMintersPanelProps {
  *
  * Displays list of active minters with their allowances and activity status.
  */
-export function ActiveMintersPanel({ maxMinters = 20 }: ActiveMintersPanelProps) {
+export function ActiveMintersPanel({ maxMinters = PAGINATION.DEFAULT_PAGE_SIZE }: ActiveMintersPanelProps) {
   const { minters, totalCount, loading, error } = useActiveMinters({ limit: maxMinters })
 
   if (loading && minters.length === 0) {

@@ -1,5 +1,6 @@
 import * as React from 'react'
 import { cn } from '@/lib/utils'
+import { UI } from '@/lib/config/constants'
 
 interface PaginationProps {
   currentPage: number
@@ -9,7 +10,7 @@ interface PaginationProps {
 }
 
 export function Pagination({ currentPage, totalPages, onPageChange, className }: PaginationProps) {
-  const maxVisible = 5
+  const maxVisible = UI.PAGINATION_MAX_VISIBLE_SIMPLE
   const halfVisible = Math.floor(maxVisible / 2)
 
   let startPage = Math.max(1, currentPage - halfVisible)

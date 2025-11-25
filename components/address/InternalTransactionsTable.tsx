@@ -16,6 +16,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { formatCurrency, formatHash, formatNumber, formatDate } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
+import { PAGINATION } from '@/lib/config/constants'
 import type { InternalTransaction } from '@/types/address-indexing'
 
 interface InternalTransactionsTableProps {
@@ -23,7 +24,7 @@ interface InternalTransactionsTableProps {
   limit?: number
 }
 
-export function InternalTransactionsTable({ address, limit = 20 }: InternalTransactionsTableProps) {
+export function InternalTransactionsTable({ address, limit = PAGINATION.DEFAULT_PAGE_SIZE }: InternalTransactionsTableProps) {
   const [currentOffset, setCurrentOffset] = useState(0)
 
   const { internalTransactions, totalCount, pageInfo, loading, error, loadMore } =

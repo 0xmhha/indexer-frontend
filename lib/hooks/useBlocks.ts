@@ -2,6 +2,7 @@
 
 import { gql, useQuery } from '@apollo/client'
 import { transformBlocks, type TransformedBlock } from '@/lib/utils/graphql-transforms'
+import { PAGINATION, POLLING_INTERVALS } from '@/lib/config/constants'
 
 // Query for blocks with pagination
 const GET_BLOCKS = gql`
@@ -41,13 +42,21 @@ interface UseBlocksParams {
   numberFrom?: string
   numberTo?: string
   miner?: string
+  pollInterval?: number // Auto-refresh interval in ms
 }
 
 /**
  * Hook to fetch blocks with pagination and filtering
  */
 export function useBlocks(params: UseBlocksParams = {}) {
-  const { limit = 20, offset = 0, numberFrom, numberTo, miner } = params
+  const {
+    limit = PAGINATION.DEFAULT_PAGE_SIZE,
+    offset = 0,
+    numberFrom,
+    numberTo,
+    miner,
+    pollInterval = POLLING_INTERVALS.VERY_FAST, // Default: 5 seconds
+  } = params
 
   const { data, loading, error, refetch, fetchMore, previousData } = useQuery(GET_BLOCKS, {
     variables: {
@@ -59,6 +68,8 @@ export function useBlocks(params: UseBlocksParams = {}) {
     },
     // Use previous data while loading to prevent flickering
     returnPartialData: true,
+    // Enable polling for real-time updates
+    pollInterval,
   })
 
   // Use previous data while loading new data to prevent flickering

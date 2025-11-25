@@ -5,18 +5,61 @@ import { gql } from '@apollo/client'
 // ============================================================================
 
 /**
- * Unified search query for blocks, transactions, addresses, and contracts
+ * Unified search query for blocks, transactions, addresses, and logs
  *
- * TODO: This query will be enabled when the backend implements the search API
- * For now, we use client-side search logic
+ * ✅ Backend API implemented with Union Types (2025-11-24)
+ * Supports automatic type detection with structured data
+ *
+ * @see Frontend API Integration Guide for full specification
  */
 export const SEARCH = gql`
-  query Search($query: String!, $types: [String!], $limit: Int = 10) {
+  query Search($query: String!, $types: [String!], $limit: Int) {
     search(query: $query, types: $types, limit: $limit) {
-      type
-      value
-      label
-      metadata
+      ... on BlockResult {
+        type
+        block {
+          number
+          hash
+          timestamp
+          parentHash
+          miner
+          gasUsed
+          gasLimit
+          transactionCount
+        }
+      }
+      ... on TransactionResult {
+        type
+        transaction {
+          hash
+          from
+          to
+          value
+          gas
+          gasPrice
+          nonce
+          blockNumber
+          blockHash
+          transactionIndex
+        }
+      }
+      ... on AddressResult {
+        type
+        address
+        transactionCount
+        balance
+      }
+      ... on LogResult {
+        type
+        log {
+          address
+          topics
+          data
+          blockNumber
+          transactionHash
+          logIndex
+        }
+      }
     }
   }
 `
@@ -38,26 +81,80 @@ export const SEARCH_AUTOCOMPLETE = gql`
 `
 
 // ============================================================================
-// Search Result Types
+// Search Result Types (Union Type Structure)
 // ============================================================================
 
-export interface SearchResult {
-  type: 'block' | 'transaction' | 'address' | 'contract'
-  value: string
-  label?: string
-  metadata?: string // JSON string with additional info
+/**
+ * Block data structure from search results
+ */
+export interface BlockData {
+  number: string // BigInt as string
+  hash: string
+  timestamp: string // BigInt as string
+  parentHash: string
+  miner: string
+  gasUsed: string // BigInt as string
+  gasLimit: string // BigInt as string
+  transactionCount: number
 }
 
-export interface SearchResultMetadata {
-  blockNumber?: string
-  timestamp?: string
-  from?: string
-  to?: string
-  value?: string
-  contractName?: string
-  verified?: boolean
-  [key: string]: unknown
+/**
+ * Transaction data structure from search results
+ */
+export interface TransactionData {
+  hash: string
+  from: string
+  to: string // Empty string for contract creation
+  value: string // Wei (BigInt as string)
+  gas: string // BigInt as string
+  gasPrice: string // BigInt as string
+  nonce: string // BigInt as string
+  blockNumber: string // BigInt as string
+  blockHash: string
+  transactionIndex: string // BigInt as string
 }
+
+/**
+ * Log data structure from search results
+ */
+export interface LogData {
+  address: string
+  topics: string[]
+  data: string
+  blockNumber: string // BigInt as string
+  transactionHash: string
+  logIndex: number
+}
+
+/**
+ * Union type results from search query
+ */
+export interface BlockResult {
+  type: 'block'
+  block: BlockData
+}
+
+export interface TransactionResult {
+  type: 'transaction'
+  transaction: TransactionData
+}
+
+export interface AddressResult {
+  type: 'address'
+  address: string
+  transactionCount: number
+  balance: string // Wei (BigInt as string)
+}
+
+export interface LogResult {
+  type: 'log'
+  log: LogData
+}
+
+/**
+ * Search result union type
+ */
+export type SearchResult = BlockResult | TransactionResult | AddressResult | LogResult
 
 export interface SearchVariables {
   query: string
