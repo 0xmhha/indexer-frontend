@@ -1,29 +1,12 @@
 'use client'
 
-import { useState, useEffect, useCallback, Suspense } from 'react'
-import Link from 'next/link'
-import dynamic from 'next/dynamic'
-import { useRouter, useSearchParams, useParams } from 'next/navigation'
-import { useAddressBalance, useAddressTransactions, useBalanceHistory, useTokenBalances } from '@/lib/hooks/useAddress'
-import { useFilteredTransactions } from '@/lib/hooks/useFilteredTransactions'
-import { useLatestHeight } from '@/lib/hooks/useLatestHeight'
-import { usePagination } from '@/lib/hooks/usePagination'
+import { Suspense } from 'react'
+import { useParams } from 'next/navigation'
+import { useAddressPageData } from '@/lib/hooks/useAddressPageData'
+import { useTokenBalances } from '@/lib/hooks/useAddress'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableRow,
-  TableHead,
-  TableCell,
-} from '@/components/ui/table'
-import { PaginationControls } from '@/components/ui/pagination-controls'
-import { ExportButton } from '@/components/common/ExportButton'
-import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { AddressDetailSkeleton } from '@/components/skeletons/AddressDetailSkeleton'
-import { TransactionFilters, type TransactionFilterValues } from '@/components/transactions/TransactionFilters'
-import { TransactionTypeBadge } from '@/components/transactions/TransactionTypeBadge'
 import { ContractVerificationStatus } from '@/components/contract/ContractVerificationStatus'
 import { SourceCodeViewer } from '@/components/contract/SourceCodeViewer'
 import { TokenBalancesTable } from '@/components/address/TokenBalancesTable'
@@ -31,184 +14,126 @@ import { InternalTransactionsTable } from '@/components/address/InternalTransact
 import { ERC20TransfersTable } from '@/components/address/ERC20TransfersTable'
 import { ERC721TransfersTable } from '@/components/address/ERC721TransfersTable'
 import { ContractCreationInfo } from '@/components/address/ContractCreationInfo'
+import { AddressOverviewCard } from '@/components/address/AddressOverviewCard'
+import { BalanceHistoryCard } from '@/components/address/BalanceHistoryCard'
+import { AddressTransactionsSection } from '@/components/address/AddressTransactionsSection'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
-import { formatCurrency, formatHash, formatNumber } from '@/lib/utils/format'
 import { isValidAddress } from '@/lib/utils/validation'
-import { env } from '@/lib/config/env'
-import type { Transaction } from '@/types/graphql'
 
-// Lazy load heavy chart component
-const BalanceHistoryChart = dynamic(
-  () => import('@/components/address/BalanceHistoryChart').then((mod) => ({ default: mod.BalanceHistoryChart })),
-  {
-    loading: () => (
-      <div className="flex h-64 items-center justify-center">
-        <LoadingSpinner />
-      </div>
-    ),
-    ssr: false,
-  }
-)
+// ============================================================
+// Sub-Components
+// ============================================================
+
+function AddressHeader({ address }: { address: string }) {
+  return (
+    <div className="mb-8">
+      <div className="annotation mb-2">ADDRESS</div>
+      <h1 className="mb-4 break-all font-mono text-xl font-bold text-accent-blue">{address}</h1>
+    </div>
+  )
+}
+
+function InvalidAddressError() {
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <ErrorDisplay title="Invalid Address" message="The provided address is not valid" />
+    </div>
+  )
+}
+
+function TokenBalancesCard({
+  balances,
+  loading,
+}: {
+  balances: ReturnType<typeof useTokenBalances>['balances']
+  loading: boolean
+}) {
+  return (
+    <Card className="mb-6">
+      <CardHeader className="border-b border-bg-tertiary">
+        <CardTitle>TOKEN BALANCES</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <TokenBalancesTable balances={balances} loading={loading} />
+      </CardContent>
+    </Card>
+  )
+}
+
+function TransactionTabs({ address }: { address: string }) {
+  return (
+    <>
+      <TabsContent value="internal">
+        <Card>
+          <CardHeader className="border-b border-bg-tertiary">
+            <CardTitle>INTERNAL TRANSACTIONS</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <InternalTransactionsTable address={address} limit={20} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="erc20">
+        <Card>
+          <CardHeader className="border-b border-bg-tertiary">
+            <CardTitle>ERC20 TOKEN TRANSFERS</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ERC20TransfersTable address={address} limit={20} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="erc721">
+        <Card>
+          <CardHeader className="border-b border-bg-tertiary">
+            <CardTitle>ERC721 NFT TRANSFERS</CardTitle>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ERC721TransfersTable address={address} limit={20} />
+          </CardContent>
+        </Card>
+      </TabsContent>
+    </>
+  )
+}
+
+// ============================================================
+// Main Page Content
+// ============================================================
 
 function AddressPageContent() {
   const params = useParams()
   const address = params.address as string
-  const router = useRouter()
-  const searchParams = useSearchParams()
 
-  // Parse initial filters from URL
-  const getFiltersFromURL = useCallback((): TransactionFilterValues | null => {
-    const fromBlock = searchParams.get('fromBlock')
-    const toBlock = searchParams.get('toBlock')
-    const minValue = searchParams.get('minValue')
-    const maxValue = searchParams.get('maxValue')
-    const txType = searchParams.get('txType')
-    const successOnly = searchParams.get('successOnly')
-
-    // Only return filters if at least one parameter is set
-    if (fromBlock || toBlock || minValue || maxValue || txType || successOnly) {
-      return {
-        fromBlock: fromBlock || '',
-        toBlock: toBlock || '',
-        minValue: minValue || '',
-        maxValue: maxValue || '',
-        txType: txType ? parseInt(txType) : 0,
-        successOnly: successOnly === 'true',
-      }
-    }
-    return null
-  }, [searchParams])
-
-  // Filter state - initialize from URL
-  const [activeFilters, setActiveFilters] = useState<TransactionFilterValues | null>(() =>
-    getFiltersFromURL()
-  )
-
-  // Sync filters with URL on searchParams change
-  useEffect(() => {
-    const urlFilters = getFiltersFromURL()
-    setActiveFilters(urlFilters)
-  }, [getFiltersFromURL])
-
-  // Get latest block height for balance history
-  const { latestHeight } = useLatestHeight()
-
-  // Calculate block range for balance history (last 1000 blocks or all if less)
-  const toBlock = latestHeight ?? BigInt(0)
-  const fromBlock = toBlock > BigInt(1000) ? toBlock - BigInt(1000) : BigInt(0)
-
-  // Call hooks unconditionally
-  const { balance, loading: balanceLoading, error: balanceError } = useAddressBalance(address)
-
-  // Get pagination params from URL
-  const pageParam = searchParams.get('page')
-  const limitParam = searchParams.get('limit')
-  const currentPageFromURL = pageParam ? parseInt(pageParam, 10) : 1
-  const itemsPerPageFromURL = limitParam ? parseInt(limitParam, 10) : 20
-  const offsetFromURL = (currentPageFromURL - 1) * itemsPerPageFromURL
-
-  // Unfiltered transactions
+  // Use extracted data hook
   const {
-    transactions: unfilteredTransactions,
-    totalCount: unfilteredTotalCount,
-    loading: unfilteredTxLoading,
-    error: unfilteredTxError,
-  } = useAddressTransactions(address, itemsPerPageFromURL, offsetFromURL)
-
-  // Filtered transactions (only when filters are active)
-  const {
-    transactions: filteredTransactions,
-    totalCount: filteredTotalCount,
-    loading: filteredTxLoading,
-    error: filteredTxError,
-  } = useFilteredTransactions({
-    address,
-    fromBlock: activeFilters?.fromBlock || '0',
-    toBlock: activeFilters?.toBlock || (latestHeight?.toString() || '0'),
-    minValue: activeFilters?.minValue,
-    maxValue: activeFilters?.maxValue,
-    txType: activeFilters?.txType,
-    successOnly: activeFilters?.successOnly,
-    limit: itemsPerPageFromURL,
-    offset: offsetFromURL,
-  })
-
-  // Use filtered or unfiltered data based on active filters
-  const transactions = activeFilters ? filteredTransactions : unfilteredTransactions
-  const totalCount = activeFilters ? filteredTotalCount : unfilteredTotalCount
-  const txLoading = activeFilters ? filteredTxLoading : unfilteredTxLoading
-  const txError = activeFilters ? filteredTxError : unfilteredTxError
-
-  // Setup pagination with URL support
-  const {
-    currentPage,
+    balance,
+    balanceLoading,
+    balanceError,
+    history,
+    historyLoading,
+    historyError,
+    balances,
+    balancesLoading,
+    transactions,
+    totalCount,
+    txLoading,
+    txError,
+    activeFilters,
     itemsPerPage,
+    currentPage,
     totalPages,
+    handleApplyFilters,
+    handleResetFilters,
     setPage,
     setItemsPerPage,
-  } = usePagination({
-    totalCount,
-    defaultItemsPerPage: 20,
-  })
+  } = useAddressPageData(address)
 
-  const {
-    history,
-    loading: historyLoading,
-    error: historyError,
-  } = useBalanceHistory(address, fromBlock, toBlock, 100)
-
-  const { balances, loading: balancesLoading } = useTokenBalances(address)
-
-  // Filter handlers
-  const handleApplyFilters = (filters: TransactionFilterValues) => {
-    // Set default block range if not provided
-    const appliedFilters = {
-      ...filters,
-      fromBlock: filters.fromBlock || '0',
-      toBlock: filters.toBlock || (latestHeight?.toString() || '0'),
-    }
-    setActiveFilters(appliedFilters)
-    setPage(1)
-
-    // Update URL with filter parameters
-    const params = new URLSearchParams()
-    if (appliedFilters.fromBlock && appliedFilters.fromBlock !== '0') {
-      params.set('fromBlock', appliedFilters.fromBlock)
-    }
-    if (appliedFilters.toBlock) {
-      params.set('toBlock', appliedFilters.toBlock)
-    }
-    if (appliedFilters.minValue) {
-      params.set('minValue', appliedFilters.minValue)
-    }
-    if (appliedFilters.maxValue) {
-      params.set('maxValue', appliedFilters.maxValue)
-    }
-    if (appliedFilters.txType !== 0) {
-      params.set('txType', appliedFilters.txType.toString())
-    }
-    if (appliedFilters.successOnly) {
-      params.set('successOnly', 'true')
-    }
-
-    const queryString = params.toString()
-    router.push(queryString ? `?${queryString}` : '', { scroll: false })
-  }
-
-  const handleResetFilters = () => {
-    setActiveFilters(null)
-    setPage(1)
-    // Clear URL parameters
-    router.push('', { scroll: false })
-  }
-
-  // Validate address
+  // Validation
   if (!isValidAddress(address)) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <ErrorDisplay title="Invalid Address" message="The provided address is not valid" />
-      </div>
-    )
+    return <InvalidAddressError />
   }
 
   if (balanceLoading) {
@@ -217,69 +142,14 @@ function AddressPageContent() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="annotation mb-2">ADDRESS</div>
-        <h1 className="mb-4 break-all font-mono text-xl font-bold text-accent-blue">{address}</h1>
-      </div>
-
-      {/* Balance Card */}
-      <Card className="mb-6">
-        <CardHeader className="border-b border-bg-tertiary">
-          <CardTitle>OVERVIEW</CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          {balanceError ? (
-            <ErrorDisplay title="Failed to load balance" message={balanceError.message} />
-          ) : (
-            <div>
-              <div className="annotation mb-2">BALANCE</div>
-              <div className="font-mono text-3xl font-bold text-accent-blue">
-                {balance !== null ? formatCurrency(balance, env.currencySymbol) : 'Loading...'}
-              </div>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Contract Verification Status */}
+      <AddressHeader address={address} />
+      <AddressOverviewCard balance={balance} error={balanceError} />
       <ContractVerificationStatus address={address} isContract={true} />
-
-      {/* Source Code Viewer (for verified contracts) */}
       <SourceCodeViewer address={address} isVerified={address.toLowerCase().endsWith('0')} />
-
-      {/* Balance History Chart */}
-      <Card className="mb-6">
-        <CardHeader className="border-b border-bg-tertiary">
-          <CardTitle>BALANCE HISTORY</CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          {historyLoading ? (
-            <div className="flex h-64 items-center justify-center">
-              <LoadingSpinner />
-            </div>
-          ) : historyError ? (
-            <ErrorDisplay title="Failed to load balance history" message={historyError.message} />
-          ) : (
-            <BalanceHistoryChart history={history} />
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Contract Creation Info */}
+      <BalanceHistoryCard history={history} loading={historyLoading} error={historyError} />
       <ContractCreationInfo address={address} />
+      <TokenBalancesCard balances={balances} loading={balancesLoading} />
 
-      {/* Token Balances */}
-      <Card className="mb-6">
-        <CardHeader className="border-b border-bg-tertiary">
-          <CardTitle>TOKEN BALANCES</CardTitle>
-        </CardHeader>
-        <CardContent className="p-0">
-          <TokenBalancesTable balances={balances} loading={balancesLoading} />
-        </CardContent>
-      </Card>
-
-      {/* Transaction Tabs */}
       <Tabs defaultValue="transactions" className="w-full">
         <TabsList className="mb-6">
           <TabsTrigger value="transactions">Regular Transactions</TabsTrigger>
@@ -288,195 +158,33 @@ function AddressPageContent() {
           <TabsTrigger value="erc721">ERC721 Transfers</TabsTrigger>
         </TabsList>
 
-        {/* Regular Transactions Tab */}
         <TabsContent value="transactions">
-          {/* Transaction Filters */}
-          <TransactionFilters
-            onApply={handleApplyFilters}
-            onReset={handleResetFilters}
-            initialValues={activeFilters || undefined}
-            isLoading={txLoading}
+          <AddressTransactionsSection
+            address={address}
+            transactions={transactions}
+            totalCount={totalCount}
+            loading={txLoading}
+            error={txError}
+            activeFilters={activeFilters}
+            currentPage={currentPage}
+            itemsPerPage={itemsPerPage}
+            totalPages={totalPages}
+            onApplyFilters={handleApplyFilters}
+            onResetFilters={handleResetFilters}
+            onPageChange={setPage}
+            onItemsPerPageChange={setItemsPerPage}
           />
-
-          <Card>
-            <CardHeader className="border-b border-bg-tertiary">
-              <CardTitle className="flex items-center justify-between">
-                <span>TRANSACTIONS {activeFilters && '(FILTERED)'}</span>
-                <div className="flex items-center gap-4">
-                  {totalCount > 0 && (
-                    <span className="font-mono text-xs text-text-secondary">
-                      {formatNumber(totalCount)} total
-                    </span>
-                  )}
-                  <ExportButton
-                    data={transactions.map((tx: Transaction) => ({
-                      hash: tx.hash,
-                      blockNumber: tx.blockNumber,
-                      from: tx.from,
-                      to: tx.to || '',
-                      value: tx.value,
-                      type: tx.type,
-                    }))}
-                    filename={`address-${address}-transactions`}
-                    headers={['hash', 'blockNumber', 'from', 'to', 'value', 'type']}
-                    disabled={txLoading}
-                  />
-                </div>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              {txLoading ? (
-                <div className="flex h-64 items-center justify-center">
-                  <LoadingSpinner />
-                </div>
-              ) : txError ? (
-                <div className="p-6">
-                  <ErrorDisplay title="Failed to load transactions" message={txError.message} />
-                </div>
-              ) : transactions.length === 0 ? (
-                <div className="p-6 text-center">
-                  <p className="text-sm text-text-muted">No transactions found for this address</p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>TX HASH</TableHead>
-                      <TableHead>BLOCK</TableHead>
-                      <TableHead>FROM</TableHead>
-                      <TableHead>TO</TableHead>
-                      <TableHead className="text-right">VALUE</TableHead>
-                      <TableHead>TYPE</TableHead>
-                      {activeFilters && <TableHead>STATUS</TableHead>}
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {transactions.map((tx: Transaction) => (
-                      <TableRow key={tx.hash}>
-                        <TableCell>
-                          <Link
-                            href={`/tx/${tx.hash}`}
-                            className="font-mono text-accent-blue hover:text-accent-cyan"
-                          >
-                            {formatHash(tx.hash)}
-                          </Link>
-                        </TableCell>
-                        <TableCell>
-                          <Link
-                            href={`/block/${tx.blockNumber}`}
-                            className="font-mono text-accent-blue hover:text-accent-cyan"
-                          >
-                            {formatNumber(BigInt(tx.blockNumber))}
-                          </Link>
-                        </TableCell>
-                        <TableCell>
-                          {tx.from === address ? (
-                            <span className="font-mono text-text-secondary">Self</span>
-                          ) : (
-                            <Link
-                              href={`/address/${tx.from}`}
-                              className="font-mono text-accent-blue hover:text-accent-cyan"
-                            >
-                              {formatHash(tx.from, true)}
-                            </Link>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {tx.to === address ? (
-                            <span className="font-mono text-text-secondary">Self</span>
-                          ) : tx.to ? (
-                            <Link
-                              href={`/address/${tx.to}`}
-                              className="font-mono text-accent-blue hover:text-accent-cyan"
-                            >
-                              {formatHash(tx.to, true)}
-                            </Link>
-                          ) : (
-                            <span className="font-mono text-text-muted">[Contract]</span>
-                          )}
-                        </TableCell>
-                        <TableCell className="text-right font-mono">
-                          {formatCurrency(BigInt(tx.value), env.currencySymbol)}
-                        </TableCell>
-                        <TableCell>
-                          <TransactionTypeBadge type={tx.type} />
-                        </TableCell>
-                        {activeFilters && (
-                          <TableCell>
-                            {tx.receipt?.status === 1 ? (
-                              <span className="font-mono text-xs text-accent-green">SUCCESS</span>
-                            ) : tx.receipt?.status === 0 ? (
-                              <span className="font-mono text-xs text-accent-orange">FAILED</span>
-                            ) : (
-                              <span className="font-mono text-xs text-text-muted">-</span>
-                            )}
-                          </TableCell>
-                        )}
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="mt-6">
-              <PaginationControls
-                currentPage={currentPage}
-                totalPages={totalPages}
-                totalCount={totalCount}
-                itemsPerPage={itemsPerPage}
-                onPageChange={setPage}
-                onItemsPerPageChange={setItemsPerPage}
-                showItemsPerPage={true}
-                showResultsInfo={true}
-                showPageInput={false}
-              />
-            </div>
-          )}
         </TabsContent>
 
-        {/* Internal Transactions Tab */}
-        <TabsContent value="internal">
-          <Card>
-            <CardHeader className="border-b border-bg-tertiary">
-              <CardTitle>INTERNAL TRANSACTIONS</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <InternalTransactionsTable address={address} limit={20} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* ERC20 Transfers Tab */}
-        <TabsContent value="erc20">
-          <Card>
-            <CardHeader className="border-b border-bg-tertiary">
-              <CardTitle>ERC20 TOKEN TRANSFERS</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ERC20TransfersTable address={address} limit={20} />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* ERC721 Transfers Tab */}
-        <TabsContent value="erc721">
-          <Card>
-            <CardHeader className="border-b border-bg-tertiary">
-              <CardTitle>ERC721 NFT TRANSFERS</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-              <ERC721TransfersTable address={address} limit={20} />
-            </CardContent>
-          </Card>
-        </TabsContent>
+        <TransactionTabs address={address} />
       </Tabs>
     </div>
   )
 }
+
+// ============================================================
+// Page Export
+// ============================================================
 
 export default function AddressPage() {
   return (

@@ -22,7 +22,14 @@
     "test:e2e:debug": "playwright test --debug",
     "codegen": "graphql-codegen --config codegen.ts",
     "clean:port": "lsof -ti:${PORT:-3000} | xargs kill -9 2>/dev/null || true",
-    "clean:port:interactive": "./scripts/kill-port.sh ${PORT:-3000}"
+    "clean:port:interactive": "./scripts/kill-port.sh ${PORT:-3000}",
+    "quality": "pnpm run quality:lint && pnpm run quality:types && pnpm run quality:test",
+    "quality:lint": "eslint . --max-warnings 0",
+    "quality:types": "tsc --noEmit",
+    "quality:test": "vitest run --coverage",
+    "quality:complexity": "eslint . --format json | node scripts/analyze-complexity.mjs",
+    "quality:report": "pnpm run quality:lint --format json -o reports/eslint-report.json; pnpm run test:coverage --reporter=json --outputFile=reports/coverage-report.json",
+    "precommit": "pnpm run quality:lint && pnpm run quality:types"
   },
   "dependencies": {
     "@apollo/client": "^3.11.0",

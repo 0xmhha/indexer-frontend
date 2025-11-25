@@ -1,262 +1,242 @@
 'use client'
 
-import { useState, FormEvent, useEffect, useRef } from 'react'
+import { useState, FormEvent, useEffect, useRef, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { detectInputType } from '@/lib/utils/validation'
 import { useLatestHeight } from '@/lib/hooks/useLatestHeight'
 import { useSearchHistory } from '@/lib/hooks/useSearchHistory'
-import { formatNumber, formatHash } from '@/lib/utils/format'
+import {
+  useSearchSuggestions,
+  getSelectableSuggestions,
+  type Suggestion,
+} from '@/lib/hooks/useSearchSuggestions'
 
-interface Suggestion {
-  type: 'block' | 'hint' | 'history' | 'search-all'
-  label: string
-  value: string
-  description?: string
+// ============================================================
+// Sub-Components
+// ============================================================
+
+function SuggestionItem({
+  suggestion,
+  isSelected,
+  isSelectable,
+  selectableIndex,
+  onClick,
+}: {
+  suggestion: Suggestion
+  isSelected: boolean
+  isSelectable: boolean
+  selectableIndex: number
+  onClick: () => void
+}) {
+  return (
+    <div
+      id={isSelectable ? `search-suggestion-${selectableIndex}` : undefined}
+      role={isSelectable ? 'option' : 'presentation'}
+      aria-selected={isSelectable ? isSelected : undefined}
+      onClick={onClick}
+      className={`
+        px-4 py-3 border-b border-bg-tertiary last:border-b-0
+        ${isSelectable ? 'cursor-pointer hover:bg-bg-tertiary' : 'cursor-default'}
+        ${isSelected ? 'bg-bg-tertiary' : ''}
+      `}
+    >
+      <div className="flex items-center justify-between">
+        <div>
+          <div
+            className={`font-mono text-sm ${
+              isSelectable ? 'text-accent-blue' : 'text-text-secondary'
+            }`}
+          >
+            {suggestion.type === 'history' && (
+              <span className="text-text-muted mr-2" aria-hidden="true">↺</span>
+            )}
+            {suggestion.label}
+          </div>
+          {suggestion.description && (
+            <div className="font-mono text-xs text-text-muted mt-1">
+              {suggestion.description}
+            </div>
+          )}
+        </div>
+        {isSelectable && (
+          <div className="font-mono text-xs text-text-muted" aria-hidden="true">→</div>
+        )}
+      </div>
+    </div>
+  )
 }
+
+function SuggestionsDropdown({
+  suggestions,
+  selectedIndex,
+  onSuggestionClick,
+  suggestionsRef,
+}: {
+  suggestions: Suggestion[]
+  selectedIndex: number
+  onSuggestionClick: (suggestion: Suggestion) => void
+  suggestionsRef: React.RefObject<HTMLDivElement>
+}) {
+  const selectableSuggestions = getSelectableSuggestions(suggestions)
+
+  return (
+    <div
+      ref={suggestionsRef}
+      id="search-suggestions"
+      role="listbox"
+      aria-label="Search suggestions"
+      className="absolute top-full left-0 right-0 mt-1 border border-bg-tertiary bg-bg-secondary shadow-lg z-50 max-h-96 overflow-y-auto"
+    >
+      {suggestions.map((suggestion, index) => {
+        const selectableIndex = selectableSuggestions.indexOf(suggestion)
+        const isSelectable = selectableIndex !== -1
+        const isSelected = selectableIndex === selectedIndex
+
+        return (
+          <SuggestionItem
+            key={`${suggestion.type}-${suggestion.label}-${index}`}
+            suggestion={suggestion}
+            isSelected={isSelected}
+            isSelectable={isSelectable}
+            selectableIndex={selectableIndex}
+            onClick={() => onSuggestionClick(suggestion)}
+          />
+        )
+      })}
+    </div>
+  )
+}
+
+// ============================================================
+// Main Component
+// ============================================================
 
 export function SearchBar() {
   const [query, setQuery] = useState('')
   const [error, setError] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [selectedIndex, setSelectedIndex] = useState(-1)
+
   const router = useRouter()
   const inputRef = useRef<HTMLInputElement>(null)
   const suggestionsRef = useRef<HTMLDivElement>(null)
 
-  // Get latest block height for recent blocks suggestions
   const { latestHeight } = useLatestHeight()
   const { history, addToHistory } = useSearchHistory()
 
-  // Generate suggestions based on query
-  const getSuggestions = (): Suggestion[] => {
-    const suggestions: Suggestion[] = []
-    const trimmed = query.trim()
+  const suggestions = useSearchSuggestions({
+    query,
+    latestHeight,
+    history,
+  })
 
-    if (!trimmed) {
-      // Show recent search history first
-      if (history.length > 0) {
-        const recentHistory = history.slice(0, 5)
-        for (const item of recentHistory) {
-          const typeLabel = item.type === 'blockNumber' ? 'Block' : item.type === 'hash' ? 'Hash' : 'Address'
-          suggestions.push({
-            type: 'history',
-            label: item.type === 'hash' || item.type === 'address' ? formatHash(item.query) : item.query,
-            value: item.query,
-            description: `Recent ${typeLabel}`,
-          })
-        }
+  const selectableSuggestions = getSelectableSuggestions(suggestions)
+
+  // Navigation handler
+  const navigateToResult = useCallback(
+    (value: string, type?: 'blockNumber' | 'hash' | 'address') => {
+      const detectedType = type || detectInputType(value)
+      if (!detectedType) {
+        setError('Invalid input')
+        return
       }
 
-      // Show recent blocks when empty
-      if (latestHeight) {
-        const blockNumber = latestHeight
-        for (let i = 0; i < 3; i++) {
-          const num = blockNumber - BigInt(i)
-          if (num >= BigInt(0)) {
-            suggestions.push({
-              type: 'block',
-              label: `Block #${formatNumber(num)}`,
-              value: num.toString(),
-              description: i === 0 ? 'Latest block' : `${i} blocks ago`,
-            })
-          }
-        }
+      addToHistory(value, detectedType)
+
+      const routes: Record<'blockNumber' | 'hash' | 'address', string> = {
+        blockNumber: `/block/${value}`,
+        hash: `/tx/${value}`,
+        address: `/address/${value}`,
       }
 
-      // Add format hints
-      suggestions.push({
-        type: 'hint',
-        label: 'Block Number',
-        value: '',
-        description: 'e.g., 12345 or 0x3039',
-      })
-      suggestions.push({
-        type: 'hint',
-        label: 'Transaction Hash',
-        value: '',
-        description: '0x followed by 64 hex characters',
-      })
-      suggestions.push({
-        type: 'hint',
-        label: 'Address',
-        value: '',
-        description: '0x followed by 40 hex characters',
-      })
-    } else {
-      // Filter suggestions based on query
-      if (latestHeight) {
-        const blockNumber = latestHeight
-        // Show matching recent blocks
-        if (/^\d+$/.test(trimmed) || /^0x[\da-f]*$/i.test(trimmed)) {
-          for (let i = 0; i < 10; i++) {
-            const num = blockNumber - BigInt(i)
-            if (num >= BigInt(0)) {
-              const numStr = num.toString()
-              if (numStr.includes(trimmed) || `0x${num.toString(16)}`.toLowerCase().includes(trimmed.toLowerCase())) {
-                suggestions.push({
-                  type: 'block',
-                  label: `Block #${formatNumber(num)}`,
-                  value: numStr,
-                  description: i === 0 ? 'Latest block' : `${i} blocks ago`,
-                })
-                if (suggestions.length >= 5) break
-              }
-            }
-          }
-        }
-      }
-
-      // Add "View All Results" option when query is valid
-      const detectedType = detectInputType(trimmed)
-      if (detectedType) {
-        suggestions.push({
-          type: 'search-all',
-          label: '🔍 View All Results',
-          value: trimmed,
-          description: 'See all matching blocks, transactions, and addresses',
-        })
-      }
-
-      // Show format hint based on what they're typing
-      if (detectedType === 'blockNumber') {
-        suggestions.push({
-          type: 'hint',
-          label: '✓ Valid block number format',
-          value: '',
-          description: 'Press Enter to search',
-        })
-      } else if (detectedType === 'hash') {
-        suggestions.push({
-          type: 'hint',
-          label: '✓ Valid hash format',
-          value: '',
-          description: 'Could be block or transaction hash',
-        })
-      } else if (detectedType === 'address') {
-        suggestions.push({
-          type: 'hint',
-          label: '✓ Valid address format',
-          value: '',
-          description: 'Press Enter to search',
-        })
-      } else if (trimmed.length > 0) {
-        suggestions.push({
-          type: 'hint',
-          label: 'Invalid format',
-          value: '',
-          description: 'Enter block number, hash (0x...), or address (0x...)',
-        })
-      }
-    }
-
-    return suggestions
-  }
-
-  const suggestions = getSuggestions()
-
-  const handleSubmit = (e: FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setShowSuggestions(false)
-
-    const trimmed = query.trim()
-    if (!trimmed) {
-      setError('Please enter a search query')
-      return
-    }
-
-    const type = detectInputType(trimmed)
-
-    if (!type) {
-      setError('Invalid input. Please enter a block number, block hash, transaction hash, or address')
-      return
-    }
-
-    navigateToResult(trimmed, type)
-  }
-
-  const navigateToResult = (value: string, type?: 'blockNumber' | 'hash' | 'address') => {
-    const detectedType = type || detectInputType(value)
-
-    if (!detectedType) {
-      setError('Invalid input')
-      return
-    }
-
-    // Save to search history
-    addToHistory(value, detectedType)
-
-    // Navigate based on detected type
-    switch (detectedType) {
-      case 'blockNumber':
-        router.push(`/block/${value}`)
-        break
-      case 'hash':
-        // Could be block hash or transaction hash, try transaction first
-        router.push(`/tx/${value}`)
-        break
-      case 'address':
-        router.push(`/address/${value}`)
-        break
-    }
-
-    setQuery('')
-    setShowSuggestions(false)
-  }
-
-  const handleSuggestionClick = (suggestion: Suggestion) => {
-    if (suggestion.type === 'block') {
-      navigateToResult(suggestion.value, 'blockNumber')
-    } else if (suggestion.type === 'history') {
-      const detectedType = detectInputType(suggestion.value)
-      if (detectedType) {
-        navigateToResult(suggestion.value, detectedType)
-      }
-    } else if (suggestion.type === 'search-all') {
-      // Navigate to search results page
-      router.push(`/search?q=${encodeURIComponent(suggestion.value)}`)
+      router.push(routes[detectedType as 'blockNumber' | 'hash' | 'address'])
       setQuery('')
       setShowSuggestions(false)
-    } else if (suggestion.type === 'hint' && suggestion.value) {
-      setQuery(suggestion.value)
-      setShowSuggestions(false)
-    }
-  }
+    },
+    [router, addToHistory]
+  )
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (!showSuggestions) return
-
-    const selectableSuggestions = suggestions.filter(
-      (s) => s.type === 'block' || s.type === 'history' || s.type === 'search-all'
-    )
-
-    if (e.key === 'ArrowDown') {
-      e.preventDefault()
-      setSelectedIndex((prev) => (prev < selectableSuggestions.length - 1 ? prev + 1 : prev))
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault()
-      setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1))
-    } else if (e.key === 'Enter' && selectedIndex >= 0) {
-      e.preventDefault()
-      const suggestion = selectableSuggestions[selectedIndex]
-      if (suggestion) {
-        handleSuggestionClick(suggestion)
+  // Suggestion click handler
+  const handleSuggestionClick = useCallback(
+    (suggestion: Suggestion) => {
+      if (suggestion.type === 'block') {
+        navigateToResult(suggestion.value, 'blockNumber')
+      } else if (suggestion.type === 'history') {
+        const detectedType = detectInputType(suggestion.value)
+        if (detectedType) {
+          navigateToResult(suggestion.value, detectedType)
+        }
+      } else if (suggestion.type === 'search-all') {
+        router.push(`/search?q=${encodeURIComponent(suggestion.value)}`)
+        setQuery('')
+        setShowSuggestions(false)
+      } else if (suggestion.type === 'hint' && suggestion.value) {
+        setQuery(suggestion.value)
+        setShowSuggestions(false)
       }
-    } else if (e.key === 'Escape') {
-      setShowSuggestions(false)
-      setSelectedIndex(-1)
-    }
-  }
+    },
+    [navigateToResult, router]
+  )
 
-  // Handle click outside
+  // Form submit handler
+  const handleSubmit = useCallback(
+    (e: FormEvent) => {
+      e.preventDefault()
+      setError('')
+      setShowSuggestions(false)
+
+      const trimmed = query.trim()
+      if (!trimmed) {
+        setError('Please enter a search query')
+        return
+      }
+
+      const type = detectInputType(trimmed)
+      if (!type) {
+        setError('Invalid input. Please enter a block number, block hash, transaction hash, or address')
+        return
+      }
+
+      navigateToResult(trimmed, type)
+    },
+    [query, navigateToResult]
+  )
+
+  // Keyboard navigation handler
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent) => {
+      if (!showSuggestions) return
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault()
+        setSelectedIndex((prev) =>
+          prev < selectableSuggestions.length - 1 ? prev + 1 : prev
+        )
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault()
+        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1))
+      } else if (e.key === 'Enter' && selectedIndex >= 0) {
+        e.preventDefault()
+        const suggestion = selectableSuggestions[selectedIndex]
+        if (suggestion) {
+          handleSuggestionClick(suggestion)
+        }
+      } else if (e.key === 'Escape') {
+        setShowSuggestions(false)
+        setSelectedIndex(-1)
+      }
+    },
+    [showSuggestions, selectableSuggestions, selectedIndex, handleSuggestionClick]
+  )
+
+  // Click outside handler
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (
-        suggestionsRef.current &&
-        !suggestionsRef.current.contains(event.target as Node) &&
-        inputRef.current &&
-        !inputRef.current.contains(event.target as Node)
-      ) {
+      const target = event.target as Node
+      const isOutsideSuggestions = suggestionsRef.current && !suggestionsRef.current.contains(target)
+      const isOutsideInput = inputRef.current && !inputRef.current.contains(target)
+
+      if (isOutsideSuggestions && isOutsideInput) {
         setShowSuggestions(false)
       }
     }
@@ -265,9 +245,6 @@ export function SearchBar() {
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const selectableSuggestions = suggestions.filter(
-    (s) => s.type === 'block' || s.type === 'history' || s.type === 'search-all'
-  )
   const activeDescendant = selectedIndex >= 0 ? `search-suggestion-${selectedIndex}` : undefined
 
   return (
@@ -302,62 +279,20 @@ export function SearchBar() {
           SEARCH
         </button>
 
-        {/* Suggestions Dropdown */}
         {showSuggestions && suggestions.length > 0 && (
-          <div
-            ref={suggestionsRef}
-            id="search-suggestions"
-            role="listbox"
-            aria-label="Search suggestions"
-            className="absolute top-full left-0 right-0 mt-1 border border-bg-tertiary bg-bg-secondary shadow-lg z-50 max-h-96 overflow-y-auto"
-          >
-            {suggestions.map((suggestion, index) => {
-              const selectableIndex =
-                suggestion.type === 'block' || suggestion.type === 'history' || suggestion.type === 'search-all'
-                  ? selectableSuggestions.indexOf(suggestion)
-                  : -1
-              const isSelected = selectableIndex === selectedIndex
-              const isSelectable =
-                suggestion.type === 'block' || suggestion.type === 'history' || suggestion.type === 'search-all'
-
-              return (
-                <div
-                  key={`${suggestion.type}-${suggestion.label}-${index}`}
-                  id={isSelectable ? `search-suggestion-${selectableIndex}` : undefined}
-                  role={isSelectable ? 'option' : 'presentation'}
-                  aria-selected={isSelectable ? isSelected : undefined}
-                  onClick={() => handleSuggestionClick(suggestion)}
-                  className={`
-                    px-4 py-3 border-b border-bg-tertiary last:border-b-0
-                    ${isSelectable ? 'cursor-pointer hover:bg-bg-tertiary' : 'cursor-default'}
-                    ${isSelected ? 'bg-bg-tertiary' : ''}
-                  `}
-                >
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div
-                        className={`font-mono text-sm ${
-                          isSelectable ? 'text-accent-blue' : 'text-text-secondary'
-                        }`}
-                      >
-                        {suggestion.type === 'history' && <span className="text-text-muted mr-2" aria-hidden="true">↺</span>}
-                        {suggestion.label}
-                      </div>
-                      {suggestion.description && (
-                        <div className="font-mono text-xs text-text-muted mt-1">{suggestion.description}</div>
-                      )}
-                    </div>
-                    {isSelectable && (
-                      <div className="font-mono text-xs text-text-muted" aria-hidden="true">→</div>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
+          <SuggestionsDropdown
+            suggestions={suggestions}
+            selectedIndex={selectedIndex}
+            onSuggestionClick={handleSuggestionClick}
+            suggestionsRef={suggestionsRef}
+          />
         )}
       </form>
-      {error && <p id="search-error" className="mt-2 font-mono text-xs text-error" role="alert">{error}</p>}
+      {error && (
+        <p id="search-error" className="mt-2 font-mono text-xs text-error" role="alert">
+          {error}
+        </p>
+      )}
     </div>
   )
 }

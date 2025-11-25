@@ -5,73 +5,40 @@ import { gql } from '@apollo/client'
 // ============================================================================
 
 /**
- * Unified search query for blocks, transactions, addresses, and logs
+ * Unified search query for blocks, transactions, addresses, and contracts
  *
- * ✅ Backend API implemented with Union Types (2025-11-24)
- * Supports automatic type detection with structured data
+ * ✅ Backend API implemented with Simple Format (2025-11-25)
+ * Returns standardized SearchResult with type, value, label, metadata
+ *
+ * @example
+ * ```graphql
+ * # Search for a block by number
+ * search(query: "12345") → { type: "block", value: "12345", label: "Block #12345" }
+ *
+ * # Search for transaction by hash
+ * search(query: "0xabc...") → { type: "transaction", value: "0xabc...", label: "0xabc..." }
+ * ```
  *
  * @see Frontend API Integration Guide for full specification
  */
 export const SEARCH = gql`
-  query Search($query: String!, $types: [String!], $limit: Int) {
+  query Search($query: String!, $types: [String], $limit: Int = 10) {
     search(query: $query, types: $types, limit: $limit) {
-      ... on BlockResult {
-        type
-        block {
-          number
-          hash
-          timestamp
-          parentHash
-          miner
-          gasUsed
-          gasLimit
-          transactionCount
-        }
-      }
-      ... on TransactionResult {
-        type
-        transaction {
-          hash
-          from
-          to
-          value
-          gas
-          gasPrice
-          nonce
-          blockNumber
-          blockHash
-          transactionIndex
-        }
-      }
-      ... on AddressResult {
-        type
-        address
-        transactionCount
-        balance
-      }
-      ... on LogResult {
-        type
-        log {
-          address
-          topics
-          data
-          blockNumber
-          transactionHash
-          logIndex
-        }
-      }
+      type
+      value
+      label
+      metadata
     }
   }
 `
 
 /**
  * Search autocomplete for real-time suggestions
- *
- * TODO: This query will be enabled when the backend implements autocomplete API
+ * Uses the same simple format as the main search query
  */
 export const SEARCH_AUTOCOMPLETE = gql`
   query SearchAutocomplete($query: String!, $limit: Int = 5) {
-    searchAutocomplete(query: $query, limit: $limit) {
+    search(query: $query, limit: $limit) {
       type
       value
       label
@@ -81,84 +48,72 @@ export const SEARCH_AUTOCOMPLETE = gql`
 `
 
 // ============================================================================
-// Search Result Types (Union Type Structure)
+// Search Result Types (Simple Format)
 // ============================================================================
 
 /**
- * Block data structure from search results
+ * Search result type enumeration
  */
-export interface BlockData {
-  number: string // BigInt as string
-  hash: string
-  timestamp: string // BigInt as string
-  parentHash: string
-  miner: string
-  gasUsed: string // BigInt as string
-  gasLimit: string // BigInt as string
-  transactionCount: number
+export type SearchResultType = 'block' | 'transaction' | 'address' | 'contract'
+
+/**
+ * Simple search result format from backend API
+ *
+ * @example
+ * ```typescript
+ * // Block result
+ * { type: "block", value: "12345", label: "Block #12345", metadata: null }
+ *
+ * // Transaction result
+ * { type: "transaction", value: "0xabc...", label: "0xabc...", metadata: '{"from":"0x...","to":"0x..."}' }
+ *
+ * // Address result
+ * { type: "address", value: "0x123...", label: "0x123...", metadata: '{"balance":"1000000"}' }
+ * ```
+ */
+export interface SearchResult {
+  /** Result type: "block" | "transaction" | "address" | "contract" */
+  type: SearchResultType
+  /** Primary identifier (block number, tx hash, address) */
+  value: string
+  /** Human-readable label (optional, may be null) */
+  label: string | null
+  /** Additional JSON data (optional, may be null) */
+  metadata: string | null
 }
 
 /**
- * Transaction data structure from search results
+ * Parsed metadata from search result
  */
-export interface TransactionData {
-  hash: string
-  from: string
-  to: string // Empty string for contract creation
-  value: string // Wei (BigInt as string)
-  gas: string // BigInt as string
-  gasPrice: string // BigInt as string
-  nonce: string // BigInt as string
-  blockNumber: string // BigInt as string
-  blockHash: string
-  transactionIndex: string // BigInt as string
+export interface SearchResultMetadata {
+  // Block metadata
+  timestamp?: string
+  miner?: string
+  transactionCount?: number
+  // Transaction metadata
+  from?: string
+  to?: string
+  blockNumber?: string
+  // Address metadata
+  balance?: string
+  isContract?: boolean
 }
 
 /**
- * Log data structure from search results
+ * Parse metadata JSON string to object
  */
-export interface LogData {
-  address: string
-  topics: string[]
-  data: string
-  blockNumber: string // BigInt as string
-  transactionHash: string
-  logIndex: number
+export function parseSearchMetadata(metadata: string | null): SearchResultMetadata | null {
+  if (!metadata) return null
+  try {
+    return JSON.parse(metadata) as SearchResultMetadata
+  } catch {
+    return null
+  }
 }
-
-/**
- * Union type results from search query
- */
-export interface BlockResult {
-  type: 'block'
-  block: BlockData
-}
-
-export interface TransactionResult {
-  type: 'transaction'
-  transaction: TransactionData
-}
-
-export interface AddressResult {
-  type: 'address'
-  address: string
-  transactionCount: number
-  balance: string // Wei (BigInt as string)
-}
-
-export interface LogResult {
-  type: 'log'
-  log: LogData
-}
-
-/**
- * Search result union type
- */
-export type SearchResult = BlockResult | TransactionResult | AddressResult | LogResult
 
 export interface SearchVariables {
   query: string
-  types?: string[]
+  types?: string[] | null
   limit?: number
 }
 
@@ -172,5 +127,5 @@ export interface SearchAutocompleteVariables {
 }
 
 export interface SearchAutocompleteData {
-  searchAutocomplete: SearchResult[]
+  search: SearchResult[]
 }
