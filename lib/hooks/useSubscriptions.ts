@@ -7,10 +7,28 @@ import {
   SUBSCRIBE_NEW_TRANSACTION,
   SUBSCRIBE_PENDING_TRANSACTIONS,
   SUBSCRIBE_LOGS,
+  SUBSCRIBE_CHAIN_CONFIG,
+  SUBSCRIBE_VALIDATOR_SET,
   GET_LATEST_HEIGHT,
 } from '@/lib/apollo/queries'
-import { transformBlock, transformTransaction } from '@/lib/utils/graphql-transforms'
-import type { RawBlock, Block, RawTransaction, Transaction, RawLog, Log } from '@/types/graphql'
+import {
+  transformBlock,
+  transformTransaction,
+  transformChainConfigChange,
+  transformValidatorSetChange,
+} from '@/lib/utils/graphql-transforms'
+import type {
+  RawBlock,
+  Block,
+  RawTransaction,
+  Transaction,
+  RawLog,
+  Log,
+  RawChainConfigChange,
+  ChainConfigChange,
+  RawValidatorSetChange,
+  ValidatorSetChange,
+} from '@/types/graphql'
 import { env } from '@/lib/config/env'
 import { REALTIME } from '@/lib/config/constants'
 
@@ -107,8 +125,11 @@ export function useLogs(filter: LogFilter = {}, maxLogs: number = REALTIME.MAX_L
         topics: rawLog.topics,
         data: rawLog.data,
         blockNumber: BigInt(rawLog.blockNumber),
+        blockHash: rawLog.blockHash,
         transactionHash: rawLog.transactionHash,
+        transactionIndex: rawLog.transactionIndex,
         logIndex: rawLog.logIndex,
+        removed: rawLog.removed,
       }
 
       // Legitimate use case: updating state from external subscription data
@@ -307,6 +328,187 @@ export function useNewTransactions(maxTransactions: number = REALTIME.MAX_TRANSA
       })
     }
   }, [data, maxTransactions])
+
+  /**
+   * Clear all accumulated transactions
+   */
+  const clearTransactions = () => {
+    setTransactions([])
+  }
+
+  return {
+    transactions,
+    loading,
+    error,
+    clearTransactions,
+  }
+}
+
+/**
+ * Hook to subscribe to chain configuration changes in real-time
+ *
+ * @param maxEvents - Maximum number of events to keep in memory (default: 50)
+ * @returns Object containing config changes array, latest change, loading state, and error
+ *
+ * @example
+ * ```tsx
+ * const { configChanges, latestChange, loading, error } = useChainConfig(100)
+ * ```
+ */
+export function useChainConfig(maxEvents: number = 50) {
+  const [configChanges, setConfigChanges] = useState<ChainConfigChange[]>([])
+  const [latestChange, setLatestChange] = useState<ChainConfigChange | null>(null)
+
+  const { data, loading, error } = useSubscription(SUBSCRIBE_CHAIN_CONFIG, {
+    fetchPolicy: 'no-cache',
+    onError: (error) => {
+      console.error('[Chain Config Subscription Error]:', error)
+    },
+  })
+
+  useEffect(() => {
+    if (data?.chainConfig) {
+      const rawChange = data.chainConfig as RawChainConfigChange
+      const transformedChange = transformChainConfigChange(rawChange)
+
+      // Legitimate use case: updating state from external subscription data
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLatestChange(transformedChange)
+      setConfigChanges((prev) => {
+        const updated = [transformedChange, ...prev]
+        return updated.slice(0, maxEvents)
+      })
+    }
+  }, [data, maxEvents])
+
+  /**
+   * Clear all accumulated config changes
+   */
+  const clearConfigChanges = () => {
+    setConfigChanges([])
+    setLatestChange(null)
+  }
+
+  return {
+    configChanges,
+    latestChange,
+    loading,
+    error,
+    clearConfigChanges,
+  }
+}
+
+/**
+ * Hook to subscribe to validator set changes in real-time
+ *
+ * @param maxEvents - Maximum number of events to keep in memory (default: 50)
+ * @returns Object containing validator changes array, latest change, loading state, and error
+ *
+ * @example
+ * ```tsx
+ * const { validatorChanges, latestChange, loading, error } = useValidatorSet(100)
+ * ```
+ */
+export function useValidatorSet(maxEvents: number = 50) {
+  const [validatorChanges, setValidatorChanges] = useState<ValidatorSetChange[]>([])
+  const [latestChange, setLatestChange] = useState<ValidatorSetChange | null>(null)
+
+  const { data, loading, error } = useSubscription(SUBSCRIBE_VALIDATOR_SET, {
+    fetchPolicy: 'no-cache',
+    onError: (error) => {
+      console.error('[Validator Set Subscription Error]:', error)
+    },
+  })
+
+  useEffect(() => {
+    if (data?.validatorSet) {
+      const rawChange = data.validatorSet as RawValidatorSetChange
+      const transformedChange = transformValidatorSetChange(rawChange)
+
+      // Legitimate use case: updating state from external subscription data
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setLatestChange(transformedChange)
+      setValidatorChanges((prev) => {
+        const updated = [transformedChange, ...prev]
+        return updated.slice(0, maxEvents)
+      })
+    }
+  }, [data, maxEvents])
+
+  /**
+   * Clear all accumulated validator changes
+   */
+  const clearValidatorChanges = () => {
+    setValidatorChanges([])
+    setLatestChange(null)
+  }
+
+  return {
+    validatorChanges,
+    latestChange,
+    loading,
+    error,
+    clearValidatorChanges,
+  }
+}
+
+/**
+ * Transaction filter options for subscription
+ */
+export interface TransactionFilter {
+  from?: string
+  to?: string
+}
+
+/**
+ * Hook to subscribe to new transactions with address filtering
+ *
+ * @param filter - Filter for transactions by from/to address
+ * @param maxTransactions - Maximum number of transactions to keep in memory (default: 50)
+ * @returns Object containing transactions array, loading state, and error
+ *
+ * @example
+ * ```tsx
+ * // Subscribe to transactions from a specific address
+ * const { transactions, loading, error } = useFilteredTransactions({ from: '0x...' })
+ *
+ * // Subscribe to transactions to a specific address
+ * const { transactions, loading, error } = useFilteredTransactions({ to: '0x...' })
+ * ```
+ */
+export function useFilteredNewTransactions(
+  filter: TransactionFilter = {},
+  maxTransactions: number = REALTIME.MAX_TRANSACTIONS
+) {
+  const [transactions, setTransactions] = useState<Transaction[]>([])
+
+  const { data, loading, error } = useSubscription(SUBSCRIBE_NEW_TRANSACTION, {
+    fetchPolicy: 'no-cache',
+    variables: { filter },
+    onError: (error) => {
+      console.error('[Filtered Transaction Subscription Error]:', error)
+    },
+  })
+
+  useEffect(() => {
+    if (data?.newTransaction) {
+      const rawTx = data.newTransaction as RawTransaction
+      const transformedTx = transformTransaction(rawTx)
+
+      // Client-side filtering as backup (server should handle this)
+      const matchesFilter =
+        (!filter.from || transformedTx.from.toLowerCase() === filter.from.toLowerCase()) &&
+        (!filter.to || transformedTx.to?.toLowerCase() === filter.to.toLowerCase())
+
+      if (matchesFilter) {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
+        setTransactions((prev) => {
+          const updated = [transformedTx, ...prev]
+          return updated.slice(0, maxTransactions)
+        })
+      }
+    }
+  }, [data, filter, maxTransactions])
 
   /**
    * Clear all accumulated transactions

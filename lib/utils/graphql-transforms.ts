@@ -187,8 +187,11 @@ export interface RawLog {
   topics: string[]
   data: string
   blockNumber: string
+  blockHash?: string
   transactionHash: string
+  transactionIndex?: number
   logIndex: number
+  removed?: boolean
 }
 
 /**
@@ -199,8 +202,11 @@ export interface TransformedLog {
   topics: string[]
   data: string
   blockNumber: bigint
+  blockHash?: string | undefined
   transactionHash: string
+  transactionIndex?: number | undefined
   logIndex: number
+  removed?: boolean | undefined
 }
 
 /**
@@ -313,8 +319,11 @@ export function transformLog(raw: RawLog): TransformedLog {
     topics: raw.topics,
     data: raw.data,
     blockNumber: toBigInt(raw.blockNumber),
+    blockHash: raw.blockHash,
     transactionHash: raw.transactionHash,
+    transactionIndex: raw.transactionIndex,
     logIndex: raw.logIndex,
+    removed: raw.removed,
   }
 }
 
@@ -342,4 +351,90 @@ export function transformBlocks(rawBlocks: RawBlock[]): TransformedBlock[] {
  */
 export function transformTransactions(rawTransactions: RawTransaction[]): TransformedTransaction[] {
   return rawTransactions.map(transformTransaction)
+}
+
+// ============================================================================
+// Chain Config Subscription Types
+// ============================================================================
+
+/**
+ * Raw chain config change event from GraphQL subscription
+ */
+export interface RawChainConfigChange {
+  blockNumber: string
+  blockHash: string
+  parameter: string
+  oldValue: string
+  newValue: string
+}
+
+/**
+ * Transformed chain config change event
+ */
+export interface TransformedChainConfigChange {
+  blockNumber: bigint
+  blockHash: string
+  parameter: string
+  oldValue: string
+  newValue: string
+}
+
+/**
+ * Transform raw chain config change to typed event
+ */
+export function transformChainConfigChange(raw: RawChainConfigChange): TransformedChainConfigChange {
+  return {
+    blockNumber: toBigInt(raw.blockNumber),
+    blockHash: raw.blockHash,
+    parameter: raw.parameter,
+    oldValue: raw.oldValue,
+    newValue: raw.newValue,
+  }
+}
+
+// ============================================================================
+// Validator Set Subscription Types
+// ============================================================================
+
+/**
+ * Validator change type
+ */
+export type ValidatorChangeType = 'added' | 'removed' | 'updated'
+
+/**
+ * Raw validator set change event from GraphQL subscription
+ */
+export interface RawValidatorSetChange {
+  blockNumber: string
+  blockHash: string
+  changeType: ValidatorChangeType
+  validator: string
+  validatorSetSize: number
+  validatorInfo?: string
+}
+
+/**
+ * Transformed validator set change event
+ */
+export interface TransformedValidatorSetChange {
+  blockNumber: bigint
+  blockHash: string
+  changeType: ValidatorChangeType
+  validator: string
+  validatorSetSize: number
+  validatorInfo?: string | undefined
+}
+
+/**
+ * Transform raw validator set change to typed event
+ */
+export function transformValidatorSetChange(raw: RawValidatorSetChange): TransformedValidatorSetChange {
+  return {
+    blockNumber: toBigInt(raw.blockNumber),
+    blockHash: raw.blockHash,
+    changeType: raw.changeType,
+    validator: raw.validator,
+    validatorSetSize: raw.validatorSetSize,
+    validatorInfo: raw.validatorInfo,
+  }
 }

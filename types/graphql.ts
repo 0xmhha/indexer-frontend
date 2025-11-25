@@ -12,6 +12,9 @@ export type {
   TransformedLog as Log,
   TransformedBalanceSnapshot as BalanceSnapshot,
   TransformedFeePayerSignature,
+  TransformedChainConfigChange as ChainConfigChange,
+  TransformedValidatorSetChange as ValidatorSetChange,
+  ValidatorChangeType,
 } from '@/lib/utils/graphql-transforms'
 
 // Export raw types for cases where string-based data is needed
@@ -21,6 +24,8 @@ export type {
   RawReceipt,
   RawLog,
   RawBalanceSnapshot,
+  RawChainConfigChange,
+  RawValidatorSetChange,
 } from '@/lib/utils/graphql-transforms'
 
 // Export transform utilities
@@ -32,6 +37,8 @@ export {
   transformReceipt,
   transformLog,
   transformBalanceSnapshot,
+  transformChainConfigChange,
+  transformValidatorSetChange,
   toBigInt,
   toNumber,
   toDate,

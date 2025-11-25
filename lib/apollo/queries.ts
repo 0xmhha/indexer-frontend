@@ -316,8 +316,42 @@ export const SUBSCRIBE_LOGS = gql`
       blockNumber
       blockHash
       transactionHash
+      transactionIndex
       logIndex
       removed
+    }
+  }
+`
+
+/**
+ * Subscribe to chain configuration changes in real-time
+ * Emitted when chain parameters like gasLimit, chainId are updated
+ */
+export const SUBSCRIBE_CHAIN_CONFIG = gql`
+  subscription ChainConfig {
+    chainConfig {
+      blockNumber
+      blockHash
+      parameter
+      oldValue
+      newValue
+    }
+  }
+`
+
+/**
+ * Subscribe to validator set changes in real-time
+ * Emitted when validators are added, removed, or updated
+ */
+export const SUBSCRIBE_VALIDATOR_SET = gql`
+  subscription ValidatorSet {
+    validatorSet {
+      blockNumber
+      blockHash
+      changeType
+      validator
+      validatorSetSize
+      validatorInfo
     }
   }
 `
