@@ -3,8 +3,7 @@
 import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
-import { useBlocks } from '@/lib/hooks/useBlocks'
-import { POLLING_INTERVALS } from '@/lib/config/constants'
+import { useBlocksWithSubscription } from '@/lib/hooks/useBlocksWithSubscription'
 import { usePagination } from '@/lib/hooks/usePagination'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
@@ -34,11 +33,13 @@ function BlocksListContent() {
   const itemsPerPageFromURL = limitParam ? parseInt(limitParam, 10) : 20
   const offsetFromURL = (currentPageFromURL - 1) * itemsPerPageFromURL
 
-  // Fetch blocks with URL params (use slower polling for list page)
-  const { blocks: rawBlocks, totalCount, loading, error } = useBlocks({
+  // Fetch blocks with WebSocket subscription for real-time updates
+  const isFirstPage = currentPageFromURL === 1
+  const { blocks: rawBlocks, totalCount, loading, error } = useBlocksWithSubscription({
     limit: itemsPerPageFromURL,
     offset: offsetFromURL,
-    pollInterval: POLLING_INTERVALS.NORMAL, // 30s refresh for paginated list
+    isFirstPage,
+    orderDirection,
   })
 
   // Setup pagination with URL support
@@ -169,9 +170,9 @@ function BlocksListContent() {
                   {blocks.map((block: Block) => {
                     const blockNumber = BigInt(block.number)
                     const timestamp = BigInt(block.timestamp)
-                    const gasUsed = BigInt(block.gasUsed)
-                    const gasLimit = BigInt(block.gasLimit)
-                    const gasUsedPercent = Number((gasUsed * BigInt(100)) / gasLimit)
+                    const gasUsed = BigInt(block.gasUsed || 0)
+                    const gasLimit = BigInt(block.gasLimit || 0)
+                    const gasUsedPercent = gasLimit > 0n ? Number((gasUsed * 100n) / gasLimit) : 0
 
                     return (
                       <TableRow key={block.hash}>
