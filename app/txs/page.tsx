@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useTransactions } from '@/lib/hooks/useTransactions'
+import { POLLING_INTERVALS } from '@/lib/config/constants'
 import { usePagination } from '@/lib/hooks/usePagination'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
@@ -35,10 +36,11 @@ function TransactionsListContent() {
   const itemsPerPageFromURL = limitParam ? parseInt(limitParam, 10) : 20
   const offsetFromURL = (currentPageFromURL - 1) * itemsPerPageFromURL
 
-  // Fetch transactions with URL params
+  // Fetch transactions with URL params (use slower polling for list page)
   const { transactions, totalCount, loading, error } = useTransactions({
     limit: itemsPerPageFromURL,
     offset: offsetFromURL,
+    pollInterval: POLLING_INTERVALS.NORMAL, // 30s refresh for paginated list
   })
 
   // Setup pagination with URL support

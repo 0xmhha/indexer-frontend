@@ -4,6 +4,7 @@ import { useState, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useBlocks } from '@/lib/hooks/useBlocks'
+import { POLLING_INTERVALS } from '@/lib/config/constants'
 import { usePagination } from '@/lib/hooks/usePagination'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import {
@@ -33,10 +34,11 @@ function BlocksListContent() {
   const itemsPerPageFromURL = limitParam ? parseInt(limitParam, 10) : 20
   const offsetFromURL = (currentPageFromURL - 1) * itemsPerPageFromURL
 
-  // Fetch blocks with URL params
+  // Fetch blocks with URL params (use slower polling for list page)
   const { blocks: rawBlocks, totalCount, loading, error } = useBlocks({
     limit: itemsPerPageFromURL,
     offset: offsetFromURL,
+    pollInterval: POLLING_INTERVALS.NORMAL, // 30s refresh for paginated list
   })
 
   // Setup pagination with URL support
