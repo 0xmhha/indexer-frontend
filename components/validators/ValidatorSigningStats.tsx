@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useValidatorSigningStats, type ValidatorSigningStats } from '@/lib/hooks/useWBFT'
-import { formatNumber, truncateAddress, formatHash } from '@/lib/utils/format'
+import { formatNumber, truncateAddress } from '@/lib/utils/format'
 import { UI } from '@/lib/config/constants'
 
 interface ValidatorSigningStatsProps {
@@ -16,14 +16,13 @@ interface ValidatorSigningStatsProps {
  * Validator Signing Statistics Dashboard
  *
  * Displays validator signing performance metrics including:
- * - Total blocks vs signed blocks
  * - Signing rate percentage
- * - Missed blocks tracking
- * - Performance trends
+ * - Prepare/Commit sign and miss counts
+ * - Block range statistics
  */
 export function ValidatorSigningStatsDashboard({ maxStats = UI.MAX_VIEWER_ITEMS }: ValidatorSigningStatsProps) {
-  const [validatorFilter, setValidatorFilter] = useState('')
-  const [epochFilter, setEpochFilter] = useState('')
+  const [fromBlockFilter, setFromBlockFilter] = useState('')
+  const [toBlockFilter, setToBlockFilter] = useState('')
 
   const {
     stats,
@@ -33,26 +32,27 @@ export function ValidatorSigningStatsDashboard({ maxStats = UI.MAX_VIEWER_ITEMS 
     refetch,
   } = useValidatorSigningStats({
     limit: maxStats,
-    ...(validatorFilter && { validator: validatorFilter }),
-    ...(epochFilter && { epochNumber: epochFilter }),
+    // Only override defaults if filter values are provided
+    ...(fromBlockFilter && { fromBlock: fromBlockFilter }),
+    ...(toBlockFilter && { toBlock: toBlockFilter }),
   })
 
-  const handleValidatorFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValidatorFilter(e.target.value)
+  const handleFromBlockFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setFromBlockFilter(e.target.value)
   }
 
-  const handleEpochFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setEpochFilter(e.target.value)
+  const handleToBlockFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setToBlockFilter(e.target.value)
   }
 
   const handleClearFilters = () => {
-    setValidatorFilter('')
-    setEpochFilter('')
+    setFromBlockFilter('')
+    setToBlockFilter('')
   }
 
   // Calculate aggregate statistics
-  const totalBlocks = stats.reduce((sum, stat) => sum + stat.totalBlocks, 0)
-  const totalMissed = stats.reduce((sum, stat) => sum + stat.missedBlocks, 0)
+  const totalSigned = stats.reduce((sum, stat) => sum + stat.prepareSignCount + stat.commitSignCount, 0)
+  const totalMissed = stats.reduce((sum, stat) => sum + stat.prepareMissCount + stat.commitMissCount, 0)
   const avgSigningRate = stats.length > 0
     ? stats.reduce((sum, stat) => sum + stat.signingRate, 0) / stats.length
     : 0
@@ -68,8 +68,8 @@ export function ValidatorSigningStatsDashboard({ maxStats = UI.MAX_VIEWER_ITEMS 
           icon="📊"
           color="text-accent-green"
         />
-        <StatCard label="TOTAL BLOCKS" value={formatNumber(totalBlocks)} icon="📦" color="text-accent-cyan" />
-        <StatCard label="MISSED BLOCKS" value={formatNumber(totalMissed)} icon="⚠️" color="text-accent-red" />
+        <StatCard label="TOTAL SIGNED" value={formatNumber(totalSigned)} icon="✓" color="text-accent-cyan" />
+        <StatCard label="TOTAL MISSED" value={formatNumber(totalMissed)} icon="⚠️" color="text-accent-red" />
       </div>
 
       {/* Filters and Data Table */}
@@ -93,20 +93,20 @@ export function ValidatorSigningStatsDashboard({ maxStats = UI.MAX_VIEWER_ITEMS 
             <div className="grid gap-4 sm:grid-cols-2">
               <input
                 type="text"
-                value={validatorFilter}
-                onChange={handleValidatorFilterChange}
-                placeholder="Filter by validator address..."
+                value={fromBlockFilter}
+                onChange={handleFromBlockFilterChange}
+                placeholder="From block number..."
                 className="rounded border border-bg-tertiary bg-bg-primary px-3 py-2 font-mono text-xs text-text-primary placeholder-text-muted focus:border-accent-blue focus:outline-none"
               />
               <input
                 type="text"
-                value={epochFilter}
-                onChange={handleEpochFilterChange}
-                placeholder="Filter by epoch number..."
+                value={toBlockFilter}
+                onChange={handleToBlockFilterChange}
+                placeholder="To block number..."
                 className="rounded border border-bg-tertiary bg-bg-primary px-3 py-2 font-mono text-xs text-text-primary placeholder-text-muted focus:border-accent-blue focus:outline-none"
               />
             </div>
-            {(validatorFilter || epochFilter) && (
+            {(fromBlockFilter || toBlockFilter) && (
               <button
                 onClick={handleClearFilters}
                 className="rounded border border-bg-tertiary bg-bg-primary px-4 py-2 font-mono text-xs text-text-secondary transition-colors hover:border-accent-blue hover:text-accent-blue"
@@ -133,7 +133,7 @@ export function ValidatorSigningStatsDashboard({ maxStats = UI.MAX_VIEWER_ITEMS 
           ) : (
             <div className="divide-y divide-bg-tertiary">
               {stats.map((stat, idx) => (
-                <ValidatorStatCard key={`${stat.validator}-${stat.epochNumber}-${idx}`} stat={stat} />
+                <ValidatorStatCard key={`${stat.validatorAddress}-${stat.validatorIndex}-${idx}`} stat={stat} />
               ))}
             </div>
           )}
@@ -187,6 +187,10 @@ function ValidatorStatCard({ stat }: { stat: ValidatorSigningStats }) {
   const performanceColor = getPerformanceColor(stat.signingRate)
   const performanceBgColor = getPerformanceBgColor(stat.signingRate)
 
+  // Calculate totals from prepare and commit counts
+  const totalSigned = stat.prepareSignCount + stat.commitSignCount
+  const totalMissed = stat.prepareMissCount + stat.commitMissCount
+
   return (
     <div className="p-4 transition-colors hover:bg-bg-secondary">
       <div className="flex flex-col gap-4">
@@ -194,11 +198,11 @@ function ValidatorStatCard({ stat }: { stat: ValidatorSigningStats }) {
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <div className="mb-2 flex items-center gap-2">
-              <span className="font-mono text-sm font-bold text-text-primary" title={stat.validator}>
-                {truncateAddress(stat.validator)}
+              <span className="font-mono text-sm font-bold text-text-primary" title={stat.validatorAddress}>
+                {truncateAddress(stat.validatorAddress)}
               </span>
               <span className="rounded border border-bg-tertiary bg-bg-secondary px-2 py-0.5 font-mono text-xs text-text-muted">
-                EPOCH {stat.epochNumber}
+                INDEX {stat.validatorIndex}
               </span>
             </div>
           </div>
@@ -210,7 +214,7 @@ function ValidatorStatCard({ stat }: { stat: ValidatorSigningStats }) {
           <div className="flex items-center justify-between font-mono text-xs text-text-muted">
             <span>Signing Performance</span>
             <span>
-              {stat.signedBlocks} / {stat.totalBlocks} blocks
+              {totalSigned} signed / {totalMissed} missed
             </span>
           </div>
           <div className="h-3 w-full overflow-hidden rounded-full bg-bg-tertiary">
@@ -223,33 +227,18 @@ function ValidatorStatCard({ stat }: { stat: ValidatorSigningStats }) {
 
         {/* Statistics Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatItem label="Total Blocks" value={formatNumber(stat.totalBlocks)} />
-          <StatItem label="Signed Blocks" value={formatNumber(stat.signedBlocks)} color="text-accent-green" />
-          <StatItem label="Missed Blocks" value={formatNumber(stat.missedBlocks)} color="text-accent-red" />
-          <StatItem
-            label="Block Range"
-            value={`${formatNumber(BigInt(stat.startBlock))} - ${formatNumber(BigInt(stat.endBlock))}`}
-          />
+          <StatItem label="Prepare Signs" value={formatNumber(stat.prepareSignCount)} color="text-accent-green" />
+          <StatItem label="Prepare Misses" value={formatNumber(stat.prepareMissCount)} color="text-accent-red" />
+          <StatItem label="Commit Signs" value={formatNumber(stat.commitSignCount)} color="text-accent-green" />
+          <StatItem label="Commit Misses" value={formatNumber(stat.commitMissCount)} color="text-accent-red" />
         </div>
 
-        {/* Last Activity */}
-        <div className="grid gap-2 sm:grid-cols-2">
-          {stat.lastSignedBlock && (
-            <div className="font-mono text-xs text-text-muted">
-              Last Signed:{' '}
-              <span className="text-text-secondary" title={stat.lastSignedBlock}>
-                {formatHash(stat.lastSignedBlock)}
-              </span>
-            </div>
-          )}
-          {stat.lastMissedBlock && (
-            <div className="font-mono text-xs text-text-muted">
-              Last Missed:{' '}
-              <span className="text-accent-red" title={stat.lastMissedBlock}>
-                {formatHash(stat.lastMissedBlock)}
-              </span>
-            </div>
-          )}
+        {/* Block Range */}
+        <div className="font-mono text-xs text-text-muted">
+          Block Range:{' '}
+          <span className="text-text-secondary">
+            {formatNumber(BigInt(stat.fromBlock))} - {formatNumber(BigInt(stat.toBlock))}
+          </span>
         </div>
       </div>
     </div>

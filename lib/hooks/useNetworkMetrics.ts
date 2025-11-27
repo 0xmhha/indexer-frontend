@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { useQuery } from '@apollo/client'
-import { GET_NETWORK_METRICS } from '@/lib/apollo/queries'
+import { GET_BLOCK_COUNT, GET_TRANSACTION_COUNT } from '@/lib/apollo/queries'
 import { useNewBlocks } from '@/lib/hooks/useSubscriptions'
 
 /**
@@ -11,13 +11,18 @@ import { useNewBlocks } from '@/lib/hooks/useSubscriptions'
  * Uses previousData pattern to prevent flickering
  */
 export function useNetworkMetrics() {
-  // Initial data from query (fallback if subscription fails)
-  const { data, loading, error, previousData } = useQuery(GET_NETWORK_METRICS, {
-    // Don't poll - we'll use subscription for updates
-    pollInterval: 0,
-    // Show previous data while loading to prevent flickering
-    returnPartialData: true,
-  })
+  // Initial data from efficient root queries (fallback if subscription fails)
+  const { data: blockData, loading: blockLoading, error: blockError, previousData: blockPrevData } = useQuery(
+    GET_BLOCK_COUNT,
+    { pollInterval: 0, returnPartialData: true }
+  )
+  const { data: txData, loading: txLoading, error: txError, previousData: txPrevData } = useQuery(
+    GET_TRANSACTION_COUNT,
+    { pollInterval: 0, returnPartialData: true }
+  )
+
+  const loading = blockLoading || txLoading
+  const error = blockError || txError
 
   // Use subscription for real-time updates
   const { blocks: recentBlocks, latestBlock } = useNewBlocks(20)
@@ -38,19 +43,21 @@ export function useNetworkMetrics() {
 
   // Initialize from query data (prevents flickering on mount)
   useEffect(() => {
-    const currentData = data || previousData
-    if (currentData) {
+    const currentBlockData = blockData || blockPrevData
+    const currentTxData = txData || txPrevData
+
+    if (currentBlockData || currentTxData) {
       // Legitimate use case: Synchronizing state from external GraphQL query data
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setMetrics((prev) => ({
-        blockCount: currentData.blockCount ? BigInt(currentData.blockCount) : prev.blockCount,
-        transactionCount: currentData.transactionCount
-          ? BigInt(currentData.transactionCount)
+        blockCount: currentBlockData?.blockCount ? BigInt(currentBlockData.blockCount) : prev.blockCount,
+        transactionCount: currentTxData?.transactionCount
+          ? BigInt(currentTxData.transactionCount)
           : prev.transactionCount,
         avgBlockTime: prev.avgBlockTime, // Keep existing avg until calculated
       }))
     }
-  }, [data, previousData])
+  }, [blockData, blockPrevData, txData, txPrevData])
 
   // Update metrics when new block arrives via subscription
   useEffect(() => {
@@ -117,7 +124,7 @@ export function useNetworkMetrics() {
     blockCount: metrics.blockCount,
     transactionCount: metrics.transactionCount,
     avgBlockTime: metrics.avgBlockTime,
-    loading: loading && !previousData,
+    loading: loading && !blockPrevData && !txPrevData,
     error,
   }
 }

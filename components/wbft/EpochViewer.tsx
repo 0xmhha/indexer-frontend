@@ -66,7 +66,7 @@ function EpochDetailsCard({
           <div className="space-y-6 p-6">
             <EpochInfoGrid epoch={displayedEpoch} />
             {displayedEpoch.validators && displayedEpoch.validators.length > 0 && (
-              <ValidatorsList validators={displayedEpoch.validators} />
+              <ValidatorsList validators={displayedEpoch.validators as any} />
             )}
           </div>
         )}
@@ -95,7 +95,26 @@ export function EpochViewer() {
     error,
     currentLoading,
     refetchCurrent,
+    isSupported,
   } = useEpochSearch()
+
+  // If consensus operations are not supported, show a message
+  if (!isSupported && !currentLoading) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardHeader className="border-b border-bg-tertiary">
+            <CardTitle>EPOCH INFORMATION</CardTitle>
+          </CardHeader>
+          <CardContent className="p-6">
+            <p className="font-mono text-sm text-text-muted">
+              Epoch data is not available. The backend storage does not support consensus operations.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6">

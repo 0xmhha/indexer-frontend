@@ -3,9 +3,12 @@
  *
  * Custom hooks for contract creation tracking, internal transactions,
  * and ERC20/ERC721 token transfers
+ *
+ * Note: These features require address indexing to be enabled on the backend.
+ * If not enabled, queries will return empty data gracefully.
  */
 
-import { useQuery } from '@apollo/client'
+import { useQuery, type ApolloError } from '@apollo/client'
 import {
   GET_CONTRACT_CREATION,
   GET_CONTRACTS_BY_CREATOR,
@@ -35,6 +38,30 @@ import type {
   RawERC721Transfer,
   RawERC721Owner,
 } from '@/types/address-indexing'
+
+// ============================================================================
+// Helper Functions
+// ============================================================================
+
+/**
+ * Check if error is due to address indexing not being supported
+ * This is a known limitation when the backend doesn't have address indexing enabled
+ */
+function isAddressIndexingNotSupportedError(error: ApolloError | undefined): boolean {
+  if (!error) return false
+  return error.message.includes('does not support address indexing')
+}
+
+/**
+ * Filter out address indexing errors from being treated as real errors
+ * Returns undefined if the error is just about address indexing not being supported
+ */
+function filterAddressIndexingError(error: ApolloError | undefined): ApolloError | undefined {
+  if (isAddressIndexingNotSupportedError(error)) {
+    return undefined
+  }
+  return error
+}
 
 // ============================================================================
 // Transform Functions (GraphQL string → TypeScript bigint)
@@ -108,6 +135,8 @@ export function useContractCreation(address: string) {
     variables: { address },
     skip: !address,
     returnPartialData: true,
+    // Don't log errors for address indexing not supported
+    errorPolicy: 'all',
   })
 
   const rawData = data?.contractCreation || previousData?.contractCreation
@@ -116,8 +145,11 @@ export function useContractCreation(address: string) {
   return {
     contractCreation,
     loading,
-    error,
+    // Filter out "address indexing not supported" errors
+    error: filterAddressIndexingError(error),
     refetch,
+    // Flag to indicate if feature is available
+    isFeatureAvailable: !isAddressIndexingNotSupportedError(error),
   }
 }
 
@@ -134,6 +166,8 @@ export function useContractsByCreator(
       },
       skip: !creator,
       returnPartialData: true,
+      // Don't log errors for address indexing not supported
+      errorPolicy: 'all',
     }
   )
 
@@ -160,9 +194,12 @@ export function useContractsByCreator(
     totalCount,
     pageInfo,
     loading,
-    error,
+    // Filter out "address indexing not supported" errors
+    error: filterAddressIndexingError(error),
     refetch,
     loadMore,
+    // Flag to indicate if feature is available
+    isFeatureAvailable: !isAddressIndexingNotSupportedError(error),
   }
 }
 

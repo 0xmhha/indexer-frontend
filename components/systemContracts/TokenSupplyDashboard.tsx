@@ -1,10 +1,11 @@
 'use client'
 
+import { useMemo } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useTotalSupply, useActiveMinters, useMintEvents, useBurnEvents } from '@/lib/hooks/useSystemContracts'
-import { formatNumber, formatDateTime } from '@/lib/utils/format'
+import { formatNumber, formatDateTime, formatTokenAmount, truncateAddress } from '@/lib/utils/format'
 
 /**
  * Token Supply Dashboard
@@ -12,13 +13,42 @@ import { formatNumber, formatDateTime } from '@/lib/utils/format'
  * Displays comprehensive token supply information including:
  * - Total supply
  * - Active minters count
+ * - 24-hour mint/burn statistics
  * - Recent mint/burn activity
  */
 export function TokenSupplyDashboard() {
   const { totalSupply, loading: supplyLoading, error: supplyError } = useTotalSupply()
-  const { totalCount: mintersCount, loading: mintersLoading } = useActiveMinters({ limit: 1 })
-  const { mintEvents, totalCount: totalMints, loading: mintsLoading } = useMintEvents({ limit: 5 })
-  const { burnEvents, totalCount: totalBurns, loading: burnsLoading } = useBurnEvents({ limit: 5 })
+  const { minters, totalCount: mintersCount, loading: mintersLoading } = useActiveMinters()
+  const { mintEvents, loading: mintsLoading } = useMintEvents({ limit: 50 })
+  const { burnEvents, loading: burnsLoading } = useBurnEvents({ limit: 50 })
+
+  // Calculate 24-hour statistics
+  const stats24h = useMemo(() => {
+    const now = Math.floor(Date.now() / 1000)
+    const oneDayAgo = now - 24 * 60 * 60
+
+    // Filter events from last 24 hours (timestamp is string, convert to number)
+    const recentMints = mintEvents.filter((e) => parseInt(e.timestamp) >= oneDayAgo)
+    const recentBurns = burnEvents.filter((e) => parseInt(e.timestamp) >= oneDayAgo)
+
+    // Calculate totals
+    const totalMinted24h = recentMints.reduce((sum, e) => sum + BigInt(e.amount), BigInt(0))
+    const totalBurned24h = recentBurns.reduce((sum, e) => sum + BigInt(e.amount), BigInt(0))
+
+    // Calculate all-time totals from available events
+    const totalMintedAll = mintEvents.reduce((sum, e) => sum + BigInt(e.amount), BigInt(0))
+    const totalBurnedAll = burnEvents.reduce((sum, e) => sum + BigInt(e.amount), BigInt(0))
+
+    return {
+      mintCount24h: recentMints.length,
+      burnCount24h: recentBurns.length,
+      totalMinted24h,
+      totalBurned24h,
+      totalMintedAll,
+      totalBurnedAll,
+      netChange24h: totalMinted24h - totalBurned24h,
+    }
+  }, [mintEvents, burnEvents])
 
   const loading = supplyLoading || mintersLoading || mintsLoading || burnsLoading
 
@@ -42,18 +72,31 @@ export function TokenSupplyDashboard() {
     )
   }
 
+  // Get 5 most recent events for display
+  const recentMints = mintEvents.slice(0, 5)
+  const recentBurns = burnEvents.slice(0, 5)
+
   return (
     <div className="space-y-6">
       {/* Main Stats Grid */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         {/* Total Supply */}
-        <StatCard
-          label="TOTAL SUPPLY"
-          value={totalSupply ? formatNumber(BigInt(totalSupply.amount)) : 'N/A'}
-          icon="◈"
-          color="text-accent-blue"
-          {...(totalSupply && { subtitle: `Updated: ${formatDateTime(totalSupply.lastUpdated)}` })}
-        />
+        {totalSupply ? (
+          <StatCard
+            label="TOTAL SUPPLY"
+            value={formatTokenAmount(totalSupply)}
+            icon="◈"
+            color="text-accent-blue"
+            subtitle={`${formatNumber(BigInt(totalSupply))} wei`}
+          />
+        ) : (
+          <StatCard
+            label="TOTAL SUPPLY"
+            value="N/A"
+            icon="◈"
+            color="text-accent-blue"
+          />
+        )}
 
         {/* Active Minters */}
         <StatCard
@@ -61,49 +104,88 @@ export function TokenSupplyDashboard() {
           value={mintersCount.toString()}
           icon="⚡"
           color="text-accent-cyan"
+          subtitle={minters.length > 0 ? 'Currently authorized' : 'None active'}
         />
 
-        {/* Total Mints */}
+        {/* 24h Mint Volume */}
         <StatCard
-          label="TOTAL MINTS"
-          value={formatNumber(totalMints)}
+          label="24H MINTED"
+          value={formatTokenAmount(stats24h.totalMinted24h.toString())}
           icon="↑"
           color="text-accent-green"
+          subtitle={`${stats24h.mintCount24h} transaction${stats24h.mintCount24h !== 1 ? 's' : ''}`}
         />
 
-        {/* Total Burns */}
+        {/* 24h Burn Volume */}
         <StatCard
-          label="TOTAL BURNS"
-          value={formatNumber(totalBurns)}
+          label="24H BURNED"
+          value={formatTokenAmount(stats24h.totalBurned24h.toString())}
           icon="↓"
           color="text-accent-red"
+          subtitle={`${stats24h.burnCount24h} transaction${stats24h.burnCount24h !== 1 ? 's' : ''}`}
         />
       </div>
+
+      {/* 24h Net Change Card */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div>
+              <div className="annotation mb-1">24H NET CHANGE</div>
+              <div
+                className={`font-mono text-2xl font-bold ${
+                  stats24h.netChange24h >= BigInt(0) ? 'text-accent-green' : 'text-accent-red'
+                }`}
+              >
+                {stats24h.netChange24h >= BigInt(0) ? '+' : ''}
+                {formatTokenAmount(stats24h.netChange24h.toString())}
+              </div>
+            </div>
+            <div className="flex gap-6">
+              <div className="text-center">
+                <div className="font-mono text-xs text-text-muted">Total Minted (Recent)</div>
+                <div className="font-mono text-lg text-accent-green">
+                  +{formatTokenAmount(stats24h.totalMintedAll.toString())}
+                </div>
+              </div>
+              <div className="text-center">
+                <div className="font-mono text-xs text-text-muted">Total Burned (Recent)</div>
+                <div className="font-mono text-lg text-accent-red">
+                  -{formatTokenAmount(stats24h.totalBurnedAll.toString())}
+                </div>
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Recent Activity Grid */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         {/* Recent Mints */}
         <Card>
           <CardHeader className="border-b border-bg-tertiary">
-            <CardTitle>RECENT MINT EVENTS</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>RECENT MINT EVENTS</CardTitle>
+              <span className="font-mono text-xs text-text-muted">{mintEvents.length} loaded</span>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
-            {mintsLoading ? (
+            {mintsLoading && recentMints.length === 0 ? (
               <div className="flex h-48 items-center justify-center">
                 <LoadingSpinner />
               </div>
-            ) : mintEvents.length === 0 ? (
+            ) : recentMints.length === 0 ? (
               <div className="flex h-48 items-center justify-center">
                 <p className="font-mono text-sm text-text-muted">No mint events found</p>
               </div>
             ) : (
               <div className="divide-y divide-bg-tertiary">
-                {mintEvents.map((event, idx) => (
+                {recentMints.map((event, idx) => (
                   <div key={`${event.transactionHash}-${idx}`} className="p-4 hover:bg-bg-secondary">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="mb-1 font-mono text-sm text-accent-green">
-                          +{formatNumber(BigInt(event.amount))} tokens
+                          +{formatTokenAmount(event.amount)}
                         </div>
                         <div className="mb-2 font-mono text-xs text-text-secondary">
                           Block {formatNumber(BigInt(event.blockNumber))} •{' '}
@@ -111,10 +193,16 @@ export function TokenSupplyDashboard() {
                         </div>
                         <div className="space-y-1">
                           <div className="font-mono text-xs text-text-muted">
-                            Minter: <span className="text-text-secondary">{event.minter}</span>
+                            Minter:{' '}
+                            <span className="text-text-secondary" title={event.minter}>
+                              {truncateAddress(event.minter)}
+                            </span>
                           </div>
                           <div className="font-mono text-xs text-text-muted">
-                            Recipient: <span className="text-text-secondary">{event.recipient}</span>
+                            To:{' '}
+                            <span className="text-text-secondary" title={event.to}>
+                              {truncateAddress(event.to)}
+                            </span>
                           </div>
                         </div>
                       </div>
@@ -129,32 +217,38 @@ export function TokenSupplyDashboard() {
         {/* Recent Burns */}
         <Card>
           <CardHeader className="border-b border-bg-tertiary">
-            <CardTitle>RECENT BURN EVENTS</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle>RECENT BURN EVENTS</CardTitle>
+              <span className="font-mono text-xs text-text-muted">{burnEvents.length} loaded</span>
+            </div>
           </CardHeader>
           <CardContent className="p-0">
-            {burnsLoading ? (
+            {burnsLoading && recentBurns.length === 0 ? (
               <div className="flex h-48 items-center justify-center">
                 <LoadingSpinner />
               </div>
-            ) : burnEvents.length === 0 ? (
+            ) : recentBurns.length === 0 ? (
               <div className="flex h-48 items-center justify-center">
                 <p className="font-mono text-sm text-text-muted">No burn events found</p>
               </div>
             ) : (
               <div className="divide-y divide-bg-tertiary">
-                {burnEvents.map((event, idx) => (
+                {recentBurns.map((event, idx) => (
                   <div key={`${event.transactionHash}-${idx}`} className="p-4 hover:bg-bg-secondary">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <div className="mb-1 font-mono text-sm text-accent-red">
-                          -{formatNumber(BigInt(event.amount))} tokens
+                          -{formatTokenAmount(event.amount)}
                         </div>
                         <div className="mb-2 font-mono text-xs text-text-secondary">
                           Block {formatNumber(BigInt(event.blockNumber))} •{' '}
                           {formatDateTime(event.timestamp)}
                         </div>
                         <div className="font-mono text-xs text-text-muted">
-                          Burner: <span className="text-text-secondary">{event.burner}</span>
+                          Burner:{' '}
+                          <span className="text-text-secondary" title={event.burner}>
+                            {truncateAddress(event.burner)}
+                          </span>
                         </div>
                       </div>
                     </div>

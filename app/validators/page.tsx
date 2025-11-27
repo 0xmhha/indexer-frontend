@@ -5,7 +5,7 @@ import { ValidatorSigningStatsDashboard } from '@/components/validators/Validato
 
 export const metadata: Metadata = {
   title: 'Validators | Stable-One Explorer',
-  description: 'View validators, their stake, voting power, signing performance, and blacklisted addresses',
+  description: 'View validators, their signing performance, and blacklisted addresses',
 }
 
 export default function ValidatorsPage() {
@@ -14,12 +14,12 @@ export default function ValidatorsPage() {
       <div className="mb-8">
         <h1 className="mb-2 font-mono text-3xl font-bold text-text-primary">VALIDATORS</h1>
         <p className="font-mono text-sm text-text-secondary">
-          View validators, their stake, voting power, signing performance, and network governance status
+          View validators, signing performance statistics, and network governance status
         </p>
       </div>
 
       <div className="space-y-8">
-        <ValidatorsListViewer maxValidators={50} />
+        <ValidatorsListViewer />
         <ValidatorSigningStatsDashboard maxStats={50} />
         <BlacklistViewer />
       </div>

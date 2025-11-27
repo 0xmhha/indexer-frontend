@@ -26,6 +26,9 @@ export interface UseEpochSearchResult {
 
   // Refetch
   refetchCurrent: () => void
+
+  // Backend support flag
+  isSupported: boolean
 }
 
 // ============================================================
@@ -44,6 +47,7 @@ export function useEpochSearch(): UseEpochSearchResult {
     loading: currentLoading,
     error: currentError,
     refetch: refetchCurrent,
+    isSupported,
   } = useCurrentEpoch()
 
   const {
@@ -83,5 +87,6 @@ export function useEpochSearch(): UseEpochSearchResult {
     error,
     currentLoading,
     refetchCurrent,
+    isSupported,
   }
 }

@@ -24,7 +24,7 @@ export function useAddressBalance(address: string | null, blockNumber?: string) 
   const effectiveData = data ?? previousData
 
   return {
-    balance: effectiveData?.addressBalance != null ? BigInt(effectiveData.addressBalance) : null,
+    balance: effectiveData?.addressBalance !== null && effectiveData?.addressBalance !== undefined ? BigInt(effectiveData.addressBalance) : null,
     loading,
     error,
   }

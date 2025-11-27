@@ -16,18 +16,11 @@ export enum ProposalStatus {
 }
 
 // Query for proposals list
+// Note: Backend uses String for addresses, ProposalStatus enum for status
+// Filter only supports contract and status (not proposer)
 const GET_PROPOSALS = gql`
-  query GetProposals(
-    $contract: Address
-    $status: String
-    $proposer: Address
-    $limit: Int
-    $offset: Int
-  ) {
-    proposals(
-      filter: { contract: $contract, status: $status, proposer: $proposer }
-      pagination: { limit: $limit, offset: $offset }
-    ) {
+  query GetProposals($contract: String, $status: ProposalStatus, $limit: Int, $offset: Int) {
+    proposals(filter: { contract: $contract, status: $status }, pagination: { limit: $limit, offset: $offset }) {
       nodes {
         contract
         proposalId
@@ -55,7 +48,7 @@ const GET_PROPOSALS = gql`
 
 // Query for specific proposal
 const GET_PROPOSAL = gql`
-  query GetProposal($contract: Address!, $proposalId: String!) {
+  query GetProposal($contract: String!, $proposalId: String!) {
     proposal(contract: $contract, proposalId: $proposalId) {
       contract
       proposalId
@@ -77,7 +70,7 @@ const GET_PROPOSAL = gql`
 
 // Query for proposal votes
 const GET_PROPOSAL_VOTES = gql`
-  query GetProposalVotes($contract: Address!, $proposalId: String!) {
+  query GetProposalVotes($contract: String!, $proposalId: String!) {
     proposalVotes(contract: $contract, proposalId: $proposalId) {
       contract
       proposalId
@@ -142,23 +135,22 @@ export interface Validator {
 
 /**
  * Hook to fetch proposals list
+ * Note: Backend filter only supports contract and status (not proposer)
  */
 export function useProposals(
   params: {
     contract?: string
     status?: ProposalStatus | string
-    proposer?: string
     limit?: number
     offset?: number
   } = {}
 ) {
-  const { contract, status, proposer, limit = PAGINATION.DEFAULT_PAGE_SIZE, offset = 0 } = params
+  const { contract, status, limit = PAGINATION.DEFAULT_PAGE_SIZE, offset = 0 } = params
 
   const { data, loading, error, refetch, fetchMore, previousData } = useQuery(GET_PROPOSALS, {
     variables: {
       ...(contract && { contract }),
       ...(status && { status }),
-      ...(proposer && { proposer }),
       limit,
       offset,
     },

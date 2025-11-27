@@ -70,6 +70,10 @@ export function useBlocks(params: UseBlocksParams = {}) {
     returnPartialData: true,
     // Enable polling for real-time updates
     pollInterval,
+    // Always fetch fresh data from network, bypass stale cache
+    fetchPolicy: 'network-only',
+    // Notify on network status change for proper loading states
+    notifyOnNetworkStatusChange: true,
   })
 
   // Use previous data while loading new data to prevent flickering

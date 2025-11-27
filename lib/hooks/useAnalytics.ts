@@ -2,9 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useQuery } from '@apollo/client'
-import { GET_BLOCKS_BY_TIME_RANGE, GET_NETWORK_METRICS } from '@/lib/apollo/queries'
+import { GET_BLOCKS_BY_TIME_RANGE, GET_BLOCK_COUNT, GET_TRANSACTION_COUNT } from '@/lib/apollo/queries'
 import { transformBlocks, type TransformedBlock } from '@/lib/utils/graphql-transforms'
-import { toBigInt } from '@/lib/utils/graphql-transforms'
 import type { MinerStats } from '@/types/graphql'
 import { PAGINATION, TIMING } from '@/lib/config/constants'
 
@@ -57,20 +56,33 @@ export function useBlocksByTimeRange(fromTime: bigint, toTime: bigint, limit = P
 
 /**
  * Hook to fetch network metrics (block count and transaction count)
+ * Uses efficient root queries: blockCount and transactionCount
  */
 export function useNetworkMetrics() {
-  const { data, loading, error, previousData } = useQuery(GET_NETWORK_METRICS, {
-    returnPartialData: true,
-  })
+  const { data: blockData, loading: blockLoading, error: blockError, previousData: blockPrevData } = useQuery(
+    GET_BLOCK_COUNT,
+    { returnPartialData: true }
+  )
+  const { data: txData, loading: txLoading, error: txError, previousData: txPrevData } = useQuery(
+    GET_TRANSACTION_COUNT,
+    { returnPartialData: true }
+  )
 
-  // Use previous data while loading to prevent flickering
-  const effectiveData = data ?? previousData
+  const effectiveBlockData = blockData ?? blockPrevData
+  const effectiveTxData = txData ?? txPrevData
+
+  const blockCount = effectiveBlockData?.blockCount !== null && effectiveBlockData?.blockCount !== undefined
+    ? BigInt(effectiveBlockData.blockCount)
+    : BigInt(0)
+  const transactionCount = effectiveTxData?.transactionCount !== null && effectiveTxData?.transactionCount !== undefined
+    ? BigInt(effectiveTxData.transactionCount)
+    : BigInt(0)
 
   return {
-    blockCount: effectiveData?.blockCount ? toBigInt(effectiveData.blockCount) : null,
-    transactionCount: effectiveData?.transactionCount ? toBigInt(effectiveData.transactionCount) : null,
-    loading,
-    error,
+    blockCount,
+    transactionCount,
+    loading: blockLoading || txLoading,
+    error: blockError || txError,
   }
 }
 

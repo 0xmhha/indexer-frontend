@@ -6,20 +6,15 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useValidators, type Validator } from '@/lib/hooks/useWBFT'
 import { formatNumber, truncateAddress } from '@/lib/utils/format'
-import { UI } from '@/lib/config/constants'
-
-interface ValidatorsListViewerProps {
-  maxValidators?: number
-  epochNumber?: string
-}
 
 /**
  * Validators List Viewer
  *
- * Displays list of validators with their stake, voting power, and status.
- * Allows filtering by epoch and active status.
+ * Displays list of active validators with their address and status.
+ * Allows filtering by active status.
+ * Note: Backend returns all validators without pagination.
  */
-export function ValidatorsListViewer({ maxValidators = UI.MAX_VIEWER_ITEMS, epochNumber }: ValidatorsListViewerProps) {
+export function ValidatorsListViewer() {
   const [showActiveOnly, setShowActiveOnly] = useState(false)
 
   const {
@@ -28,10 +23,7 @@ export function ValidatorsListViewer({ maxValidators = UI.MAX_VIEWER_ITEMS, epoc
     loading,
     error,
     refetch,
-  } = useValidators({
-    limit: maxValidators,
-    ...(epochNumber && { epochNumber }),
-  })
+  } = useValidators()
 
   // Filter for active validators if toggle is on
   const displayedValidators = showActiveOnly ? validators.filter((v) => v.isActive) : validators
@@ -40,9 +32,7 @@ export function ValidatorsListViewer({ maxValidators = UI.MAX_VIEWER_ITEMS, epoc
     <Card>
       <CardHeader className="border-b border-bg-tertiary">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <CardTitle>
-            VALIDATORS {epochNumber && `(EPOCH ${epochNumber})`}
-          </CardTitle>
+          <CardTitle>VALIDATORS</CardTitle>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <span className="font-mono text-xs text-text-muted">Total:</span>
@@ -100,53 +90,26 @@ export function ValidatorsListViewer({ maxValidators = UI.MAX_VIEWER_ITEMS, epoc
 function ValidatorCard({ validator }: { validator: Validator }) {
   return (
     <div className="p-4 transition-colors hover:bg-bg-secondary">
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="flex items-center justify-between">
         {/* Validator Address */}
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <div className={`h-2 w-2 rounded-full ${validator.isActive ? 'bg-accent-green' : 'bg-text-muted'}`} />
-            <span className="font-mono text-xs text-text-muted">Validator</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-mono text-sm font-bold text-text-primary" title={validator.address}>
-              {truncateAddress(validator.address)}
+        <div className="flex items-center gap-3">
+          <div className={`h-2 w-2 rounded-full ${validator.isActive ? 'bg-accent-green' : 'bg-text-muted'}`} />
+          <span className="font-mono text-sm font-bold text-text-primary" title={validator.address}>
+            {truncateAddress(validator.address)}
+          </span>
+        </div>
+
+        {/* Status Badge */}
+        <div>
+          {validator.isActive ? (
+            <span className="rounded border border-accent-green bg-accent-green/10 px-3 py-1 font-mono text-xs text-accent-green">
+              ACTIVE
             </span>
-            {validator.isActive && (
-              <span className="rounded border border-accent-green bg-accent-green/10 px-2 py-0.5 font-mono text-xs text-accent-green">
-                ACTIVE
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* Stake */}
-        <div className="space-y-1">
-          <div className="font-mono text-xs text-text-muted">Stake</div>
-          <div className="font-mono text-sm text-text-secondary">
-            {formatNumber(BigInt(validator.stake))} tokens
-          </div>
-        </div>
-
-        {/* Voting Power */}
-        <div className="space-y-1">
-          <div className="font-mono text-xs text-text-muted">Voting Power</div>
-          <div className="font-mono text-sm text-text-secondary">{validator.votingPower}%</div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-bg-tertiary">
-            <div
-              className="h-full bg-accent-blue transition-all"
-              style={{ width: `${Math.min(validator.votingPower, 100)}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Epochs */}
-        <div className="space-y-1">
-          <div className="font-mono text-xs text-text-muted">Epochs</div>
-          <div className="flex items-center gap-2 font-mono text-xs text-text-secondary">
-            <span>Joined: {validator.joinedEpoch}</span>
-            <span>•</span>
-            <span>Last: {validator.lastActiveEpoch}</span>
-          </div>
+          ) : (
+            <span className="rounded border border-text-muted bg-text-muted/10 px-3 py-1 font-mono text-xs text-text-muted">
+              INACTIVE
+            </span>
+          )}
         </div>
       </div>
     </div>

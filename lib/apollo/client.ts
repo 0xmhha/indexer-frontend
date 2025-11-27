@@ -7,12 +7,32 @@ import { env } from '@/lib/config/env'
 import { REALTIME } from '@/lib/config/constants'
 
 /**
+ * Known error messages that should be silently ignored
+ * These are expected errors from features that may not be enabled on the backend
+ */
+const SUPPRESSED_ERROR_PATTERNS = [
+  'does not support address indexing', // Address indexing feature not enabled
+  'does not support consensus operations', // Consensus/epoch data feature not enabled
+]
+
+/**
+ * Check if an error message should be suppressed from console logging
+ */
+function shouldSuppressError(message: string): boolean {
+  return SUPPRESSED_ERROR_PATTERNS.some((pattern) => message.includes(pattern))
+}
+
+/**
  * Error handling link for Apollo Client
- * Logs GraphQL and network errors
+ * Logs GraphQL and network errors (except known suppressed errors)
  */
 const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
   if (graphQLErrors) {
     graphQLErrors.forEach(({ message, locations, path }) => {
+      // Skip logging for known suppressed errors
+      if (shouldSuppressError(message)) {
+        return
+      }
       console.error(
         `[GraphQL error]: Message: ${message}, Location: ${JSON.stringify(locations)}, Path: ${path}, Operation: ${operation.operationName}`
       )

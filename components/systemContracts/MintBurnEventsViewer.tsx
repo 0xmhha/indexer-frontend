@@ -27,7 +27,6 @@ export function MintBurnEventsViewer({ maxEvents = UI.MAX_VIEWER_ITEMS }: MintBu
   // Mint events query
   const {
     mintEvents,
-    totalCount: mintTotalCount,
     loading: mintLoading,
     error: mintError,
   } = useMintEvents({
@@ -38,13 +37,16 @@ export function MintBurnEventsViewer({ maxEvents = UI.MAX_VIEWER_ITEMS }: MintBu
   // Burn events query
   const {
     burnEvents,
-    totalCount: burnTotalCount,
     loading: burnLoading,
     error: burnError,
   } = useBurnEvents({
     limit: maxEvents,
     ...(addressFilter && { burner: addressFilter }),
   })
+
+  // Use array length for counts since backend doesn't return totalCount
+  const mintTotalCount = mintEvents.length
+  const burnTotalCount = burnEvents.length
 
   const loading = activeTab === 'mint' ? mintLoading : burnLoading
   const error = activeTab === 'mint' ? mintError : burnError
@@ -144,7 +146,7 @@ function MintEventsList({ events }: { events: MintEvent[] }) {
     <div className="divide-y divide-bg-tertiary">
       {events.map((event, idx) => (
         <div
-          key={`${event.transactionHash}-${event.logIndex}-${idx}`}
+          key={`${event.transactionHash}-${idx}`}
           className="p-4 transition-colors hover:bg-bg-secondary"
         >
           <div className="grid gap-3 sm:grid-cols-2">
@@ -177,9 +179,9 @@ function MintEventsList({ events }: { events: MintEvent[] }) {
                 <span className="font-mono text-xs text-text-secondary">{truncateAddress(event.minter)}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="font-mono text-xs text-text-muted">Recipient:</span>
+                <span className="font-mono text-xs text-text-muted">To:</span>
                 <span className="font-mono text-xs text-text-secondary">
-                  {truncateAddress(event.recipient)}
+                  {truncateAddress(event.to)}
                 </span>
               </div>
               <div className="flex items-center gap-2">
@@ -209,7 +211,7 @@ function BurnEventsList({ events }: { events: BurnEvent[] }) {
     <div className="divide-y divide-bg-tertiary">
       {events.map((event, idx) => (
         <div
-          key={`${event.transactionHash}-${event.logIndex}-${idx}`}
+          key={`${event.transactionHash}-${idx}`}
           className="p-4 transition-colors hover:bg-bg-secondary"
         >
           <div className="grid gap-3 sm:grid-cols-2">

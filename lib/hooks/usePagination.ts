@@ -97,18 +97,17 @@ export function usePagination(options: UsePaginationOptions): UsePaginationResul
   const canGoPrevious = currentPage > 1
 
   // Sync with URL on mount and URL changes
+  // Note: We intentionally exclude currentPage and itemsPerPage from dependencies
+  // to prevent infinite loops. We only want to sync FROM URL TO state.
   useEffect(() => {
     const urlPage = getPageFromURL()
     const urlLimit = getItemsPerPageFromURL()
 
-    if (urlPage !== currentPage) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setCurrentPage(urlPage)
-    }
-    if (urlLimit !== itemsPerPage) {
-      setItemsPerPageState(urlLimit)
-    }
-  }, [getPageFromURL, getItemsPerPageFromURL, currentPage, itemsPerPage])
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setCurrentPage(urlPage)
+    setItemsPerPageState(urlLimit)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams])
 
   // Update URL with new query params
   const updateURL = useCallback(
@@ -152,12 +151,16 @@ export function usePagination(options: UsePaginationOptions): UsePaginationResul
   )
 
   // Validate current page when total pages changes
+  // Note: Only validate when totalCount > 0 (data has loaded)
+  // This prevents resetting to page 1 while data is still loading
   useEffect(() => {
-    if (currentPage > totalPages && totalPages > 0) {
+    if (totalCount > 0 && currentPage > totalPages) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPage(totalPages)
+      setCurrentPage(totalPages)
+      updateURL(totalPages, itemsPerPage)
     }
-  }, [totalPages, currentPage, setPage])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [totalPages, totalCount])
 
   // Set items per page
   const setItemsPerPage = useCallback(

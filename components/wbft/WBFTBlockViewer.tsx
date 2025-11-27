@@ -94,83 +94,111 @@ export function WBFTBlockViewer({ initialBlockNumber = '' }: WBFTBlockViewerProp
                 <div>
                   <h3 className="mb-3 font-mono text-sm font-bold text-text-primary">CONSENSUS INFORMATION</h3>
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                    <InfoItem label="Block Number" value={formatNumber(wbftBlock.blockNumber)} />
                     <InfoItem label="Round" value={wbftBlock.round.toString()} />
-                    <InfoItem label="Step" value={wbftBlock.step} />
-                    <InfoItem label="Commit Round" value={wbftBlock.commitRound.toString()} />
-                    {wbftBlock.lockRound !== undefined && (
-                      <InfoItem label="Lock Round" value={wbftBlock.lockRound.toString()} />
+                    <InfoItem label="Prev Round" value={wbftBlock.prevRound.toString()} />
+                    {wbftBlock.gasTip && (
+                      <InfoItem label="Gas Tip" value={wbftBlock.gasTip} />
                     )}
-                    <InfoItem
-                      label="Proposer"
-                      value={truncateAddress(wbftBlock.proposer)}
-                      fullValue={wbftBlock.proposer}
-                      copyable
-                    />
                     <InfoItem label="Timestamp" value={formatDateTime(wbftBlock.timestamp)} />
                   </div>
                 </div>
 
-                {/* Hashes */}
+                {/* Block Hashes */}
                 <div>
-                  <h3 className="mb-3 font-mono text-sm font-bold text-text-primary">HASHES</h3>
-                  <div className="grid gap-4 sm:grid-cols-2">
+                  <h3 className="mb-3 font-mono text-sm font-bold text-text-primary">BLOCK HASHES</h3>
+                  <div className="grid gap-4 sm:grid-cols-1">
                     <InfoItem
-                      label="Commit Hash"
-                      value={formatHash(wbftBlock.commitHash)}
-                      fullValue={wbftBlock.commitHash}
+                      label="Block Hash"
+                      value={formatHash(wbftBlock.blockHash)}
+                      fullValue={wbftBlock.blockHash}
                       copyable
                     />
-                    {wbftBlock.lockHash && (
+                    <InfoItem
+                      label="Randao Reveal"
+                      value={formatHash(wbftBlock.randaoReveal)}
+                      fullValue={wbftBlock.randaoReveal}
+                      copyable
+                    />
+                  </div>
+                </div>
+
+                {/* Prepared Seal Info */}
+                {wbftBlock.preparedSeal && (
+                  <div>
+                    <h3 className="mb-3 font-mono text-sm font-bold text-text-primary">PREPARED SEAL</h3>
+                    <div className="space-y-4">
                       <InfoItem
-                        label="Lock Hash"
-                        value={formatHash(wbftBlock.lockHash)}
-                        fullValue={wbftBlock.lockHash}
+                        label="Sealers Bitmap"
+                        value={formatHash(wbftBlock.preparedSeal.sealers)}
+                        fullValue={wbftBlock.preparedSeal.sealers}
                         copyable
                       />
-                    )}
-                  </div>
-                </div>
-
-                {/* Validator Set */}
-                <div>
-                  <h3 className="mb-3 font-mono text-sm font-bold text-text-primary">
-                    VALIDATOR SET ({wbftBlock.validatorSet.length})
-                  </h3>
-                  <div className="rounded border border-bg-tertiary bg-bg-secondary p-4">
-                    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                      {wbftBlock.validatorSet.map((validator, idx) => (
-                        <div
-                          key={`${validator}-${idx}`}
-                          className="flex items-center gap-2 font-mono text-xs text-text-secondary"
-                          title={validator}
-                        >
-                          <span className="text-text-muted">{idx + 1}.</span>
-                          <span>{truncateAddress(validator)}</span>
-                        </div>
-                      ))}
+                      <InfoItem
+                        label="Signature"
+                        value={formatHash(wbftBlock.preparedSeal.signature)}
+                        fullValue={wbftBlock.preparedSeal.signature}
+                        copyable
+                      />
                     </div>
                   </div>
-                </div>
+                )}
 
-                {/* Voter Bitmap */}
-                <div>
-                  <h3 className="mb-3 font-mono text-sm font-bold text-text-primary">VOTER BITMAP</h3>
-                  <div className="overflow-x-auto rounded border border-bg-tertiary bg-bg-secondary p-4">
-                    <code className="font-mono text-xs text-text-secondary break-all">{wbftBlock.voterBitmap}</code>
+                {/* Committed Seal Info */}
+                {wbftBlock.committedSeal && (
+                  <div>
+                    <h3 className="mb-3 font-mono text-sm font-bold text-text-primary">COMMITTED SEAL</h3>
+                    <div className="space-y-4">
+                      <InfoItem
+                        label="Sealers Bitmap"
+                        value={formatHash(wbftBlock.committedSeal.sealers)}
+                        fullValue={wbftBlock.committedSeal.sealers}
+                        copyable
+                      />
+                      <InfoItem
+                        label="Signature"
+                        value={formatHash(wbftBlock.committedSeal.signature)}
+                        fullValue={wbftBlock.committedSeal.signature}
+                        copyable
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* Block Signers */}
-                {blockSigners && (
+                {/* Block Signers - Preparers */}
+                {blockSigners && blockSigners.preparers?.length > 0 && (
                   <div>
                     <h3 className="mb-3 font-mono text-sm font-bold text-text-primary">
-                      BLOCK SIGNERS ({blockSigners.signers.length})
+                      PREPARE SIGNERS ({blockSigners.preparers.length})
                     </h3>
                     <div className="rounded border border-bg-tertiary bg-bg-secondary p-4">
-                      <div className="mb-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                        {blockSigners.signers.map((signer, idx) => (
+                      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        {blockSigners.preparers.map((signer, idx) => (
                           <div
-                            key={`${signer}-${idx}`}
+                            key={`preparer-${signer}-${idx}`}
+                            className="flex items-center gap-2 font-mono text-xs text-text-secondary"
+                            title={signer}
+                          >
+                            <div className="h-2 w-2 rounded-full bg-accent-blue" />
+                            <span>{truncateAddress(signer)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Block Signers - Committers */}
+                {blockSigners && blockSigners.committers?.length > 0 && (
+                  <div>
+                    <h3 className="mb-3 font-mono text-sm font-bold text-text-primary">
+                      COMMIT SIGNERS ({blockSigners.committers.length})
+                    </h3>
+                    <div className="rounded border border-bg-tertiary bg-bg-secondary p-4">
+                      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        {blockSigners.committers.map((signer, idx) => (
+                          <div
+                            key={`committer-${signer}-${idx}`}
                             className="flex items-center gap-2 font-mono text-xs text-text-secondary"
                             title={signer}
                           >
@@ -178,12 +206,6 @@ export function WBFTBlockViewer({ initialBlockNumber = '' }: WBFTBlockViewerProp
                             <span>{truncateAddress(signer)}</span>
                           </div>
                         ))}
-                      </div>
-                      <div className="mt-3 border-t border-bg-tertiary pt-3">
-                        <div className="font-mono text-xs text-text-muted">
-                          Bitmap:{' '}
-                          <span className="text-text-secondary break-all">{blockSigners.bitmap}</span>
-                        </div>
                       </div>
                     </div>
                   </div>

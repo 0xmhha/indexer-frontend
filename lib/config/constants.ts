@@ -135,6 +135,47 @@ export const CACHE_POLICIES = {
 } as const
 
 // ============================================================================
+// Consensus Monitoring
+// ============================================================================
+
+/**
+ * Consensus monitoring thresholds and limits
+ */
+export const CONSENSUS = {
+  /** Maximum recent blocks to keep in memory */
+  MAX_RECENT_BLOCKS: 50,
+
+  /** Maximum recent errors to keep in memory */
+  MAX_RECENT_ERRORS: 100,
+
+  /** Maximum recent forks to keep in memory */
+  MAX_RECENT_FORKS: 20,
+
+  /** Maximum recent validator changes to keep in memory */
+  MAX_RECENT_VALIDATOR_CHANGES: 50,
+
+  /** Participation rate threshold for warning (%) */
+  PARTICIPATION_WARNING_THRESHOLD: 75,
+
+  /** Participation rate threshold for critical (%) - below 2/3 */
+  PARTICIPATION_CRITICAL_THRESHOLD: 66.7,
+
+  /** Network health score thresholds */
+  HEALTH_EXCELLENT_THRESHOLD: 90,
+  HEALTH_GOOD_THRESHOLD: 75,
+  HEALTH_FAIR_THRESHOLD: 60,
+
+  /** Error auto-dismiss timeout (ms) for low severity errors */
+  ERROR_AUTO_DISMISS_LOW: 5000,
+
+  /** Error auto-dismiss timeout (ms) for medium severity errors */
+  ERROR_AUTO_DISMISS_MEDIUM: 10000,
+
+  /** High priority errors do not auto-dismiss */
+  ERROR_AUTO_DISMISS_HIGH: 0,
+} as const
+
+// ============================================================================
 // Feature Flags
 // ============================================================================
 
@@ -155,6 +196,12 @@ export const FEATURES = {
 
   /** Enable development mode logging */
   ENABLE_DEV_LOGGING: process.env.NODE_ENV === 'development',
+
+  /** Enable consensus real-time monitoring */
+  ENABLE_CONSENSUS_MONITORING: true,
+
+  /** Enable browser notifications for critical errors */
+  ENABLE_BROWSER_NOTIFICATIONS: true,
 } as const
 
 // ============================================================================

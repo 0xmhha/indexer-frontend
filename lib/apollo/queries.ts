@@ -229,10 +229,16 @@ export const GET_BLOCKS_BY_TIME_RANGE = gql`
   }
 `
 
-// Get block count and transaction count
-export const GET_NETWORK_METRICS = gql`
-  query GetNetworkMetrics {
+// Get block count (efficient root query)
+export const GET_BLOCK_COUNT = gql`
+  query GetBlockCount {
     blockCount
+  }
+`
+
+// Get transaction count (efficient root query)
+export const GET_TRANSACTION_COUNT = gql`
+  query GetTransactionCount {
     transactionCount
   }
 `
@@ -243,6 +249,7 @@ export const GET_NETWORK_METRICS = gql`
 
 /**
  * Subscribe to new blocks in real-time
+ * Note: Backend uses transactionCount (not txCount)
  */
 export const SUBSCRIBE_NEW_BLOCK = gql`
   subscription NewBlock {
@@ -252,7 +259,7 @@ export const SUBSCRIBE_NEW_BLOCK = gql`
       parentHash
       timestamp
       miner
-      txCount
+      transactionCount
     }
   }
 `
@@ -304,11 +311,11 @@ export const SUBSCRIBE_PENDING_TRANSACTIONS = gql`
 
 /**
  * Subscribe to logs with filtering
- * Variables must be passed as { filter: LogFilterInput }
+ * Variables must be passed as { filter: LogFilter }
  * Note: filter argument is required by backend (non-null)
  */
 export const SUBSCRIBE_LOGS = gql`
-  subscription Logs($filter: LogFilterInput!) {
+  subscription Logs($filter: LogFilter!) {
     logs(filter: $filter) {
       address
       topics
@@ -371,6 +378,120 @@ export const GET_TOKEN_BALANCES = gql`
       symbol
       decimals
       metadata
+    }
+  }
+`
+
+// ============================================================================
+// Consensus Event Subscriptions (Phase B - Real-time WBFT Monitoring)
+// ============================================================================
+
+/**
+ * Subscribe to real-time consensus block finalization events
+ * Provides WBFT consensus data including round info, participation metrics, and epoch data
+ */
+export const SUBSCRIBE_CONSENSUS_BLOCK = gql`
+  subscription OnConsensusBlock {
+    consensusBlock {
+      blockNumber
+      blockHash
+      timestamp
+      round
+      prevRound
+      roundChanged
+      proposer
+      validatorCount
+      prepareCount
+      commitCount
+      participationRate
+      missedValidatorRate
+      isEpochBoundary
+      epochNumber
+      epochValidators
+    }
+  }
+`
+
+/**
+ * Subscribe to chain fork detection and resolution events
+ * Monitors for chain splits and tracks which chain wins
+ */
+export const SUBSCRIBE_CONSENSUS_FORK = gql`
+  subscription OnConsensusFork {
+    consensusFork {
+      forkBlockNumber
+      forkBlockHash
+      chain1Hash
+      chain1Height
+      chain1Weight
+      chain2Hash
+      chain2Height
+      chain2Weight
+      resolved
+      winningChain
+      detectedAt
+      detectionLag
+    }
+  }
+`
+
+/**
+ * Subscribe to validator set changes at epoch boundaries
+ * Tracks when validators are added or removed from the active set
+ */
+export const SUBSCRIBE_CONSENSUS_VALIDATOR_CHANGE = gql`
+  subscription OnValidatorChange {
+    consensusValidatorChange {
+      blockNumber
+      blockHash
+      timestamp
+      epochNumber
+      isEpochBoundary
+      changeType
+      previousValidatorCount
+      newValidatorCount
+      addedValidators
+      removedValidators
+      validatorSet
+      additionalInfo
+    }
+  }
+`
+
+/**
+ * Subscribe to consensus errors and anomalies
+ * Monitors for round changes, missed validators, low participation, etc.
+ *
+ * Error Types:
+ * - round_change: Round change occurred (normal but monitored)
+ * - missed_validators: Validators failed to sign
+ * - low_participation: Participation below threshold (<66.7%)
+ * - proposer_failure: Proposer failed to create block
+ * - signature_failure: Signature verification failed
+ *
+ * Severity Levels:
+ * - critical: Consensus at risk, immediate action required
+ * - high: Significant issue, requires attention
+ * - medium: Notable anomaly, monitor closely
+ * - low: Minor issue, informational
+ */
+export const SUBSCRIBE_CONSENSUS_ERROR = gql`
+  subscription OnConsensusError {
+    consensusError {
+      blockNumber
+      blockHash
+      timestamp
+      errorType
+      severity
+      errorMessage
+      round
+      expectedValidators
+      actualSigners
+      participationRate
+      missedValidators
+      consensusImpacted
+      recoveryTime
+      errorDetails
     }
   }
 `

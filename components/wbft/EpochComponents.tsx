@@ -1,24 +1,8 @@
 'use client'
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { formatNumber, formatDateTime, truncateAddress } from '@/lib/utils/format'
-import type { ValidatorInEpoch } from '@/lib/hooks/useWBFT'
-
-// ============================================================
-// Types
-// ============================================================
-
-interface Epoch {
-  epochNumber: string
-  startBlock: string
-  endBlock: string
-  startTime: string
-  endTime?: string
-  status: string
-  validatorCount: number
-  totalStake: string
-  validators?: ValidatorInEpoch[]
-}
+import { truncateAddress } from '@/lib/utils/format'
+import type { ValidatorDisplayInfo, Epoch } from '@/lib/hooks/useWBFT'
 
 // ============================================================
 // Stat Card
@@ -67,25 +51,19 @@ export function EpochStatsGrid({ currentEpoch, currentLoading }: StatsGridProps)
       />
       <StatCard
         label="VALIDATORS"
-        value={currentLoading ? '...' : currentEpoch?.validatorCount.toString() || 'N/A'}
+        value={currentLoading ? '...' : currentEpoch?.validatorCount?.toString() || 'N/A'}
         icon="⚡"
         color="text-accent-green"
       />
       <StatCard
-        label="TOTAL STAKE"
-        value={
-          currentLoading
-            ? '...'
-            : currentEpoch
-              ? formatNumber(BigInt(currentEpoch.totalStake))
-              : 'N/A'
-        }
-        icon="💰"
+        label="CANDIDATES"
+        value={currentLoading ? '...' : currentEpoch?.candidateCount?.toString() || 'N/A'}
+        icon="👥"
         color="text-accent-cyan"
       />
       <StatCard
-        label="STATUS"
-        value={currentLoading ? '...' : currentEpoch?.status || 'N/A'}
+        label="ACTIVE"
+        value={currentLoading ? '...' : currentEpoch ? 'ACTIVE' : 'N/A'}
         icon="🔄"
         color="text-accent-purple"
       />
@@ -170,13 +148,8 @@ export function EpochInfoGrid({ epoch }: { epoch: Epoch }) {
       <h3 className="mb-3 font-mono text-sm font-bold text-text-primary">EPOCH INFORMATION</h3>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <InfoItem label="Epoch Number" value={epoch.epochNumber} />
-        <InfoItem label="Start Block" value={formatNumber(BigInt(epoch.startBlock))} />
-        <InfoItem label="End Block" value={formatNumber(BigInt(epoch.endBlock))} />
-        <InfoItem label="Start Time" value={formatDateTime(epoch.startTime)} />
-        {epoch.endTime && <InfoItem label="End Time" value={formatDateTime(epoch.endTime)} />}
-        <InfoItem label="Status" value={epoch.status.toUpperCase()} />
         <InfoItem label="Validator Count" value={epoch.validatorCount.toString()} />
-        <InfoItem label="Total Stake" value={formatNumber(BigInt(epoch.totalStake))} />
+        <InfoItem label="Candidate Count" value={epoch.candidateCount.toString()} />
       </div>
     </div>
   )
@@ -186,13 +159,13 @@ export function EpochInfoGrid({ epoch }: { epoch: Epoch }) {
 // Validator Item
 // ============================================================
 
-function ValidatorItem({ validator, rank }: { validator: ValidatorInEpoch; rank: number }) {
+function ValidatorItem({ validator }: { validator: ValidatorDisplayInfo }) {
   return (
     <div className="p-4 transition-colors hover:bg-bg-secondary">
       <div className="grid gap-4 sm:grid-cols-3">
         <div className="flex items-center gap-3">
           <div className="flex h-8 w-8 items-center justify-center rounded-full border border-accent-blue bg-accent-blue/10">
-            <span className="font-mono text-xs font-bold text-accent-blue">{rank}</span>
+            <span className="font-mono text-xs font-bold text-accent-blue">{validator.index}</span>
           </div>
           <div>
             <div className="font-mono text-xs text-text-muted">Address</div>
@@ -201,22 +174,10 @@ function ValidatorItem({ validator, rank }: { validator: ValidatorInEpoch; rank:
             </div>
           </div>
         </div>
-        <div>
-          <div className="font-mono text-xs text-text-muted">Stake</div>
-          <div className="font-mono text-sm text-text-secondary">
-            {formatNumber(BigInt(validator.stake))}
-          </div>
-        </div>
-        <div>
-          <div className="font-mono text-xs text-text-muted">Voting Power</div>
-          <div className="flex items-center gap-2">
-            <div className="font-mono text-sm text-text-secondary">{validator.votingPower}%</div>
-            <div className="h-2 flex-1 overflow-hidden rounded-full bg-bg-tertiary">
-              <div
-                className="h-full bg-accent-green transition-all"
-                style={{ width: `${Math.min(validator.votingPower, 100)}%` }}
-              />
-            </div>
+        <div className="sm:col-span-2">
+          <div className="font-mono text-xs text-text-muted">BLS Public Key</div>
+          <div className="font-mono text-xs text-text-secondary break-all" title={validator.blsPubKey}>
+            {validator.blsPubKey ? `${validator.blsPubKey.slice(0, 32)}...` : 'N/A'}
           </div>
         </div>
       </div>
@@ -228,15 +189,15 @@ function ValidatorItem({ validator, rank }: { validator: ValidatorInEpoch; rank:
 // Validators List
 // ============================================================
 
-export function ValidatorsList({ validators }: { validators: ValidatorInEpoch[] }) {
+export function ValidatorsList({ validators }: { validators: ValidatorDisplayInfo[] }) {
   return (
     <div>
       <h3 className="mb-3 font-mono text-sm font-bold text-text-primary">
         VALIDATORS ({validators.length})
       </h3>
       <div className="divide-y divide-bg-tertiary rounded border border-bg-tertiary">
-        {validators.map((validator, idx) => (
-          <ValidatorItem key={`${validator.address}-${idx}`} validator={validator} rank={idx + 1} />
+        {validators.map((validator) => (
+          <ValidatorItem key={`${validator.address}-${validator.index}`} validator={validator} />
         ))}
       </div>
     </div>

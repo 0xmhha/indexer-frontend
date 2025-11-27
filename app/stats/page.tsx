@@ -80,13 +80,13 @@ export default function StatsPage() {
         <div className="mb-8 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-2">
           <StatCard
             label="TOTAL BLOCKS"
-            value={blockCount ? formatNumber(blockCount) : 'N/A'}
+            value={formatNumber(blockCount)}
             icon="□"
             color="text-accent-blue"
           />
           <StatCard
             label="TOTAL TRANSACTIONS"
-            value={transactionCount ? formatNumber(transactionCount) : 'N/A'}
+            value={formatNumber(transactionCount)}
             icon="→"
             color="text-accent-cyan"
           />

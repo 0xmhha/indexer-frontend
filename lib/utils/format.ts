@@ -154,10 +154,15 @@ export function truncateAddress(address: string): string {
 
 /**
  * Format number with thousand separators
- * @param num - Number to format
+ * @param num - Number to format (accepts number, bigint, or string)
  * @returns Formatted number string
  */
-export function formatNumber(num: number | bigint): string {
+export function formatNumber(num: number | bigint | string): string {
+  if (typeof num === 'string') {
+    const parsed = Number(num)
+    if (Number.isNaN(parsed)) return num
+    return parsed.toLocaleString('en-US')
+  }
   return num.toLocaleString('en-US')
 }
 
@@ -199,4 +204,64 @@ export function shortenHex(data: string, maxLength = 20): string {
   const suffixLength = maxLength - prefixLength - 3 // 3 for "..."
 
   return `${data.slice(0, prefixLength)}...${data.slice(-suffixLength)}`
+}
+
+/**
+ * Format token amount with proper decimal handling
+ * Handles large amounts with K/M/B suffixes and small amounts with decimal precision
+ * @param amount - Token amount in wei (18 decimals) as string or bigint
+ * @param decimals - Token decimals (default 18)
+ * @param symbol - Optional token symbol
+ * @returns Formatted token amount string
+ */
+export function formatTokenAmount(amount: string | bigint, decimals = 18, symbol?: string): string {
+  // Handle negative values
+  const amountStr = amount.toString()
+  const isNegative = amountStr.startsWith('-')
+  const absoluteAmount = isNegative ? amountStr.slice(1) : amountStr
+
+  try {
+    const bigIntAmount = BigInt(absoluteAmount)
+
+    // If zero, return immediately
+    if (bigIntAmount === BigInt(0)) {
+      return symbol ? `0 ${symbol}` : '0'
+    }
+
+    const divisor = BigInt(10 ** decimals)
+    const integerPart = bigIntAmount / divisor
+    const fractionalPart = bigIntAmount % divisor
+
+    // Convert to number for easier formatting
+    const fullValue = Number(integerPart) + Number(fractionalPart) / Math.pow(10, decimals)
+
+    let formatted: string
+
+    // Use K/M/B suffixes for large amounts
+    if (fullValue >= 1_000_000_000) {
+      formatted = `${(fullValue / 1_000_000_000).toFixed(2)}B`
+    } else if (fullValue >= 1_000_000) {
+      formatted = `${(fullValue / 1_000_000).toFixed(2)}M`
+    } else if (fullValue >= 1_000) {
+      formatted = `${(fullValue / 1_000).toFixed(2)}K`
+    } else if (fullValue >= 1) {
+      // Show up to 4 decimal places for amounts >= 1
+      formatted = fullValue.toFixed(4).replace(/\.?0+$/, '')
+    } else if (fullValue > 0) {
+      // Show up to 8 decimal places for small amounts
+      formatted = fullValue.toFixed(8).replace(/\.?0+$/, '')
+    } else {
+      formatted = '0'
+    }
+
+    // Add negative sign back if needed
+    if (isNegative) {
+      formatted = `-${formatted}`
+    }
+
+    return symbol ? `${formatted} ${symbol}` : formatted
+  } catch {
+    // Fallback for invalid amounts
+    return symbol ? `0 ${symbol}` : '0'
+  }
 }
