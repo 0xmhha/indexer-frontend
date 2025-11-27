@@ -2,7 +2,7 @@
 
 import { gql, useQuery, useSubscription } from '@apollo/client'
 import { useCallback, useEffect } from 'react'
-import { PAGINATION } from '@/lib/config/constants'
+import { PAGINATION, POLLING_INTERVALS } from '@/lib/config/constants'
 import {
   SUBSCRIBE_CONSENSUS_BLOCK,
   SUBSCRIBE_CONSENSUS_ERROR,
@@ -656,7 +656,9 @@ export function useEpochData(epochNumber: string) {
  */
 export function useLatestEpochData() {
   const { data, loading, error, refetch, previousData } = useQuery(GET_LATEST_EPOCH_INFO, {
-    returnPartialData: true,
+    pollInterval: POLLING_INTERVALS.FAST, // 10초마다 자동 업데이트
+    fetchPolicy: 'network-only', // 항상 네트워크에서 최신 데이터 가져오기
+    nextFetchPolicy: 'network-only', // 폴링 시에도 네트워크 우선
     errorPolicy: 'all',
   })
 

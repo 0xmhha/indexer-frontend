@@ -1,7 +1,7 @@
 'use client'
 
 import { gql, useQuery } from '@apollo/client'
-import { PAGINATION } from '@/lib/config/constants'
+import { PAGINATION, POLLING_INTERVALS } from '@/lib/config/constants'
 
 // Query for WBFT block metadata (backend: wbftBlockExtra)
 const GET_WBFT_BLOCK = gql`
@@ -242,7 +242,9 @@ export function useWBFTBlock(blockNumber: string) {
  */
 export function useCurrentEpoch() {
   const { data, loading, error, refetch, previousData } = useQuery(GET_LATEST_EPOCH, {
-    returnPartialData: true,
+    pollInterval: POLLING_INTERVALS.FAST, // 10초마다 자동 업데이트
+    fetchPolicy: 'network-only', // 항상 네트워크에서 최신 데이터 가져오기
+    nextFetchPolicy: 'network-only', // 폴링 시에도 네트워크 우선
     // Silently handle errors for backends that don't support consensus operations
     errorPolicy: 'all',
   })
