@@ -50,9 +50,9 @@ export function ValidatorSigningStatsDashboard({ maxStats = UI.MAX_VIEWER_ITEMS 
     setToBlockFilter('')
   }
 
-  // Calculate aggregate statistics
-  const totalSigned = stats.reduce((sum, stat) => sum + stat.prepareSignCount + stat.commitSignCount, 0)
-  const totalMissed = stats.reduce((sum, stat) => sum + stat.prepareMissCount + stat.commitMissCount, 0)
+  // Calculate aggregate statistics (counts are strings from backend)
+  const totalSigned = stats.reduce((sum, stat) => sum + parseInt(stat.prepareSignCount || '0', 10) + parseInt(stat.commitSignCount || '0', 10), 0)
+  const totalMissed = stats.reduce((sum, stat) => sum + parseInt(stat.prepareMissCount || '0', 10) + parseInt(stat.commitMissCount || '0', 10), 0)
   const avgSigningRate = stats.length > 0
     ? stats.reduce((sum, stat) => sum + stat.signingRate, 0) / stats.length
     : 0
@@ -61,15 +61,34 @@ export function ValidatorSigningStatsDashboard({ maxStats = UI.MAX_VIEWER_ITEMS 
     <div className="space-y-6">
       {/* Statistics Overview */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatCard label="VALIDATORS" value={formatNumber(totalCount)} icon="⚡" color="text-accent-blue" />
+        <StatCard
+          label="VALIDATORS"
+          value={formatNumber(totalCount)}
+          icon="⚡"
+          color="text-accent-blue"
+          tooltip="현재 조회된 밸리데이터의 총 수"
+        />
         <StatCard
           label="AVG SIGNING RATE"
           value={`${avgSigningRate.toFixed(2)}%`}
           icon="📊"
           color="text-accent-green"
+          tooltip="모든 밸리데이터의 평균 서명 성공률 (높을수록 네트워크 참여도가 좋음)"
         />
-        <StatCard label="TOTAL SIGNED" value={formatNumber(totalSigned)} icon="✓" color="text-accent-cyan" />
-        <StatCard label="TOTAL MISSED" value={formatNumber(totalMissed)} icon="⚠️" color="text-accent-red" />
+        <StatCard
+          label="TOTAL SIGNED"
+          value={formatNumber(totalSigned)}
+          icon="✓"
+          color="text-accent-cyan"
+          tooltip="모든 밸리데이터의 Prepare + Commit 서명 성공 횟수 합계"
+        />
+        <StatCard
+          label="TOTAL MISSED"
+          value={formatNumber(totalMissed)}
+          icon="⚠️"
+          color="text-accent-red"
+          tooltip="모든 밸리데이터의 Prepare + Commit 서명 실패 횟수 합계 (낮을수록 좋음)"
+        />
       </div>
 
       {/* Filters and Data Table */}
@@ -148,22 +167,36 @@ function StatCard({
   value,
   icon,
   color,
+  tooltip,
 }: {
   label: string
   value: string
   icon: string
   color: string
+  tooltip?: string
 }) {
   return (
-    <Card>
+    <Card className="group relative">
       <CardContent className="p-6">
         <div className="flex items-start justify-between">
           <div>
-            <div className="annotation mb-2">{label}</div>
+            <div className="annotation mb-2 flex items-center gap-1">
+              {label}
+              {tooltip && (
+                <span className="cursor-help text-text-muted">ⓘ</span>
+              )}
+            </div>
             <div className="font-mono text-2xl font-bold text-accent-blue">{value}</div>
           </div>
           <div className={`font-mono text-3xl ${color}`}>{icon}</div>
         </div>
+        {/* Tooltip */}
+        {tooltip && (
+          <div className="pointer-events-none absolute left-1/2 top-full z-50 mt-2 w-64 -translate-x-1/2 rounded-lg border border-bg-tertiary bg-bg-primary p-3 font-mono text-xs text-text-secondary opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+            <div className="absolute -top-2 left-1/2 -translate-x-1/2 border-8 border-transparent border-b-bg-tertiary" />
+            {tooltip}
+          </div>
+        )}
       </CardContent>
     </Card>
   )
@@ -187,9 +220,13 @@ function ValidatorStatCard({ stat }: { stat: ValidatorSigningStats }) {
   const performanceColor = getPerformanceColor(stat.signingRate)
   const performanceBgColor = getPerformanceBgColor(stat.signingRate)
 
-  // Calculate totals from prepare and commit counts
-  const totalSigned = stat.prepareSignCount + stat.commitSignCount
-  const totalMissed = stat.prepareMissCount + stat.commitMissCount
+  // Calculate totals from prepare and commit counts (counts are strings)
+  const prepareSignCount = parseInt(stat.prepareSignCount || '0', 10)
+  const commitSignCount = parseInt(stat.commitSignCount || '0', 10)
+  const prepareMissCount = parseInt(stat.prepareMissCount || '0', 10)
+  const commitMissCount = parseInt(stat.commitMissCount || '0', 10)
+  const totalSigned = prepareSignCount + commitSignCount
+  const totalMissed = prepareMissCount + commitMissCount
 
   return (
     <div className="p-4 transition-colors hover:bg-bg-secondary">
@@ -227,10 +264,10 @@ function ValidatorStatCard({ stat }: { stat: ValidatorSigningStats }) {
 
         {/* Statistics Grid */}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <StatItem label="Prepare Signs" value={formatNumber(stat.prepareSignCount)} color="text-accent-green" />
-          <StatItem label="Prepare Misses" value={formatNumber(stat.prepareMissCount)} color="text-accent-red" />
-          <StatItem label="Commit Signs" value={formatNumber(stat.commitSignCount)} color="text-accent-green" />
-          <StatItem label="Commit Misses" value={formatNumber(stat.commitMissCount)} color="text-accent-red" />
+          <StatItem label="Prepare Signs" value={formatNumber(prepareSignCount)} color="text-accent-green" />
+          <StatItem label="Prepare Misses" value={formatNumber(prepareMissCount)} color="text-accent-red" />
+          <StatItem label="Commit Signs" value={formatNumber(commitSignCount)} color="text-accent-green" />
+          <StatItem label="Commit Misses" value={formatNumber(commitMissCount)} color="text-accent-red" />
         </div>
 
         {/* Block Range */}

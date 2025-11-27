@@ -189,10 +189,11 @@ export interface ValidatorSigningStats {
   fromBlock: string
   toBlock: string
   signingRate: number
-  prepareSignCount: number
-  prepareMissCount: number
-  commitSignCount: number
-  commitMissCount: number
+  // Count fields are BigInt from backend, serialized as strings
+  prepareSignCount: string
+  prepareMissCount: string
+  commitSignCount: string
+  commitMissCount: string
 }
 
 // Block signers from backend

@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
@@ -10,6 +11,7 @@ import {
   EpochInfoGrid,
   ValidatorsList,
 } from '@/components/wbft/EpochComponents'
+import type { ValidatorDisplayInfo } from '@/lib/hooks/useWBFT'
 
 // ============================================================
 // Epoch Details Card
@@ -30,6 +32,18 @@ function EpochDetailsCard({
   error,
   refetchCurrent,
 }: EpochDetailsCardProps) {
+  // Transform validator indices + BLS keys into ValidatorDisplayInfo[]
+  const validatorDisplayInfos: ValidatorDisplayInfo[] = useMemo(() => {
+    if (!displayedEpoch?.validators) return []
+
+    return displayedEpoch.validators.map((validatorIndex, i) => ({
+      index: validatorIndex,
+      // Backend doesn't provide addresses, use BLS key prefix or index as placeholder
+      address: displayedEpoch.blsPublicKeys?.[i]?.slice(0, 42) || `Validator #${validatorIndex}`,
+      blsPubKey: displayedEpoch.blsPublicKeys?.[i] || '',
+    }))
+  }, [displayedEpoch?.validators, displayedEpoch?.blsPublicKeys])
+
   return (
     <Card>
       <CardHeader className="border-b border-bg-tertiary">
@@ -65,8 +79,8 @@ function EpochDetailsCard({
         ) : (
           <div className="space-y-6 p-6">
             <EpochInfoGrid epoch={displayedEpoch} />
-            {displayedEpoch.validators && displayedEpoch.validators.length > 0 && (
-              <ValidatorsList validators={displayedEpoch.validators as any} />
+            {validatorDisplayInfos.length > 0 && (
+              <ValidatorsList validators={validatorDisplayInfos} />
             )}
           </div>
         )}

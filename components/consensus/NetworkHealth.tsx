@@ -44,15 +44,15 @@ export function NetworkHealthStatus() {
   const statusIcon = useMemo(() => {
     switch (networkHealth.status) {
       case 'excellent':
-        return '\u{1F7E2}' // 🟢
+        return '🟢'
       case 'good':
-        return '\u{1F7E1}' // 🟡
+        return '🟡'
       case 'fair':
-        return '\u{1F7E0}' // 🟠
+        return '🟠'
       case 'poor':
-        return '\u{1F534}' // 🔴
+        return '🔴'
       default:
-        return '\u26AA' // ⚪
+        return '⚪'
     }
   }, [networkHealth.status])
 

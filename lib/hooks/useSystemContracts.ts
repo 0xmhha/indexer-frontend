@@ -273,10 +273,10 @@ const GET_AUTHORIZED_ACCOUNTS = gql`
 // GraphQL Queries - Common Governance
 // ============================================================================
 
-// Backend uses ProposalFilter: { contract (required), status, proposer }
+// Backend uses ProposalFilter: { contract (nullable), status, proposer }
 const GET_PROPOSALS = gql`
   query GetProposals(
-    $contract: String!
+    $contract: String
     $status: ProposalStatus
     $proposer: String
     $limit: Int
@@ -883,11 +883,12 @@ export function useDepositMintProposals(params: {
   toBlock?: string
   status?: ProposalStatus
 } = {}) {
-  const { fromBlock = '0', toBlock = '999999999', status = 'all' } = params
+  const { fromBlock = '0', toBlock = '999999999', status } = params
 
   const { data, loading, error, refetch, previousData } = useQuery(GET_DEPOSIT_MINT_PROPOSALS, {
     variables: { fromBlock, toBlock, status },
     returnPartialData: true,
+    errorPolicy: 'all',
   })
 
   const effectiveData = data ?? previousData
@@ -903,6 +904,7 @@ export function useDepositMintProposals(params: {
 
 /**
  * Hook to fetch burn history with external TX IDs
+ * Note: Uses burnEvents query since burnHistory is not exposed in backend
  */
 export function useBurnHistory(params: {
   fromBlock?: string
@@ -915,18 +917,32 @@ export function useBurnHistory(params: {
     variables: {
       fromBlock,
       toBlock,
-      ...(user && { user }),
+      address: user,
     },
     returnPartialData: true,
+    errorPolicy: 'all',
   })
 
   const effectiveData = data ?? previousData
-  const history: BurnHistoryEvent[] = effectiveData?.burnHistory ?? []
+  const burnEventsData = effectiveData?.burnEvents
+
+  // Transform to BurnHistoryEvent format
+  const history: BurnHistoryEvent[] = (burnEventsData?.nodes ?? []).map((e: BurnEvent) => ({
+    blockNumber: e.blockNumber,
+    transactionHash: e.transactionHash,
+    burner: e.burner,
+    amount: e.amount,
+    withdrawalId: e.withdrawalId,
+    timestamp: e.timestamp,
+    txHash: e.transactionHash,
+    burnTxId: e.withdrawalId,
+  }))
 
   return {
     history,
+    totalCount: burnEventsData?.totalCount ?? 0,
     loading,
-    error,
+    error: isUnsupportedQueryError(error) ? undefined : error,
     refetch,
   }
 }
@@ -1005,14 +1021,15 @@ export function useAuthorizedAccounts() {
  * Hook to fetch governance proposals
  * Uses ProposalFilter with pagination
  * Accepts ProposalStatusFilter for UI convenience (converts to backend ProposalStatus)
+ * contract is now optional (nullable in backend ProposalFilter)
  */
 export function useProposals(params: {
-  contract: string
+  contract?: string
   status?: ProposalStatusFilter
   proposer?: string
   limit?: number
   offset?: number
-}) {
+} = {}) {
   const {
     contract,
     status,
@@ -1026,7 +1043,6 @@ export function useProposals(params: {
 
   const { data, loading, error, refetch, fetchMore, previousData } = useQuery(GET_PROPOSALS, {
     variables: { contract, status: backendStatus, proposer, limit, offset },
-    skip: !contract,
     returnPartialData: true,
     errorPolicy: 'all',
   })

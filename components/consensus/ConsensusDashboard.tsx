@@ -76,13 +76,13 @@ export function ConsensusDashboard() {
           title="Current Epoch"
           value={epochLoading ? '...' : latestEpochData?.epochNumber || 'N/A'}
           status="info"
-          icon="\u{1F4C5}"
+          icon="📅"
         />
         <ConsensusStatusCard
           title="Active Validators"
           value={epochLoading ? '...' : formatNumber(latestEpochData?.validatorCount || 0)}
           status="success"
-          icon="\u2713"
+          icon="✓"
         />
         <ConsensusStatusCard
           title="Avg Participation"
@@ -94,7 +94,7 @@ export function ConsensusDashboard() {
                 : 'N/A'
           }
           status={stats.averageParticipation >= 90 ? 'success' : stats.averageParticipation >= 75 ? 'warning' : 'danger'}
-          icon="\u{1F4CA}"
+          icon="📊"
         />
         <ConsensusStatusCard
           title="Health Score"
@@ -108,7 +108,7 @@ export function ConsensusDashboard() {
                   ? 'warning'
                   : 'danger'
           }
-          icon={networkHealth.status === 'excellent' ? '\u{1F7E2}' : networkHealth.status === 'good' ? '\u{1F7E1}' : networkHealth.status === 'fair' ? '\u{1F7E0}' : '\u{1F534}'}
+          icon={networkHealth.status === 'excellent' ? '🟢' : networkHealth.status === 'good' ? '🟡' : networkHealth.status === 'fair' ? '🟠' : '🔴'}
         />
       </div>
 
@@ -164,21 +164,21 @@ export function ConsensusDashboard() {
                   className="flex items-center justify-between rounded border border-bg-tertiary p-3 font-mono text-sm text-text-secondary transition-colors hover:border-accent-blue hover:text-accent-blue"
                 >
                   <span>All Validators</span>
-                  <span>\u2192</span>
+                  <span>→</span>
                 </Link>
                 <Link
                   href="/epochs"
                   className="flex items-center justify-between rounded border border-bg-tertiary p-3 font-mono text-sm text-text-secondary transition-colors hover:border-accent-blue hover:text-accent-blue"
                 >
                   <span>Epoch History</span>
-                  <span>\u2192</span>
+                  <span>→</span>
                 </Link>
                 <Link
                   href="/blocks"
                   className="flex items-center justify-between rounded border border-bg-tertiary p-3 font-mono text-sm text-text-secondary transition-colors hover:border-accent-blue hover:text-accent-blue"
                 >
                   <span>Block Explorer</span>
-                  <span>\u2192</span>
+                  <span>→</span>
                 </Link>
               </div>
             </CardContent>
@@ -268,7 +268,7 @@ function EpochInfoPanel({ epochData, loading, error }: EpochInfoPanelProps) {
             href={`/epochs/${epochData.epochNumber}`}
             className="font-mono text-xs text-accent-blue hover:underline"
           >
-            Details \u2192
+            Details →
           </Link>
         </div>
       </CardHeader>
