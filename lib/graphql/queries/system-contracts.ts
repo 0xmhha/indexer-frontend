@@ -147,3 +147,81 @@ export const GET_BLACKLISTED_ADDRESSES = gql`
     blacklistedAddresses
   }
 `
+
+// ============================================================================
+// Deposit Mint Proposal Queries (GovMinter)
+// ============================================================================
+
+export const GET_DEPOSIT_MINT_PROPOSALS = gql`
+  query GetDepositMintProposals($filter: SystemContractEventFilter!, $status: ProposalStatus) {
+    depositMintProposals(filter: $filter, status: $status) {
+      proposalId
+      requester
+      beneficiary
+      amount
+      depositId
+      bankReference
+      status
+      blockNumber
+      transactionHash
+      timestamp
+    }
+  }
+`
+
+// ============================================================================
+// MaxProposalsUpdate Queries (GovBase 공통)
+// ============================================================================
+
+export const GET_MAX_PROPOSALS_UPDATE_HISTORY = gql`
+  query GetMaxProposalsUpdateHistory($contract: Address!) {
+    maxProposalsUpdateHistory(contract: $contract) {
+      contract
+      blockNumber
+      transactionHash
+      oldMax
+      newMax
+      timestamp
+    }
+  }
+`
+
+// ============================================================================
+// ProposalExecutionSkipped Queries (GovCouncil)
+// ============================================================================
+
+export const GET_PROPOSAL_EXECUTION_SKIPPED = gql`
+  query GetProposalExecutionSkippedEvents($contract: Address!, $proposalId: BigInt) {
+    proposalExecutionSkippedEvents(contract: $contract, proposalId: $proposalId) {
+      contract
+      blockNumber
+      transactionHash
+      account
+      proposalId
+      reason
+      timestamp
+    }
+  }
+`
+
+// ============================================================================
+// System Contract Event Subscriptions (WebSocket)
+// ============================================================================
+
+/**
+ * Subscribe to all system contract events
+ * Filter by contract address and/or event types
+ */
+export const SYSTEM_CONTRACT_EVENTS_SUBSCRIPTION = gql`
+  subscription SystemContractEvents($filter: SystemContractSubscriptionFilter) {
+    systemContractEvents(filter: $filter) {
+      contract
+      eventName
+      blockNumber
+      transactionHash
+      logIndex
+      data
+      timestamp
+    }
+  }
+`

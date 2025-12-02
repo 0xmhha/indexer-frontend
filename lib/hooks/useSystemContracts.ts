@@ -1,6 +1,6 @@
 'use client'
 
-import { gql, useQuery } from '@apollo/client'
+import { gql, useQuery, useSubscription } from '@apollo/client'
 import { PAGINATION } from '@/lib/config/constants'
 
 // ============================================================================
@@ -207,9 +207,11 @@ const GET_DEPOSIT_MINT_PROPOSALS = gql`
       status: $status
     ) {
       proposalId
-      to
+      requester
+      beneficiary
       amount
       depositId
+      bankReference
       status
       blockNumber
       transactionHash
@@ -266,6 +268,41 @@ const GET_BLACKLIST_HISTORY = gql`
 const GET_AUTHORIZED_ACCOUNTS = gql`
   query GetAuthorizedAccounts {
     authorizedAccounts
+  }
+`
+
+// ============================================================================
+// GraphQL Queries - MaxProposalsUpdate (GovBase 공통)
+// ============================================================================
+
+const GET_MAX_PROPOSALS_UPDATE_HISTORY = gql`
+  query GetMaxProposalsUpdateHistory($contract: String!) {
+    maxProposalsUpdateHistory(contract: $contract) {
+      contract
+      blockNumber
+      transactionHash
+      oldMax
+      newMax
+      timestamp
+    }
+  }
+`
+
+// ============================================================================
+// GraphQL Queries - ProposalExecutionSkipped (GovCouncil)
+// ============================================================================
+
+const GET_PROPOSAL_EXECUTION_SKIPPED = gql`
+  query GetProposalExecutionSkippedEvents($contract: String!, $proposalId: String) {
+    proposalExecutionSkippedEvents(contract: $contract, proposalId: $proposalId) {
+      contract
+      blockNumber
+      transactionHash
+      account
+      proposalId
+      reason
+      timestamp
+    }
   }
 `
 
@@ -433,9 +470,11 @@ export interface EmergencyPauseEvent {
 
 export interface DepositMintProposal {
   proposalId: string
-  to: string
+  requester: string      // 제안을 생성한 멤버 주소
+  beneficiary: string    // 토큰을 받을 수신자 주소 (기존 to 대체)
   amount: string
   depositId: string
+  bankReference: string  // 은행 참조번호
   status: ProposalStatus
   blockNumber: string
   transactionHash: string
@@ -462,6 +501,44 @@ export interface BlacklistEvent {
   proposalId?: string
   timestamp: string
 }
+
+// MaxProposalsUpdate Event (GovBase 공통)
+export interface MaxProposalsUpdateEvent {
+  contract: string
+  blockNumber: string
+  transactionHash: string
+  oldMax: string
+  newMax: string
+  timestamp: string
+}
+
+// ProposalExecutionSkipped Event (GovCouncil)
+export interface ProposalExecutionSkippedEvent {
+  contract: string
+  blockNumber: string
+  transactionHash: string
+  account: string
+  proposalId: string
+  reason: string
+  timestamp: string
+}
+
+/**
+ * Possible reason values for ProposalExecutionSkippedEvent:
+ * - ALREADY_BLACKLISTED: 이미 블랙리스트에 있음
+ * - NOT_IN_BLACKLIST: 블랙리스트에 없음
+ * - ALREADY_AUTHORIZED: 이미 인가됨
+ * - NOT_AUTHORIZED: 인가되지 않음
+ * - GovCouncil: blacklist call failed: 블랙리스트 호출 실패
+ * - GovCouncil: authorize call failed: 인가 호출 실패
+ */
+export type ProposalExecutionSkippedReason =
+  | 'ALREADY_BLACKLISTED'
+  | 'NOT_IN_BLACKLIST'
+  | 'ALREADY_AUTHORIZED'
+  | 'NOT_AUTHORIZED'
+  | 'GovCouncil: blacklist call failed'
+  | 'GovCouncil: authorize call failed'
 
 // Legacy alias with mapped fields
 export interface BlacklistHistoryEvent {
@@ -1014,6 +1091,62 @@ export function useAuthorizedAccounts() {
 }
 
 // ============================================================================
+// React Hooks - MaxProposalsUpdate (GovBase 공통)
+// ============================================================================
+
+/**
+ * Hook to fetch max proposals update history for a governance contract
+ * Returns history of changes to the maximum number of proposals per member
+ */
+export function useMaxProposalsUpdateHistory(contract: string) {
+  const { data, loading, error, refetch, previousData } = useQuery(GET_MAX_PROPOSALS_UPDATE_HISTORY, {
+    variables: { contract },
+    skip: !contract,
+    returnPartialData: true,
+    errorPolicy: 'all',
+  })
+
+  const effectiveData = data ?? previousData
+  const history: MaxProposalsUpdateEvent[] = effectiveData?.maxProposalsUpdateHistory ?? []
+
+  return {
+    history,
+    loading,
+    error: isUnsupportedQueryError(error) ? undefined : error,
+    refetch,
+  }
+}
+
+// ============================================================================
+// React Hooks - ProposalExecutionSkipped (GovCouncil)
+// ============================================================================
+
+/**
+ * Hook to fetch proposal execution skipped events
+ * Returns events when proposal execution was skipped due to conditions not being met
+ * @param contract - The contract address
+ * @param proposalId - Optional proposal ID to filter by
+ */
+export function useProposalExecutionSkipped(contract: string, proposalId?: string) {
+  const { data, loading, error, refetch, previousData } = useQuery(GET_PROPOSAL_EXECUTION_SKIPPED, {
+    variables: { contract, proposalId },
+    skip: !contract,
+    returnPartialData: true,
+    errorPolicy: 'all',
+  })
+
+  const effectiveData = data ?? previousData
+  const events: ProposalExecutionSkippedEvent[] = effectiveData?.proposalExecutionSkippedEvents ?? []
+
+  return {
+    events,
+    loading,
+    error: isUnsupportedQueryError(error) ? undefined : error,
+    refetch,
+  }
+}
+
+// ============================================================================
 // React Hooks - Common Governance
 // ============================================================================
 
@@ -1193,4 +1326,211 @@ export function getProposalStatusColor(status: ProposalStatus | ProposalStatusFi
     REJECTED: 'text-accent-red',
   }
   return colors[status] || 'text-text-secondary'
+}
+
+// ============================================================================
+// GraphQL Subscription - System Contract Events (WebSocket)
+// ============================================================================
+
+const SYSTEM_CONTRACT_EVENTS_SUBSCRIPTION = gql`
+  subscription SystemContractEvents($filter: SystemContractSubscriptionFilter) {
+    systemContractEvents(filter: $filter) {
+      contract
+      eventName
+      blockNumber
+      transactionHash
+      logIndex
+      data
+      timestamp
+    }
+  }
+`
+
+// ============================================================================
+// Subscription Types
+// ============================================================================
+
+/**
+ * Filter for system contract event subscriptions
+ */
+export interface SystemContractSubscriptionFilter {
+  /** Filter by specific contract address (optional) */
+  contract?: string
+  /** Filter by specific event types (optional) */
+  eventTypes?: string[]
+}
+
+/**
+ * System contract event message received via WebSocket subscription
+ */
+export interface SystemContractEventMessage {
+  contract: string
+  eventName: string
+  blockNumber: string
+  transactionHash: string
+  logIndex: number
+  data: string  // JSON string - needs JSON.parse()
+  timestamp: string
+}
+
+/**
+ * Parsed system contract event with typed data
+ */
+export interface ParsedSystemContractEvent<T = Record<string, unknown>> {
+  contract: string
+  eventName: string
+  blockNumber: string
+  transactionHash: string
+  logIndex: number
+  data: T
+  timestamp: string
+}
+
+// ============================================================================
+// React Hooks - System Contract Event Subscriptions
+// ============================================================================
+
+/**
+ * Parse the data field from a SystemContractEventMessage
+ * @param message - The event message with JSON data string
+ * @returns Parsed event with typed data
+ */
+export function parseSystemContractEvent<T = Record<string, unknown>>(
+  message: SystemContractEventMessage
+): ParsedSystemContractEvent<T> {
+  let parsedData: T
+  try {
+    parsedData = JSON.parse(message.data) as T
+  } catch {
+    parsedData = {} as T
+  }
+
+  return {
+    contract: message.contract,
+    eventName: message.eventName,
+    blockNumber: message.blockNumber,
+    transactionHash: message.transactionHash,
+    logIndex: message.logIndex,
+    data: parsedData,
+    timestamp: message.timestamp,
+  }
+}
+
+/**
+ * Hook to subscribe to system contract events via WebSocket
+ *
+ * @example
+ * // Subscribe to all events
+ * const { event, loading, error } = useSystemContractEvents()
+ *
+ * @example
+ * // Subscribe to specific contract events
+ * const { event } = useSystemContractEvents({
+ *   contract: SYSTEM_CONTRACTS.NativeCoinAdapter
+ * })
+ *
+ * @example
+ * // Subscribe to specific event types
+ * const { event } = useSystemContractEvents({
+ *   eventTypes: ['Mint', 'Burn']
+ * })
+ *
+ * @example
+ * // Subscribe with callback
+ * const { event } = useSystemContractEvents({
+ *   eventTypes: ['ProposalCreated', 'ProposalVoted'],
+ *   onEvent: (event) => {
+ *     console.log('New event:', event.eventName, event.data)
+ *   }
+ * })
+ */
+export function useSystemContractEvents(params: {
+  contract?: string
+  eventTypes?: string[]
+  onEvent?: (event: ParsedSystemContractEvent) => void
+  skip?: boolean
+} = {}) {
+  const { contract, eventTypes, onEvent, skip = false } = params
+
+  const { data, loading, error } = useSubscription<{
+    systemContractEvents: SystemContractEventMessage
+  }>(SYSTEM_CONTRACT_EVENTS_SUBSCRIPTION, {
+    variables: {
+      filter: {
+        ...(contract && { contract }),
+        ...(eventTypes && eventTypes.length > 0 && { eventTypes }),
+      },
+    },
+    skip,
+    onData: ({ data: subscriptionData }) => {
+      if (subscriptionData?.data?.systemContractEvents && onEvent) {
+        const parsedEvent = parseSystemContractEvent(subscriptionData.data.systemContractEvents)
+        onEvent(parsedEvent)
+      }
+    },
+  })
+
+  const rawEvent = data?.systemContractEvents
+  const event = rawEvent ? parseSystemContractEvent(rawEvent) : null
+
+  return {
+    event,
+    rawEvent,
+    loading,
+    error,
+  }
+}
+
+/**
+ * Hook to subscribe to mint/burn events from NativeCoinAdapter
+ */
+export function useMintBurnEvents(params: {
+  onEvent?: (event: ParsedSystemContractEvent) => void
+  skip?: boolean
+} = {}) {
+  return useSystemContractEvents({
+    contract: SYSTEM_CONTRACTS.NativeCoinAdapter,
+    eventTypes: ['Mint', 'Burn'],
+    ...params,
+  })
+}
+
+/**
+ * Hook to subscribe to governance proposal events
+ */
+export function useGovernanceEvents(params: {
+  contract?: string
+  onEvent?: (event: ParsedSystemContractEvent) => void
+  skip?: boolean
+} = {}) {
+  const { contract, onEvent, skip } = params
+  return useSystemContractEvents({
+    ...(contract && { contract }),
+    eventTypes: [
+      'ProposalCreated',
+      'ProposalVoted',
+      'ProposalApproved',
+      'ProposalRejected',
+      'ProposalExecuted',
+      'ProposalFailed',
+      'ProposalExpired',
+      'ProposalCancelled',
+    ],
+    ...(onEvent && { onEvent }),
+    ...(skip !== undefined && { skip }),
+  })
+}
+
+/**
+ * Hook to subscribe to blacklist events from GovCouncil
+ */
+export function useBlacklistEvents(params: {
+  onEvent?: (event: ParsedSystemContractEvent) => void
+  skip?: boolean
+} = {}) {
+  return useSystemContractEvents({
+    contract: SYSTEM_CONTRACTS.GovCouncil,
+    eventTypes: ['AddressBlacklisted', 'AddressUnblacklisted'],
+    ...params,
+  })
 }
