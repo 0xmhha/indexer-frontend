@@ -225,3 +225,87 @@ export const SYSTEM_CONTRACT_EVENTS_SUBSCRIPTION = gql`
     }
   }
 `
+
+// ============================================================================
+// Dynamic Contract Registration
+// ============================================================================
+
+/**
+ * Register a new contract for event indexing
+ */
+export const REGISTER_CONTRACT = gql`
+  mutation RegisterContract($input: RegisterContractInput!) {
+    registerContract(input: $input) {
+      address
+      name
+      abi
+      registeredAt
+      blockNumber
+      isVerified
+      events
+    }
+  }
+`
+
+/**
+ * Unregister a contract from event indexing
+ */
+export const UNREGISTER_CONTRACT = gql`
+  mutation UnregisterContract($address: Address!) {
+    unregisterContract(address: $address)
+  }
+`
+
+/**
+ * Get all registered contracts
+ */
+export const GET_REGISTERED_CONTRACTS = gql`
+  query GetRegisteredContracts {
+    registeredContracts {
+      address
+      name
+      events
+      isVerified
+      registeredAt
+    }
+  }
+`
+
+/**
+ * Get a specific registered contract by address
+ */
+export const GET_REGISTERED_CONTRACT = gql`
+  query GetRegisteredContract($address: Address!) {
+    registeredContract(address: $address) {
+      address
+      name
+      abi
+      events
+      isVerified
+      registeredAt
+    }
+  }
+`
+
+// ============================================================================
+// Dynamic Contract Event Subscriptions (WebSocket)
+// ============================================================================
+
+/**
+ * Subscribe to events from dynamically registered contracts
+ * Filter by contract address and/or event names
+ */
+export const DYNAMIC_CONTRACT_EVENTS_SUBSCRIPTION = gql`
+  subscription DynamicContractEvents($filter: DynamicContractSubscriptionFilter) {
+    dynamicContractEvents(filter: $filter) {
+      contract
+      contractName
+      eventName
+      blockNumber
+      txHash
+      logIndex
+      data
+      timestamp
+    }
+  }
+`

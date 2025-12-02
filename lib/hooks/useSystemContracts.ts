@@ -1,6 +1,6 @@
 'use client'
 
-import { gql, useQuery, useSubscription } from '@apollo/client'
+import { gql, useQuery, useSubscription, useMutation } from '@apollo/client'
 import { PAGINATION } from '@/lib/config/constants'
 
 // ============================================================================
@@ -1533,4 +1533,331 @@ export function useBlacklistEvents(params: {
     eventTypes: ['AddressBlacklisted', 'AddressUnblacklisted'],
     ...params,
   })
+}
+
+// ============================================================================
+// GraphQL Operations - Dynamic Contract Registration
+// ============================================================================
+
+const REGISTER_CONTRACT = gql`
+  mutation RegisterContract($input: RegisterContractInput!) {
+    registerContract(input: $input) {
+      address
+      name
+      abi
+      registeredAt
+      blockNumber
+      isVerified
+      events
+    }
+  }
+`
+
+const UNREGISTER_CONTRACT = gql`
+  mutation UnregisterContract($address: String!) {
+    unregisterContract(address: $address)
+  }
+`
+
+const GET_REGISTERED_CONTRACTS = gql`
+  query GetRegisteredContracts {
+    registeredContracts {
+      address
+      name
+      events
+      isVerified
+      registeredAt
+    }
+  }
+`
+
+const GET_REGISTERED_CONTRACT = gql`
+  query GetRegisteredContract($address: String!) {
+    registeredContract(address: $address) {
+      address
+      name
+      abi
+      events
+      isVerified
+      registeredAt
+    }
+  }
+`
+
+const DYNAMIC_CONTRACT_EVENTS_SUBSCRIPTION = gql`
+  subscription DynamicContractEvents($filter: DynamicContractSubscriptionFilter) {
+    dynamicContractEvents(filter: $filter) {
+      contract
+      contractName
+      eventName
+      blockNumber
+      txHash
+      logIndex
+      data
+      timestamp
+    }
+  }
+`
+
+// ============================================================================
+// Dynamic Contract Types
+// ============================================================================
+
+/**
+ * Input for registering a dynamic contract
+ */
+export interface RegisterContractInput {
+  /** Contract address to register */
+  address: string
+  /** Contract name */
+  name: string
+  /** Contract ABI as JSON string */
+  abi: string
+  /** Optional starting block number (defaults to current block) */
+  blockNumber?: string
+}
+
+/**
+ * Registered contract information
+ */
+export interface RegisteredContract {
+  address: string
+  name: string
+  abi?: string
+  blockNumber?: string
+  isVerified: boolean
+  registeredAt: string
+  events: string[]
+}
+
+/**
+ * Filter for dynamic contract event subscriptions
+ */
+export interface DynamicContractSubscriptionFilter {
+  /** Filter by specific contract address (optional) */
+  contract?: string
+  /** Filter by specific event names (optional) */
+  eventNames?: string[]
+}
+
+/**
+ * Dynamic contract event message received via WebSocket subscription
+ */
+export interface DynamicContractEventMessage {
+  contract: string
+  contractName: string
+  eventName: string
+  blockNumber: string
+  txHash: string
+  logIndex: number
+  data: string  // JSON string - needs JSON.parse()
+  timestamp: string
+}
+
+/**
+ * Parsed dynamic contract event with typed data
+ */
+export interface ParsedDynamicContractEvent<T = Record<string, unknown>> {
+  contract: string
+  contractName: string
+  eventName: string
+  blockNumber: string
+  txHash: string
+  logIndex: number
+  data: T
+  timestamp: string
+}
+
+// ============================================================================
+// React Hooks - Dynamic Contract Registration
+// ============================================================================
+
+/**
+ * Parse the data field from a DynamicContractEventMessage
+ * @param message - The event message with JSON data string
+ * @returns Parsed event with typed data
+ */
+export function parseDynamicContractEvent<T = Record<string, unknown>>(
+  message: DynamicContractEventMessage
+): ParsedDynamicContractEvent<T> {
+  let parsedData: T
+  try {
+    parsedData = JSON.parse(message.data) as T
+  } catch {
+    parsedData = {} as T
+  }
+
+  return {
+    contract: message.contract,
+    contractName: message.contractName,
+    eventName: message.eventName,
+    blockNumber: message.blockNumber,
+    txHash: message.txHash,
+    logIndex: message.logIndex,
+    data: parsedData,
+    timestamp: message.timestamp,
+  }
+}
+
+/**
+ * Hook to manage contract registration
+ *
+ * @example
+ * const { registerContract, unregisterContract, loading, error } = useContractRegistration()
+ *
+ * // Register a new contract
+ * await registerContract({
+ *   address: '0x...',
+ *   abi: JSON.stringify(contractAbi),
+ *   name: 'MyToken'
+ * })
+ *
+ * // Unregister a contract
+ * await unregisterContract('0x...')
+ */
+export function useContractRegistration() {
+  const [registerMutation, { loading: registerLoading, error: registerError }] =
+    useMutation<{ registerContract: RegisteredContract }>(REGISTER_CONTRACT)
+
+  const [unregisterMutation, { loading: unregisterLoading, error: unregisterError }] =
+    useMutation<{ unregisterContract: boolean }>(UNREGISTER_CONTRACT)
+
+  const registerContract = async (input: RegisterContractInput) => {
+    const result = await registerMutation({
+      variables: { input },
+      refetchQueries: [{ query: GET_REGISTERED_CONTRACTS }],
+    })
+    return result.data?.registerContract
+  }
+
+  const unregisterContract = async (address: string) => {
+    const result = await unregisterMutation({
+      variables: { address },
+      refetchQueries: [{ query: GET_REGISTERED_CONTRACTS }],
+    })
+    return result.data?.unregisterContract
+  }
+
+  return {
+    registerContract,
+    unregisterContract,
+    loading: registerLoading || unregisterLoading,
+    error: registerError || unregisterError,
+  }
+}
+
+/**
+ * Hook to fetch all registered contracts
+ *
+ * @example
+ * const { contracts, loading, error, refetch } = useRegisteredContracts()
+ */
+export function useRegisteredContracts() {
+  const { data, loading, error, refetch, previousData } = useQuery<{
+    registeredContracts: RegisteredContract[]
+  }>(GET_REGISTERED_CONTRACTS, {
+    returnPartialData: true,
+    errorPolicy: 'all',
+  })
+
+  const effectiveData = data ?? previousData
+  const contracts: RegisteredContract[] = effectiveData?.registeredContracts ?? []
+
+  return {
+    contracts,
+    loading,
+    error: isUnsupportedQueryError(error) ? undefined : error,
+    refetch,
+  }
+}
+
+/**
+ * Hook to fetch a specific registered contract
+ *
+ * @example
+ * const { contract, loading, error } = useRegisteredContract('0x...')
+ */
+export function useRegisteredContract(address: string) {
+  const { data, loading, error, refetch, previousData } = useQuery<{
+    registeredContract: RegisteredContract | null
+  }>(GET_REGISTERED_CONTRACT, {
+    variables: { address },
+    skip: !address,
+    returnPartialData: true,
+    errorPolicy: 'all',
+  })
+
+  const effectiveData = data ?? previousData
+  const contract = effectiveData?.registeredContract ?? null
+
+  return {
+    contract,
+    loading,
+    error: isUnsupportedQueryError(error) ? undefined : error,
+    refetch,
+  }
+}
+
+/**
+ * Hook to subscribe to events from dynamically registered contracts
+ *
+ * @example
+ * // Subscribe to all dynamic contract events
+ * const { event, loading, error } = useDynamicContractEvents()
+ *
+ * @example
+ * // Subscribe to specific contract events
+ * const { event } = useDynamicContractEvents({
+ *   contract: '0x...'
+ * })
+ *
+ * @example
+ * // Subscribe to specific event types
+ * const { event } = useDynamicContractEvents({
+ *   eventNames: ['Transfer', 'Approval']
+ * })
+ *
+ * @example
+ * // Subscribe with callback
+ * const { event } = useDynamicContractEvents({
+ *   onEvent: (event) => {
+ *     console.log('New event:', event.eventName, event.data)
+ *   }
+ * })
+ */
+export function useDynamicContractEvents(params: {
+  contract?: string
+  eventNames?: string[]
+  onEvent?: (event: ParsedDynamicContractEvent) => void
+  skip?: boolean
+} = {}) {
+  const { contract, eventNames, onEvent, skip = false } = params
+
+  const { data, loading, error } = useSubscription<{
+    dynamicContractEvents: DynamicContractEventMessage
+  }>(DYNAMIC_CONTRACT_EVENTS_SUBSCRIPTION, {
+    variables: {
+      filter: {
+        ...(contract && { contract }),
+        ...(eventNames && eventNames.length > 0 && { eventNames }),
+      },
+    },
+    skip,
+    onData: ({ data: subscriptionData }) => {
+      if (subscriptionData?.data?.dynamicContractEvents && onEvent) {
+        const parsedEvent = parseDynamicContractEvent(subscriptionData.data.dynamicContractEvents)
+        onEvent(parsedEvent)
+      }
+    },
+  })
+
+  const rawEvent = data?.dynamicContractEvents
+  const event = rawEvent ? parseDynamicContractEvent(rawEvent) : null
+
+  return {
+    event,
+    rawEvent,
+    loading,
+    error,
+  }
 }

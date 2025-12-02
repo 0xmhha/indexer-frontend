@@ -320,6 +320,8 @@ export type SystemContractEventName =
   | 'MinterConfigured'
   | 'MinterRemoved'
   | 'MasterMinterChanged'
+  | 'Transfer'
+  | 'Approval'
   // GovBase common events
   | 'ProposalCreated'
   | 'ProposalVoted'
@@ -366,6 +368,7 @@ export interface MintEventData {
 export interface BurnEventData {
   burner: string
   amount: string
+  withdrawalId?: string
 }
 
 /** MinterConfigured event data */
@@ -390,7 +393,8 @@ export interface ProposalCreatedEventData {
   proposer: string
   actionType: string
   memberVersion: string
-  requiredApprovals: number
+  requiredApprovals: string
+  callData: string
 }
 
 /** ProposalVoted event data */
@@ -398,6 +402,8 @@ export interface ProposalVotedEventData {
   proposalId: string
   voter: string
   approval: boolean
+  approved: string
+  rejected: string
 }
 
 /** ProposalApproved event data */
@@ -479,6 +485,7 @@ export interface EmergencyPauseEventData {
 /** DepositMintProposed event data */
 export interface DepositMintProposedEventData {
   proposalId: string
+  depositId: string
   requester: string
   beneficiary: string
   amount: string
@@ -515,4 +522,115 @@ export interface ProposalExecutionSkippedEventData {
   account: string
   proposalId: string
   reason: ProposalExecutionSkippedReason
+}
+
+/** Transfer event data (ERC20) */
+export interface TransferEventData {
+  from: string
+  to: string
+  value: string
+}
+
+/** Approval event data (ERC20) */
+export interface ApprovalEventData {
+  owner: string
+  spender: string
+  value: string
+}
+
+// ============================================================================
+// Dynamic Contract Registration
+// ============================================================================
+
+/**
+ * Input for registering a dynamic contract
+ */
+export interface RegisterContractInput {
+  /** Contract address to register */
+  address: string
+  /** Contract name */
+  name: string
+  /** Contract ABI as JSON string */
+  abi: string
+  /** Optional starting block number (defaults to current block) */
+  blockNumber?: string
+}
+
+/**
+ * Registered contract information
+ */
+export interface RegisteredContract {
+  /** Contract address */
+  address: string
+  /** Contract name */
+  name: string
+  /** Contract ABI as JSON string */
+  abi: string
+  /** Block number from which events are being indexed */
+  blockNumber: string
+  /** Whether the contract is verified */
+  isVerified: boolean
+  /** Registration timestamp */
+  registeredAt: string
+  /** Event names that can be emitted */
+  events: string[]
+}
+
+/**
+ * Parsed registered contract with proper types
+ */
+export interface ParsedRegisteredContract {
+  address: string
+  name: string
+  abi: string
+  blockNumber: bigint
+  isVerified: boolean
+  registeredAt: bigint
+  events: string[]
+}
+
+/**
+ * Filter for dynamic contract event subscriptions
+ */
+export interface DynamicContractSubscriptionFilter {
+  /** Filter by specific contract address (optional) */
+  contract?: string
+  /** Filter by specific event names (optional) */
+  eventNames?: string[]
+}
+
+/**
+ * Dynamic contract event message received via WebSocket subscription
+ */
+export interface DynamicContractEventMessage {
+  /** Contract address where the event occurred */
+  contract: string
+  /** Contract name */
+  contractName: string
+  /** Event name */
+  eventName: string
+  /** Block number where the event was emitted */
+  blockNumber: string
+  /** Transaction hash */
+  txHash: string
+  /** Log index within the transaction */
+  logIndex: number
+  /** Event data as JSON string - needs JSON.parse() */
+  data: string
+  /** Event timestamp */
+  timestamp: string
+}
+
+/**
+ * Parsed dynamic contract event with typed data
+ */
+export interface ParsedDynamicContractEvent<T = Record<string, unknown>> {
+  contract: string
+  contractName: string
+  eventName: string
+  blockNumber: bigint
+  txHash: string
+  logIndex: number
+  data: T
+  timestamp: bigint
 }
