@@ -1,11 +1,8 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { useSubscription, useQuery } from '@apollo/client'
 import {
-  SUBSCRIBE_NEW_BLOCK,
-  SUBSCRIBE_NEW_TRANSACTION,
-  SUBSCRIBE_PENDING_TRANSACTIONS,
   SUBSCRIBE_LOGS,
   SUBSCRIBE_CHAIN_CONFIG,
   SUBSCRIBE_VALIDATOR_SET,
@@ -21,7 +18,6 @@ import type {
   RawBlock,
   Block,
   RawTransaction,
-  Transaction,
   RawLog,
   Log,
   RawChainConfigChange,
@@ -31,6 +27,14 @@ import type {
 } from '@/types/graphql'
 import { env } from '@/lib/config/env'
 import { REALTIME } from '@/lib/config/constants'
+import {
+  useRealtimeStore,
+  selectRecentBlocks,
+  selectLatestBlock,
+  selectRecentTransactions,
+  selectPendingTransactions,
+  selectIsConnected,
+} from '@/stores/realtimeStore'
 
 /**
  * Log filter options for subscription
@@ -44,46 +48,31 @@ export interface LogFilter {
 }
 
 /**
- * Hook to subscribe to new pending transactions in real-time
+ * Hook to get pending transactions from centralized store
+ * Real-time updates come from RealtimeProvider (single subscription source)
  *
- * @param maxTransactions - Maximum number of transactions to keep in memory (default: 50)
- * @returns Object containing pending transactions array, loading state, and error
+ * @param maxTransactions - Maximum number of transactions to return (default: 50)
+ * @returns Object containing pending transactions array, loading state, and connection status
  *
  * @example
  * ```tsx
- * const { pendingTransactions, loading, error } = usePendingTransactions(100)
+ * const { pendingTransactions, loading } = usePendingTransactions(100)
  * ```
  */
 export function usePendingTransactions(maxTransactions: number = REALTIME.MAX_PENDING_TRANSACTIONS) {
-  const [pendingTransactions, setPendingTransactions] = useState<Transaction[]>([])
+  // Read from centralized store instead of subscribing directly
+  const allPending = useRealtimeStore(selectPendingTransactions)
+  const isConnected = useRealtimeStore(selectIsConnected)
 
-  const { data, loading, error } = useSubscription(SUBSCRIBE_PENDING_TRANSACTIONS, {
-    fetchPolicy: 'no-cache',
-    onError: (error) => {
-      console.error('[Pending Transactions Subscription Error]:', error)
-    },
-  })
-
-  useEffect(() => {
-    if (data?.newPendingTransactions) {
-      const rawTx = data.newPendingTransactions as RawTransaction
-      const transformedTx = transformTransaction(rawTx)
-
-      // Legitimate use case: updating state from external subscription data
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setPendingTransactions((prev) => {
-        // Add new transaction at the beginning
-        const updated = [transformedTx, ...prev]
-        // Keep only the most recent maxTransactions
-        return updated.slice(0, maxTransactions)
-      })
-    }
-  }, [data, maxTransactions])
+  // Transform and limit the transactions
+  const pendingTransactions = useMemo(() => {
+    return allPending.slice(0, maxTransactions).map((tx) => transformTransaction(tx as RawTransaction))
+  }, [allPending, maxTransactions])
 
   return {
     pendingTransactions,
-    loading,
-    error,
+    loading: !isConnected && pendingTransactions.length === 0,
+    error: null,
   }
 }
 
@@ -109,9 +98,28 @@ export function usePendingTransactions(maxTransactions: number = REALTIME.MAX_PE
 export function useLogs(filter: LogFilter = {}, maxLogs: number = REALTIME.MAX_LOGS) {
   const [logs, setLogs] = useState<Log[]>([])
 
+  // Memoize filter to prevent infinite re-subscription
+  // Normalize filter values for stable comparison
+  const stableFilter = useMemo(
+    () => ({
+      address: filter.address?.toLowerCase(),
+      addresses: filter.addresses?.map((a) => a.toLowerCase()),
+      topics: filter.topics,
+      fromBlock: filter.fromBlock,
+      toBlock: filter.toBlock,
+    }),
+    [filter.address, filter.addresses, filter.topics, filter.fromBlock, filter.toBlock]
+  )
+
+  // Store current filter in ref for use in effect (not during render)
+  const filterRef = useRef(filter)
+  useEffect(() => {
+    filterRef.current = filter
+  }, [filter])
+
   const { data, loading, error } = useSubscription(SUBSCRIBE_LOGS, {
     fetchPolicy: 'no-cache',
-    variables: { filter },
+    variables: { filter: stableFilter },
     onError: (error) => {
       console.error('[Logs Subscription Error]:', error)
     },
@@ -159,9 +167,10 @@ export function useLogs(filter: LogFilter = {}, maxLogs: number = REALTIME.MAX_L
 }
 
 /**
- * Hook to subscribe to new blocks in real-time with initial data loading
+ * Hook to get blocks from centralized store with initial data loading
+ * Real-time updates come from RealtimeProvider (single subscription source)
  *
- * @param maxBlocks - Maximum number of blocks to keep in memory (default: 20)
+ * @param maxBlocks - Maximum number of blocks to return (default: 20)
  * @returns Object containing blocks array, loading state, error, and latest block
  *
  * @example
@@ -170,43 +179,36 @@ export function useLogs(filter: LogFilter = {}, maxLogs: number = REALTIME.MAX_L
  * ```
  */
 export function useNewBlocks(maxBlocks: number = REALTIME.MAX_BLOCKS) {
-  const [blocks, setBlocks] = useState<Block[]>([])
-  const [latestBlock, setLatestBlock] = useState<Block | null>(null)
+  const [initialBlocks, setInitialBlocks] = useState<Block[]>([])
   const [initialized, setInitialized] = useState(false)
+
+  // Get real-time data from centralized store
+  const realtimeBlocks = useRealtimeStore(selectRecentBlocks)
+  const realtimeLatestBlock = useRealtimeStore(selectLatestBlock)
+  const isConnected = useRealtimeStore(selectIsConnected)
 
   // Get latest height for initial data loading
   const { data: heightData } = useQuery(GET_LATEST_HEIGHT, {
     fetchPolicy: 'cache-first',
   })
 
-  // Subscribe to new blocks
-  const { data: subscriptionData, loading, error } = useSubscription(SUBSCRIBE_NEW_BLOCK, {
-    fetchPolicy: 'no-cache',
-    onError: (error) => {
-      console.error('[New Block Subscription Error]:', error)
-    },
-  })
-
   // Load initial blocks when we have the latest height (only once)
   useEffect(() => {
     if (heightData?.latestHeight && !initialized) {
-      if (env.isDevelopment) {
-        console.log('[useNewBlocks] Loading initial blocks, latest height:', heightData.latestHeight)
-      }
-      setInitialized(true) // Set immediately to prevent re-execution
+      // Required to prevent double fetch
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setInitialized(true)
 
       const latestHeight = BigInt(heightData.latestHeight)
       const blocksToFetch: bigint[] = []
 
-      // Calculate block numbers to fetch (latest N blocks)
       for (let i = 0; i < maxBlocks; i++) {
         const blockNum = latestHeight - BigInt(i)
-        if (blockNum >= 0n) {
+        if (blockNum >= BigInt(0)) {
           blocksToFetch.push(blockNum)
         }
       }
 
-      // Fetch blocks in parallel
       Promise.all(
         blocksToFetch.map(async (blockNum) => {
           try {
@@ -242,104 +244,83 @@ export function useNewBlocks(maxBlocks: number = REALTIME.MAX_BLOCKS) {
       ).then((fetchedBlocks) => {
         const validBlocks = fetchedBlocks.filter((b): b is Block => b !== null)
         if (validBlocks.length > 0) {
-          if (env.isDevelopment) {
-            console.log('[useNewBlocks] Initial blocks loaded:', validBlocks.length)
-          }
-          setBlocks(validBlocks)
-          const firstBlock = validBlocks[0]
-          if (firstBlock) {
-            setLatestBlock(firstBlock)
-          }
+          setInitialBlocks(validBlocks)
         }
       })
     }
   }, [heightData, initialized, maxBlocks])
 
-  // Update from subscription (real-time updates)
-  useEffect(() => {
-    if (subscriptionData?.newBlock) {
-      const rawBlock = subscriptionData.newBlock as RawBlock
-      const transformedBlock = transformBlock(rawBlock)
+  // Merge initial blocks with realtime blocks
+  const blocks = useMemo(() => {
+    const realtimeTransformed = realtimeBlocks.map((b) => transformBlock(b as unknown as RawBlock))
+    const merged = [...realtimeTransformed]
 
-      // Legitimate use case: updating state from external subscription data
-      setLatestBlock(transformedBlock)
+    // Add initial blocks that aren't in realtime
+    initialBlocks.forEach((block) => {
+      if (!merged.some((b) => b.hash === block.hash)) {
+        merged.push(block)
+      }
+    })
 
-      // Legitimate use case: updating state from external subscription data
-      setBlocks((prev) => {
-        // Add new block at the beginning
-        const updated = [transformedBlock, ...prev]
-        // Keep only the most recent maxBlocks
-        return updated.slice(0, maxBlocks)
-      })
+    // Sort by block number descending and limit
+    return merged
+      .sort((a, b) => (b.number > a.number ? 1 : -1))
+      .slice(0, maxBlocks)
+  }, [realtimeBlocks, initialBlocks, maxBlocks])
+
+  const latestBlock = useMemo(() => {
+    if (realtimeLatestBlock) {
+      return transformBlock(realtimeLatestBlock as unknown as RawBlock)
     }
-  }, [subscriptionData, maxBlocks])
+    return blocks[0] ?? null
+  }, [realtimeLatestBlock, blocks])
 
-  /**
-   * Clear all accumulated blocks
-   */
   const clearBlocks = () => {
-    setBlocks([])
-    setLatestBlock(null)
+    setInitialBlocks([])
     setInitialized(false)
   }
 
   return {
     blocks,
     latestBlock,
-    loading: loading && !initialized,
-    error,
+    loading: !initialized && !isConnected,
+    error: null,
     clearBlocks,
   }
 }
 
 /**
- * Hook to subscribe to new confirmed transactions in real-time
+ * Hook to get confirmed transactions from centralized store
+ * Real-time updates come from RealtimeProvider (single subscription source)
  *
- * @param maxTransactions - Maximum number of transactions to keep in memory (default: 50)
- * @returns Object containing transactions array, loading state, and error
+ * @param maxTransactions - Maximum number of transactions to return (default: 50)
+ * @returns Object containing transactions array, loading state, and connection status
  *
  * @example
  * ```tsx
- * const { transactions, loading, error } = useNewTransactions(100)
+ * const { transactions, loading } = useNewTransactions(100)
  * ```
  */
 export function useNewTransactions(maxTransactions: number = REALTIME.MAX_TRANSACTIONS) {
-  const [transactions, setTransactions] = useState<Transaction[]>([])
+  // Read from centralized store instead of subscribing directly
+  const realtimeTransactions = useRealtimeStore(selectRecentTransactions)
+  const isConnected = useRealtimeStore(selectIsConnected)
 
-  const { data, loading, error } = useSubscription(SUBSCRIBE_NEW_TRANSACTION, {
-    fetchPolicy: 'no-cache',
-    onError: (error) => {
-      console.error('[New Transaction Subscription Error]:', error)
-    },
-  })
+  // Transform and limit the transactions
+  const transactions = useMemo(() => {
+    return realtimeTransactions
+      .slice(0, maxTransactions)
+      .map((tx) => transformTransaction(tx as RawTransaction))
+  }, [realtimeTransactions, maxTransactions])
 
-  useEffect(() => {
-    if (data?.newTransaction) {
-      const rawTx = data.newTransaction as RawTransaction
-      const transformedTx = transformTransaction(rawTx)
-
-      // Legitimate use case: updating state from external subscription data
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setTransactions((prev) => {
-        // Add new transaction at the beginning
-        const updated = [transformedTx, ...prev]
-        // Keep only the most recent maxTransactions
-        return updated.slice(0, maxTransactions)
-      })
-    }
-  }, [data, maxTransactions])
-
-  /**
-   * Clear all accumulated transactions
-   */
   const clearTransactions = () => {
-    setTransactions([])
+    // No-op for now - store manages its own state
   }
 
   return {
     transactions,
-    loading,
-    error,
+    loading: !isConnected && transactions.length === 0,
+    error: null,
     clearTransactions,
   }
 }
@@ -461,66 +442,58 @@ export interface TransactionFilter {
 }
 
 /**
- * Hook to subscribe to new transactions with address filtering
+ * Hook to get filtered transactions from centralized store
+ * Real-time updates come from RealtimeProvider (single subscription source)
  *
  * @param filter - Filter for transactions by from/to address
- * @param maxTransactions - Maximum number of transactions to keep in memory (default: 50)
- * @returns Object containing transactions array, loading state, and error
+ * @param maxTransactions - Maximum number of transactions to return (default: 50)
+ * @returns Object containing transactions array, loading state, and connection status
  *
  * @example
  * ```tsx
- * // Subscribe to transactions from a specific address
- * const { transactions, loading, error } = useFilteredTransactions({ from: '0x...' })
+ * // Get transactions from a specific address
+ * const { transactions, loading } = useFilteredTransactions({ from: '0x...' })
  *
- * // Subscribe to transactions to a specific address
- * const { transactions, loading, error } = useFilteredTransactions({ to: '0x...' })
+ * // Get transactions to a specific address
+ * const { transactions, loading } = useFilteredTransactions({ to: '0x...' })
  * ```
  */
 export function useFilteredNewTransactions(
   filter: TransactionFilter = {},
   maxTransactions: number = REALTIME.MAX_TRANSACTIONS
 ) {
-  const [transactions, setTransactions] = useState<Transaction[]>([])
+  // Read from centralized store instead of subscribing directly
+  const realtimeTransactions = useRealtimeStore(selectRecentTransactions)
+  const isConnected = useRealtimeStore(selectIsConnected)
 
-  const { data, loading, error } = useSubscription(SUBSCRIBE_NEW_TRANSACTION, {
-    fetchPolicy: 'no-cache',
-    variables: { filter },
-    onError: (error) => {
-      console.error('[Filtered Transaction Subscription Error]:', error)
-    },
-  })
+  // Transform and filter transactions
+  const transactions = useMemo(() => {
+    const transformed = realtimeTransactions.map((tx) =>
+      transformTransaction(tx as RawTransaction)
+    )
 
-  useEffect(() => {
-    if (data?.newTransaction) {
-      const rawTx = data.newTransaction as RawTransaction
-      const transformedTx = transformTransaction(rawTx)
-
-      // Client-side filtering as backup (server should handle this)
-      const matchesFilter =
-        (!filter.from || transformedTx.from.toLowerCase() === filter.from.toLowerCase()) &&
-        (!filter.to || transformedTx.to?.toLowerCase() === filter.to.toLowerCase())
-
-      if (matchesFilter) {
-        // eslint-disable-next-line react-hooks/set-state-in-effect
-        setTransactions((prev) => {
-          const updated = [transformedTx, ...prev]
-          return updated.slice(0, maxTransactions)
-        })
+    // Apply filters
+    const filtered = transformed.filter((tx) => {
+      if (filter.from && tx.from.toLowerCase() !== filter.from.toLowerCase()) {
+        return false
       }
-    }
-  }, [data, filter, maxTransactions])
+      if (filter.to && tx.to?.toLowerCase() !== filter.to.toLowerCase()) {
+        return false
+      }
+      return true
+    })
 
-  /**
-   * Clear all accumulated transactions
-   */
+    return filtered.slice(0, maxTransactions)
+  }, [realtimeTransactions, filter.from, filter.to, maxTransactions])
+
   const clearTransactions = () => {
-    setTransactions([])
+    // No-op for now - store manages its own state
   }
 
   return {
     transactions,
-    loading,
-    error,
+    loading: !isConnected && transactions.length === 0,
+    error: null,
     clearTransactions,
   }
 }

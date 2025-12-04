@@ -20,6 +20,7 @@ import { ListPageSkeleton } from '@/components/skeletons/ListPageSkeleton'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { formatNumber, formatTimeAgo } from '@/lib/utils/format'
 import type { Block } from '@/types/graphql'
+import { PAGINATION, BLOCKCHAIN } from '@/lib/config/constants'
 
 function BlocksListContent() {
   const searchParams = useSearchParams()
@@ -30,7 +31,7 @@ function BlocksListContent() {
   const pageParam = searchParams.get('page')
   const limitParam = searchParams.get('limit')
   const currentPageFromURL = pageParam ? parseInt(pageParam, 10) : 1
-  const itemsPerPageFromURL = limitParam ? parseInt(limitParam, 10) : 20
+  const itemsPerPageFromURL = limitParam ? parseInt(limitParam, 10) : PAGINATION.DEFAULT_PAGE_SIZE
   const offsetFromURL = (currentPageFromURL - 1) * itemsPerPageFromURL
 
   // Fetch blocks with WebSocket subscription for real-time updates
@@ -172,7 +173,7 @@ function BlocksListContent() {
                     const timestamp = BigInt(block.timestamp)
                     const gasUsed = BigInt(block.gasUsed || 0)
                     const gasLimit = BigInt(block.gasLimit || 0)
-                    const gasUsedPercent = gasLimit > 0n ? Number((gasUsed * 100n) / gasLimit) : 0
+                    const gasUsedPercent = gasLimit > BLOCKCHAIN.ZERO_BIGINT ? Number((gasUsed * BLOCKCHAIN.HUNDRED_BIGINT) / gasLimit) : 0
 
                     return (
                       <TableRow key={block.hash}>

@@ -8,6 +8,8 @@
  * - consensusError: Consensus errors and anomalies
  */
 
+import { CONSENSUS } from '@/lib/config/constants'
+
 // ============================================================================
 // Consensus Block Event Types
 // ============================================================================
@@ -306,9 +308,9 @@ export function getSeverityIcon(severity: ConsensusErrorSeverity): string {
  * Get participation rate color based on threshold
  */
 export function getParticipationColor(rate: number): string {
-  if (rate >= 90) return 'text-green-400'
-  if (rate >= 75) return 'text-yellow-400'
-  if (rate >= 66.7) return 'text-orange-400'
+  if (rate >= CONSENSUS.HEALTH_EXCELLENT_THRESHOLD) {return 'text-green-400'}
+  if (rate >= CONSENSUS.HEALTH_GOOD_THRESHOLD) {return 'text-yellow-400'}
+  if (rate >= CONSENSUS.PARTICIPATION_CRITICAL_THRESHOLD) {return 'text-orange-400'}
   return 'text-red-400'
 }
 
@@ -316,8 +318,8 @@ export function getParticipationColor(rate: number): string {
  * Get participation rate background color based on threshold
  */
 export function getParticipationBgColor(rate: number): string {
-  if (rate >= 90) return 'bg-green-500'
-  if (rate >= 75) return 'bg-yellow-500'
-  if (rate >= 66.7) return 'bg-orange-500'
+  if (rate >= CONSENSUS.HEALTH_EXCELLENT_THRESHOLD) {return 'bg-green-500'}
+  if (rate >= CONSENSUS.HEALTH_GOOD_THRESHOLD) {return 'bg-yellow-500'}
+  if (rate >= CONSENSUS.PARTICIPATION_CRITICAL_THRESHOLD) {return 'bg-orange-500'}
   return 'bg-red-500'
 }

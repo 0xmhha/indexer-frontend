@@ -18,6 +18,8 @@ export function useAddressBalance(address: string | null, blockNumber?: string) 
     returnPartialData: true,
     // Enable polling for real-time balance updates (10 seconds)
     pollInterval: POLLING_INTERVALS.FAST,
+    // Prevent re-renders during polling to avoid flickering
+    notifyOnNetworkStatusChange: false,
   })
 
   // Use previous data while loading to prevent flickering
@@ -44,6 +46,8 @@ export function useAddressTransactions(address: string | null, limit: number = P
     returnPartialData: true,
     // Enable polling for real-time transaction updates (10 seconds)
     pollInterval: POLLING_INTERVALS.FAST,
+    // Prevent re-renders during polling to avoid flickering
+    notifyOnNetworkStatusChange: false,
   })
 
   // Use previous data while loading to prevent flickering
@@ -84,6 +88,8 @@ export function useBalanceHistory(
     returnPartialData: true,
     // Enable polling for balance history updates (10 seconds)
     pollInterval: POLLING_INTERVALS.FAST,
+    // Prevent re-renders during polling to avoid flickering
+    notifyOnNetworkStatusChange: false,
   })
 
   // Use previous data while loading to prevent flickering
@@ -129,6 +135,8 @@ export function useTokenBalances(address: string | null, tokenType?: string) {
     returnPartialData: true,
     // Enable polling for token balance updates (10 seconds)
     pollInterval: POLLING_INTERVALS.FAST,
+    // Prevent re-renders during polling to avoid flickering
+    notifyOnNetworkStatusChange: false,
   })
 
   // Use previous data while loading to prevent flickering

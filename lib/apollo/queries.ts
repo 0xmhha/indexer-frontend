@@ -244,6 +244,65 @@ export const GET_TRANSACTION_COUNT = gql`
 `
 
 // ============================================================================
+// Transaction Receipt Queries
+// ============================================================================
+
+/**
+ * Get transaction receipt by hash
+ * Returns detailed receipt information including status, gas usage, and logs
+ */
+export const GET_RECEIPT = gql`
+  query GetReceipt($txHash: String!) {
+    receipt(transactionHash: $txHash) {
+      transactionHash
+      blockNumber
+      blockHash
+      transactionIndex
+      status
+      gasUsed
+      cumulativeGasUsed
+      effectiveGasPrice
+      contractAddress
+      logs {
+        address
+        topics
+        data
+        logIndex
+        blockNumber
+        transactionHash
+      }
+      logsBloom
+    }
+  }
+`
+
+/**
+ * Get all receipts for a specific block
+ * Useful for block-level analysis and monitoring
+ */
+export const GET_RECEIPTS_BY_BLOCK = gql`
+  query GetReceiptsByBlock($blockNumber: String!) {
+    receiptsByBlock(blockNumber: $blockNumber) {
+      transactionHash
+      blockNumber
+      blockHash
+      transactionIndex
+      status
+      gasUsed
+      cumulativeGasUsed
+      effectiveGasPrice
+      contractAddress
+      logs {
+        address
+        topics
+        data
+        logIndex
+      }
+    }
+  }
+`
+
+// ============================================================================
 // Subscriptions
 // ============================================================================
 

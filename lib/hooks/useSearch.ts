@@ -257,17 +257,17 @@ export function useSearch(options: UseSearchOptions = {}): UseSearchResult {
         if (searchTypes.includes('block')) {
           if (inputType === 'blockNumber') {
             const result = await searchBlockByNumber(query)
-            if (result) searchResults.push(result)
+            if (result) {searchResults.push(result)}
           } else if (inputType === 'hash') {
             const result = await searchBlockByHash(query)
-            if (result) searchResults.push(result)
+            if (result) {searchResults.push(result)}
           }
         }
 
         // Search transactions
         if (searchTypes.includes('transaction') && inputType === 'hash') {
           const result = await searchTransaction(query)
-          if (result) searchResults.push(result)
+          if (result) {searchResults.push(result)}
         }
 
         // Search addresses

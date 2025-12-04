@@ -7,7 +7,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useProposals, type Proposal, ProposalStatus } from '@/lib/hooks/useGovernance'
 import { formatNumber, formatDateTime, truncateAddress } from '@/lib/utils/format'
-import { UI } from '@/lib/config/constants'
+import { UI, FORMATTING } from '@/lib/config/constants'
 
 interface ProposalsListViewerProps {
   maxProposals?: number
@@ -234,8 +234,8 @@ function ProposalCard({ proposal }: { proposal: Proposal }) {
           <div className="font-mono text-xs text-text-muted">
             Call Data:{' '}
             <span className="text-text-secondary">
-              {proposal.callData.slice(0, 66)}
-              {proposal.callData.length > 66 && '...'}
+              {proposal.callData.slice(0, FORMATTING.HEX_PREVIEW_LENGTH)}
+              {proposal.callData.length > FORMATTING.HEX_PREVIEW_LENGTH && '...'}
             </span>
           </div>
         )}

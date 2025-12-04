@@ -28,7 +28,7 @@ interface RowComponentProps<T> {
 
 function RowComponent<T>({ index, style, data, columns }: RowComponentProps<T>) {
   const item = data[index]
-  if (!item) return null
+  if (!item) {return null}
 
   return (
     <div

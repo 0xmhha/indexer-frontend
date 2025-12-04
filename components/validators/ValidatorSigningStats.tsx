@@ -6,7 +6,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useValidatorSigningStats, type ValidatorSigningStats } from '@/lib/hooks/useWBFT'
 import { formatNumber, truncateAddress } from '@/lib/utils/format'
-import { UI } from '@/lib/config/constants'
+import { UI, THRESHOLDS } from '@/lib/config/constants'
 
 interface ValidatorSigningStatsProps {
   maxStats?: number
@@ -204,16 +204,16 @@ function StatCard({
 
 function ValidatorStatCard({ stat }: { stat: ValidatorSigningStats }) {
   const getPerformanceColor = (rate: number) => {
-    if (rate >= 95) return 'text-accent-green'
-    if (rate >= 80) return 'text-accent-cyan'
-    if (rate >= 60) return 'text-accent-yellow'
+    if (rate >= THRESHOLDS.SIGNING_EXCELLENT) {return 'text-accent-green'}
+    if (rate >= THRESHOLDS.SIGNING_GOOD) {return 'text-accent-cyan'}
+    if (rate >= THRESHOLDS.SIGNING_FAIR) {return 'text-accent-yellow'}
     return 'text-accent-red'
   }
 
   const getPerformanceBgColor = (rate: number) => {
-    if (rate >= 95) return 'bg-accent-green'
-    if (rate >= 80) return 'bg-accent-cyan'
-    if (rate >= 60) return 'bg-accent-yellow'
+    if (rate >= THRESHOLDS.SIGNING_EXCELLENT) {return 'bg-accent-green'}
+    if (rate >= THRESHOLDS.SIGNING_GOOD) {return 'bg-accent-cyan'}
+    if (rate >= THRESHOLDS.SIGNING_FAIR) {return 'bg-accent-yellow'}
     return 'bg-accent-red'
   }
 

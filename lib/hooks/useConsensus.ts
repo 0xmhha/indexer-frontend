@@ -1,8 +1,8 @@
 'use client'
 
+import { useCallback, useMemo } from 'react'
 import { gql, useQuery, useSubscription } from '@apollo/client'
-import { useCallback, useEffect } from 'react'
-import { PAGINATION, POLLING_INTERVALS } from '@/lib/config/constants'
+import { PAGINATION, POLLING_INTERVALS, CONSENSUS } from '@/lib/config/constants'
 import {
   SUBSCRIBE_CONSENSUS_BLOCK,
   SUBSCRIBE_CONSENSUS_ERROR,
@@ -378,7 +378,14 @@ export function useConsensusData(blockNumber: string) {
     // All validators are the union of preparers and committers for now
     // (backend doesn't provide full validator list in wbftBlockExtra for a single block)
     const allSigners = [...new Set([...prepareSigners, ...commitSigners])]
-    const validators = allSigners.length > 0 ? allSigners : prepareSigners.length > 0 ? prepareSigners : commitSigners
+
+    // Determine validators list with fallback priority
+    const getValidatorsList = (): string[] => {
+      if (allSigners.length > 0) { return allSigners }
+      if (prepareSigners.length > 0) { return prepareSigners }
+      return commitSigners
+    }
+    const validators = getValidatorsList()
 
     // Calculate missed validators
     const missedPrepare = validators.filter(v => !prepareSigners.includes(v))
@@ -391,7 +398,7 @@ export function useConsensusData(blockNumber: string) {
       : 0
 
     // Determine health status (>= 66.7% participation is healthy)
-    const isHealthy = participationRate >= 66.7
+    const isHealthy = participationRate >= CONSENSUS.PARTICIPATION_CRITICAL_THRESHOLD
 
     // Check if epoch boundary (has epochInfo)
     const isEpochBoundary = !!wbftBlockExtra.epochInfo
@@ -723,30 +730,48 @@ export function useBlockSigners(blockNumber: string) {
  * Automatically updates the consensus store with new blocks
  */
 export function useConsensusBlockSubscription() {
-  const { setLatestBlock, setConnectionStatus, latestBlock, recentBlocks } = useConsensusStore()
+  // Get only action functions (stable references) to avoid re-renders
+  // Zustand store functions are guaranteed to be stable across renders
+  const setLatestBlock = useConsensusStore((state) => state.setLatestBlock)
+  const setConnectionStatus = useConsensusStore((state) => state.setConnectionStatus)
+
+  // Get reactive state separately
+  const latestBlock = useConsensusStore((state) => state.latestBlock)
+  const recentBlocks = useConsensusStore((state) => state.recentBlocks)
+
+  // Stable callback for onData - Zustand actions are stable, so this won't change
+  const onData = useCallback(
+    ({ data: subscriptionData }: { data: { data?: { consensusBlock?: ConsensusBlockEvent } } }) => {
+      if (subscriptionData.data?.consensusBlock) {
+        setLatestBlock(subscriptionData.data.consensusBlock)
+      }
+    },
+    [setLatestBlock]
+  )
+
+  // Stable callback for onError
+  const onError = useCallback(
+    (err: Error) => {
+      console.error('[Consensus Block Subscription] Error:', err.message)
+      setConnectionStatus(false, err.message)
+    },
+    [setConnectionStatus]
+  )
+
+  // Memoize subscription options to prevent re-subscription
+  const subscriptionOptions = useMemo(
+    () => ({
+      fetchPolicy: 'no-cache' as const,
+      onData,
+      onError,
+    }),
+    [onData, onError]
+  )
 
   const { data, loading, error } = useSubscription<{ consensusBlock: ConsensusBlockEvent }>(
     SUBSCRIBE_CONSENSUS_BLOCK,
-    {
-      onData: ({ data: subscriptionData }) => {
-        if (subscriptionData.data?.consensusBlock) {
-          setLatestBlock(subscriptionData.data.consensusBlock)
-          setConnectionStatus(true)
-        }
-      },
-      onError: (err) => {
-        console.error('[Consensus Block Subscription] Error:', err.message)
-        setConnectionStatus(false, err.message)
-      },
-    }
+    subscriptionOptions
   )
-
-  // Update connection status on successful data
-  useEffect(() => {
-    if (data?.consensusBlock) {
-      setConnectionStatus(true)
-    }
-  }, [data, setConnectionStatus])
 
   return {
     latestBlock: data?.consensusBlock ?? latestBlock,
@@ -761,20 +786,42 @@ export function useConsensusBlockSubscription() {
  * Stores errors in the consensus store for alerting
  */
 export function useConsensusErrorSubscription() {
-  const { addError, recentErrors, stats } = useConsensusStore()
+  // Get only action functions (stable references) to avoid re-renders
+  // Zustand store functions are guaranteed to be stable across renders
+  const addError = useConsensusStore((state) => state.addError)
+
+  // Get reactive state separately
+  const recentErrors = useConsensusStore((state) => state.recentErrors)
+  const stats = useConsensusStore((state) => state.stats)
+
+  // Stable callback for onData - Zustand actions are stable, so this won't change
+  const onData = useCallback(
+    ({ data: subscriptionData }: { data: { data?: { consensusError?: ConsensusErrorEvent } } }) => {
+      if (subscriptionData.data?.consensusError) {
+        addError(subscriptionData.data.consensusError)
+      }
+    },
+    [addError]
+  )
+
+  // Stable callback for onError
+  const onError = useCallback((err: Error) => {
+    console.error('[Consensus Error Subscription] Error:', err.message)
+  }, [])
+
+  // Memoize subscription options to prevent re-subscription
+  const subscriptionOptions = useMemo(
+    () => ({
+      fetchPolicy: 'no-cache' as const,
+      onData,
+      onError,
+    }),
+    [onData, onError]
+  )
 
   const { data, loading, error } = useSubscription<{ consensusError: ConsensusErrorEvent }>(
     SUBSCRIBE_CONSENSUS_ERROR,
-    {
-      onData: ({ data: subscriptionData }) => {
-        if (subscriptionData.data?.consensusError) {
-          addError(subscriptionData.data.consensusError)
-        }
-      },
-      onError: (err) => {
-        console.error('[Consensus Error Subscription] Error:', err.message)
-      },
-    }
+    subscriptionOptions
   )
 
   return {
@@ -792,34 +839,59 @@ export function useConsensusErrorSubscription() {
  * Monitors for chain splits
  */
 export function useConsensusForkSubscription() {
-  const { addFork, updateForkResolution, recentForks } = useConsensusStore()
+  // Get only action functions (stable references) to avoid re-renders
+  // Zustand store functions are guaranteed to be stable across renders
+  const addFork = useConsensusStore((state) => state.addFork)
+  const updateForkResolution = useConsensusStore((state) => state.updateForkResolution)
+
+  // Get reactive state separately
+  const recentForks = useConsensusStore((state) => state.recentForks)
+
+  // Stable callback for onData - Zustand actions are stable, so this won't change
+  const onData = useCallback(
+    ({ data: subscriptionData }: { data: { data?: { consensusFork?: ConsensusForkEvent } } }) => {
+      if (subscriptionData.data?.consensusFork) {
+        const fork = subscriptionData.data.consensusFork
+        if (fork.resolved && fork.winningChain) {
+          updateForkResolution(fork.forkBlockNumber, fork.winningChain)
+        } else {
+          addFork(fork)
+        }
+      }
+    },
+    [addFork, updateForkResolution]
+  )
+
+  // Stable callback for onError
+  const onError = useCallback((err: Error) => {
+    console.error('[Consensus Fork Subscription] Error:', err.message)
+  }, [])
+
+  // Memoize subscription options to prevent re-subscription
+  const subscriptionOptions = useMemo(
+    () => ({
+      fetchPolicy: 'no-cache' as const,
+      onData,
+      onError,
+    }),
+    [onData, onError]
+  )
 
   const { data, loading, error } = useSubscription<{ consensusFork: ConsensusForkEvent }>(
     SUBSCRIBE_CONSENSUS_FORK,
-    {
-      onData: ({ data: subscriptionData }) => {
-        if (subscriptionData.data?.consensusFork) {
-          const fork = subscriptionData.data.consensusFork
-          if (fork.resolved && fork.winningChain) {
-            updateForkResolution(fork.forkBlockNumber, fork.winningChain)
-          } else {
-            addFork(fork)
-          }
-        }
-      },
-      onError: (err) => {
-        console.error('[Consensus Fork Subscription] Error:', err.message)
-      },
-    }
+    subscriptionOptions
   )
 
-  const unresolvedForks = recentForks.filter((f) => !f.resolved)
+  // Memoize filtered forks to prevent unnecessary recalculations
+  const unresolvedForks = useMemo(() => recentForks.filter((f) => !f.resolved), [recentForks])
+
+  const hasUnresolvedForks = useMemo(() => unresolvedForks.length > 0, [unresolvedForks])
 
   return {
     latestFork: data?.consensusFork ?? recentForks[0] ?? null,
     recentForks,
     unresolvedForks,
-    hasUnresolvedForks: unresolvedForks.length > 0,
+    hasUnresolvedForks,
     loading,
     error,
   }
@@ -829,20 +901,45 @@ export function useConsensusForkSubscription() {
  * Hook to subscribe to validator set changes at epoch boundaries
  */
 export function useConsensusValidatorChangeSubscription() {
-  const { addValidatorChange, recentValidatorChanges } = useConsensusStore()
+  // Get only action functions (stable references) to avoid re-renders
+  // Zustand store functions are guaranteed to be stable across renders
+  const addValidatorChange = useConsensusStore((state) => state.addValidatorChange)
 
-  const { data, loading, error } = useSubscription<{
-    consensusValidatorChange: ConsensusValidatorChangeEvent
-  }>(SUBSCRIBE_CONSENSUS_VALIDATOR_CHANGE, {
-    onData: ({ data: subscriptionData }) => {
+  // Get reactive state separately
+  const recentValidatorChanges = useConsensusStore((state) => state.recentValidatorChanges)
+
+  // Stable callback for onData - Zustand actions are stable, so this won't change
+  const onData = useCallback(
+    ({
+      data: subscriptionData,
+    }: {
+      data: { data?: { consensusValidatorChange?: ConsensusValidatorChangeEvent } }
+    }) => {
       if (subscriptionData.data?.consensusValidatorChange) {
         addValidatorChange(subscriptionData.data.consensusValidatorChange)
       }
     },
-    onError: (err) => {
-      console.error('[Validator Change Subscription] Error:', err.message)
-    },
-  })
+    [addValidatorChange]
+  )
+
+  // Stable callback for onError
+  const onError = useCallback((err: Error) => {
+    console.error('[Validator Change Subscription] Error:', err.message)
+  }, [])
+
+  // Memoize subscription options to prevent re-subscription
+  const subscriptionOptions = useMemo(
+    () => ({
+      fetchPolicy: 'no-cache' as const,
+      onData,
+      onError,
+    }),
+    [onData, onError]
+  )
+
+  const { data, loading, error } = useSubscription<{
+    consensusValidatorChange: ConsensusValidatorChangeEvent
+  }>(SUBSCRIBE_CONSENSUS_VALIDATOR_CHANGE, subscriptionOptions)
 
   return {
     latestChange: data?.consensusValidatorChange ?? recentValidatorChanges[0] ?? null,
@@ -855,9 +952,23 @@ export function useConsensusValidatorChangeSubscription() {
 /**
  * Combined hook for all consensus subscriptions
  * Use this for the main consensus dashboard
+ * Uses Zustand selectors to prevent unnecessary re-renders
  */
 export function useConsensusMonitoring() {
-  const store = useConsensusStore()
+  // Use individual selectors instead of entire store to prevent cascading updates
+  const isConnected = useConsensusStore((state) => state.isConnected)
+  const connectionError = useConsensusStore((state) => state.connectionError)
+  const latestBlock = useConsensusStore((state) => state.latestBlock)
+  const recentBlocks = useConsensusStore((state) => state.recentBlocks)
+  const recentErrors = useConsensusStore((state) => state.recentErrors)
+  const recentForks = useConsensusStore((state) => state.recentForks)
+  const recentValidatorChanges = useConsensusStore((state) => state.recentValidatorChanges)
+  const stats = useConsensusStore((state) => state.stats)
+  const networkHealth = useConsensusStore((state) => state.networkHealth)
+
+  // Get stable action references (these don't change)
+  const clearAll = useConsensusStore((state) => state.clearAll)
+  const acknowledgeError = useConsensusStore((state) => state.acknowledgeError)
 
   // Subscribe to all consensus events
   const blockSub = useConsensusBlockSubscription()
@@ -865,43 +976,43 @@ export function useConsensusMonitoring() {
   const forkSub = useConsensusForkSubscription()
   const validatorChangeSub = useConsensusValidatorChangeSubscription()
 
-  // Check if any subscription has an error
-  const hasSubscriptionError = !!(
-    blockSub.error ||
-    errorSub.error ||
-    forkSub.error ||
-    validatorChangeSub.error
+  // Memoize computed values to prevent unnecessary re-renders
+  const hasSubscriptionError = useMemo(
+    () => !!(blockSub.error || errorSub.error || forkSub.error || validatorChangeSub.error),
+    [blockSub.error, errorSub.error, forkSub.error, validatorChangeSub.error]
   )
 
-  // Check if all subscriptions are loading
-  const isLoading =
-    blockSub.loading && errorSub.loading && forkSub.loading && validatorChangeSub.loading
+  const isLoading = useMemo(
+    () => blockSub.loading && errorSub.loading && forkSub.loading && validatorChangeSub.loading,
+    [blockSub.loading, errorSub.loading, forkSub.loading, validatorChangeSub.loading]
+  )
 
-  // Clear all data
-  const clearAll = useCallback(() => {
-    store.clearAll()
-  }, [store])
+  // Memoize filtered errors to prevent unnecessary recalculations
+  const highPriorityErrors = useMemo(
+    () => recentErrors.filter((e) => e.severity === 'critical' || e.severity === 'high'),
+    [recentErrors]
+  )
 
   return {
     // Connection status
-    isConnected: store.isConnected,
-    connectionError: store.connectionError,
+    isConnected,
+    connectionError,
 
     // Latest data
-    latestBlock: store.latestBlock,
+    latestBlock,
     latestError: errorSub.latestError,
     latestFork: forkSub.latestFork,
     latestValidatorChange: validatorChangeSub.latestChange,
 
     // Historical data
-    recentBlocks: store.recentBlocks,
-    recentErrors: store.recentErrors,
-    recentForks: store.recentForks,
-    recentValidatorChanges: store.recentValidatorChanges,
+    recentBlocks,
+    recentErrors,
+    recentForks,
+    recentValidatorChanges,
 
     // Computed stats
-    stats: store.stats,
-    networkHealth: store.networkHealth,
+    stats,
+    networkHealth,
 
     // Status
     hasSubscriptionError,
@@ -910,12 +1021,10 @@ export function useConsensusMonitoring() {
     // Alerts
     hasUnresolvedForks: forkSub.hasUnresolvedForks,
     unresolvedForks: forkSub.unresolvedForks,
-    highPriorityErrors: store.recentErrors.filter(
-      (e) => e.severity === 'critical' || e.severity === 'high'
-    ),
+    highPriorityErrors,
 
-    // Actions
+    // Actions (stable references)
     clearAll,
-    acknowledgeError: store.acknowledgeError,
+    acknowledgeError,
   }
 }

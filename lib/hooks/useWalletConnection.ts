@@ -29,7 +29,7 @@ export interface UseWalletConnectionResult {
 // ============================================================
 
 function getEthereumProvider(): ethers.Eip1193Provider | null {
-  if (typeof window === 'undefined') return null
+  if (typeof window === 'undefined') {return null}
   const windowWithEth = window as WindowWithEthereum
   return windowWithEth.ethereum ?? null
 }
@@ -52,7 +52,7 @@ export function useWalletConnection(): UseWalletConnectionResult {
   useEffect(() => {
     const checkConnection = async () => {
       const ethereum = getEthereumProvider()
-      if (!ethereum) return
+      if (!ethereum) {return}
 
       try {
         const provider = new BrowserProvider(ethereum)
@@ -109,7 +109,7 @@ export function useWalletConnection(): UseWalletConnectionResult {
 
   const getSigner = useCallback(async (): Promise<ethers.Signer | null> => {
     const ethereum = getEthereumProvider()
-    if (!ethereum) return null
+    if (!ethereum) {return null}
 
     try {
       const provider = new BrowserProvider(ethereum)

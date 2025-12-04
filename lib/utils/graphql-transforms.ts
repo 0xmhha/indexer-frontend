@@ -8,7 +8,7 @@
  * Transform a string to BigInt, returns 0n if invalid
  */
 export function toBigInt(value: string | null | undefined): bigint {
-  if (!value) return BigInt(0)
+  if (!value) {return BigInt(0)}
   try {
     return BigInt(value)
   } catch {
@@ -20,7 +20,7 @@ export function toBigInt(value: string | null | undefined): bigint {
  * Transform a string to number, returns 0 if invalid
  */
 export function toNumber(value: string | null | undefined): number {
-  if (!value) return 0
+  if (!value) {return 0}
   const num = Number(value)
   return isNaN(num) ? 0 : num
 }
@@ -29,7 +29,7 @@ export function toNumber(value: string | null | undefined): number {
  * Transform a timestamp string to Date
  */
 export function toDate(timestamp: string | null | undefined): Date {
-  if (!timestamp) return new Date(0)
+  if (!timestamp) {return new Date(0)}
   const ts = toBigInt(timestamp)
   return new Date(Number(ts) * 1000)
 }

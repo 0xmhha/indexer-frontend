@@ -78,7 +78,7 @@ const wsLink =
             if (errOrCloseEvent && typeof errOrCloseEvent === 'object' && 'code' in errOrCloseEvent) {
               const code = (errOrCloseEvent as CloseEvent).code
               // Don't retry on normal closure or going away
-              return code !== 1000 && code !== 1001
+              return code !== REALTIME.WS_CLOSE_NORMAL && code !== REALTIME.WS_CLOSE_GOING_AWAY
             }
             return true
           },

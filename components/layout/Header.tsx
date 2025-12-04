@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState, useRef, useEffect } from 'react'
 import { env } from '@/lib/config/env'
+import { UI } from '@/lib/config/constants'
 import { SearchBar } from '@/components/common/SearchBar'
 import { ThemeToggle } from '@/components/common/ThemeToggle'
 
@@ -14,7 +15,7 @@ export function Header() {
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    if (!showMoreMenu) return
+    if (!showMoreMenu) {return}
 
     function handleClickOutside(event: MouseEvent) {
       if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
@@ -29,7 +30,7 @@ export function Header() {
   // Close mobile menu when window is resized to desktop
   useEffect(() => {
     function handleResize() {
-      if (window.innerWidth >= 768) {
+      if (window.innerWidth >= UI.MOBILE_BREAKPOINT) {
         setShowMobileMenu(false)
       }
     }

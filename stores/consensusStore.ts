@@ -16,22 +16,7 @@ import type {
   ConsensusStats,
   NetworkHealth,
 } from '@/types/consensus'
-
-// ============================================================================
-// Constants
-// ============================================================================
-
-/** Maximum number of recent blocks to keep in memory */
-const MAX_RECENT_BLOCKS = 50
-
-/** Maximum number of recent errors to keep in memory */
-const MAX_RECENT_ERRORS = 100
-
-/** Maximum number of recent forks to keep in memory */
-const MAX_RECENT_FORKS = 20
-
-/** Maximum number of recent validator changes to keep in memory */
-const MAX_RECENT_VALIDATOR_CHANGES = 50
+import { CONSENSUS } from '@/lib/config/constants'
 
 // ============================================================================
 // Store Interface
@@ -79,10 +64,113 @@ interface ConsensusState {
 
   // Actions - Reset
   clearAll: () => void
+}
 
-  // Internal - Update computed values
-  _updateStats: () => void
-  _updateNetworkHealth: () => void
+// ============================================================================
+// Pure computation functions (no side effects)
+// ============================================================================
+
+function computeStats(
+  recentBlocks: ConsensusBlockEvent[],
+  recentErrors: ConsensusErrorEvent[]
+): ConsensusStats {
+  const totalBlocks = recentBlocks.length
+  const roundChanges = recentBlocks.filter((b) => b.roundChanged).length
+  const averageParticipation =
+    totalBlocks > 0
+      ? recentBlocks.reduce((sum, b) => sum + b.participationRate, 0) / totalBlocks
+      : 0
+
+  const errorsBySeverity = {
+    critical: recentErrors.filter((e) => e.severity === 'critical').length,
+    high: recentErrors.filter((e) => e.severity === 'high').length,
+    medium: recentErrors.filter((e) => e.severity === 'medium').length,
+    low: recentErrors.filter((e) => e.severity === 'low').length,
+  }
+
+  return {
+    totalBlocks,
+    roundChanges,
+    averageParticipation,
+    errorCount: recentErrors.length,
+    errorsBySeverity,
+    lastUpdated: new Date().toISOString(),
+  }
+}
+
+function computeNetworkHealth(
+  recentBlocks: ConsensusBlockEvent[],
+  recentErrors: ConsensusErrorEvent[],
+  stats: ConsensusStats
+): NetworkHealth {
+  // Calculate health score
+  let score: number = CONSENSUS.HEALTH_SCORE_INITIAL
+
+  // Deduct for low participation
+  if (stats.averageParticipation < CONSENSUS.DEFAULT_PARTICIPATION_RATE) {
+    score -= Math.min(
+      CONSENSUS.MAX_PARTICIPATION_PENALTY,
+      (CONSENSUS.DEFAULT_PARTICIPATION_RATE - stats.averageParticipation) *
+        CONSENSUS.PARTICIPATION_PENALTY_MULTIPLIER
+    )
+  }
+
+  // Deduct for round changes
+  const roundChangeRate =
+    stats.totalBlocks > 0 ? stats.roundChanges / stats.totalBlocks : 0
+  score -= Math.min(
+    CONSENSUS.MAX_ROUND_CHANGE_PENALTY,
+    roundChangeRate * CONSENSUS.ROUND_CHANGE_MULTIPLIER
+  )
+
+  // Deduct for errors
+  const errorPenalty =
+    stats.errorsBySeverity.critical * CONSENSUS.ERROR_PENALTY_CRITICAL +
+    stats.errorsBySeverity.high * CONSENSUS.ERROR_PENALTY_HIGH +
+    stats.errorsBySeverity.medium * CONSENSUS.ERROR_PENALTY_MEDIUM +
+    stats.errorsBySeverity.low * CONSENSUS.ERROR_PENALTY_LOW
+  score -= Math.min(CONSENSUS.MAX_ERROR_PENALTY, errorPenalty)
+
+  // Ensure score is between 0 and 100
+  score = Math.max(0, Math.min(CONSENSUS.HEALTH_SCORE_INITIAL, Math.round(score)))
+
+  // Determine status
+  let status: NetworkHealth['status']
+  if (score >= CONSENSUS.HEALTH_EXCELLENT_THRESHOLD) {
+    status = 'excellent'
+  } else if (score >= CONSENSUS.HEALTH_GOOD_THRESHOLD) {
+    status = 'good'
+  } else if (score >= CONSENSUS.HEALTH_FAIR_THRESHOLD) {
+    status = 'fair'
+  } else {
+    status = 'poor'
+  }
+
+  // Calculate time since last error
+  const lastError = recentErrors[0]
+  const timeSinceLastError = lastError?.receivedAt
+    ? Date.now() - lastError.receivedAt.getTime()
+    : null
+
+  // Get latest participation rate
+  const latestBlock = recentBlocks[0]
+  const participationRate =
+    latestBlock?.participationRate ?? CONSENSUS.DEFAULT_PARTICIPATION_RATE
+
+  // Build network health object
+  const networkHealthUpdate: NetworkHealth = {
+    score,
+    status,
+    isHealthy: score >= CONSENSUS.MINIMUM_HEALTHY_SCORE,
+    participationRate,
+    roundChangeRate,
+  }
+
+  if (timeSinceLastError !== null) {
+    networkHealthUpdate.timeSinceLastError = timeSinceLastError
+  }
+
+  return networkHealthUpdate
 }
 
 // ============================================================================
@@ -104,10 +192,10 @@ const initialStats: ConsensusStats = {
 }
 
 const initialNetworkHealth: NetworkHealth = {
-  score: 100,
+  score: CONSENSUS.HEALTH_SCORE_INITIAL,
   status: 'excellent',
   isHealthy: true,
-  participationRate: 100,
+  participationRate: CONSENSUS.DEFAULT_PARTICIPATION_RATE,
   roundChangeRate: 0,
 }
 
@@ -142,72 +230,93 @@ export const useConsensusStore = create<ConsensusState>()(
           })
         },
 
-        // Block event handling
+        // Block event handling - Single batched update to prevent cascading re-renders
         setLatestBlock: (block) => {
-          const blockWithTimestamp: ConsensusBlockEvent = {
-            ...block,
-            receivedAt: new Date(),
-          }
-
           set((state) => {
             // Prevent duplicates
             const existingIndex = state.recentBlocks.findIndex(
               (b) => b.blockNumber === block.blockNumber
             )
             if (existingIndex !== -1) {
-              return state // Block already exists
+              return state // Block already exists, no update needed
+            }
+
+            const blockWithTimestamp: ConsensusBlockEvent = {
+              ...block,
+              receivedAt: new Date(),
             }
 
             const newBlocks = [blockWithTimestamp, ...state.recentBlocks].slice(
               0,
-              MAX_RECENT_BLOCKS
+              CONSENSUS.MAX_RECENT_BLOCKS
             )
+
+            // Compute stats and health in same update to prevent cascading
+            const newStats = computeStats(newBlocks, state.recentErrors)
+            const newHealth = computeNetworkHealth(newBlocks, state.recentErrors, newStats)
 
             return {
               latestBlock: blockWithTimestamp,
               recentBlocks: newBlocks,
+              stats: newStats,
+              networkHealth: newHealth,
             }
           })
-
-          // Update computed values
-          get()._updateStats()
-          get()._updateNetworkHealth()
         },
 
         clearBlocks: () => {
-          set({
-            latestBlock: null,
-            recentBlocks: [],
+          set((state) => {
+            const newStats = computeStats([], state.recentErrors)
+            const newHealth = computeNetworkHealth([], state.recentErrors, newStats)
+            return {
+              latestBlock: null,
+              recentBlocks: [],
+              stats: newStats,
+              networkHealth: newHealth,
+            }
           })
-          get()._updateStats()
-          get()._updateNetworkHealth()
         },
 
-        // Error event handling
+        // Error event handling - Single batched update
         addError: (error) => {
-          const errorWithTimestamp: ConsensusErrorEvent = {
-            ...error,
-            receivedAt: new Date(),
-          }
+          set((state) => {
+            const errorWithTimestamp: ConsensusErrorEvent = {
+              ...error,
+              receivedAt: new Date(),
+            }
+            const newErrors = [errorWithTimestamp, ...state.recentErrors].slice(0, CONSENSUS.MAX_RECENT_ERRORS)
 
-          set((state) => ({
-            recentErrors: [errorWithTimestamp, ...state.recentErrors].slice(0, MAX_RECENT_ERRORS),
-          }))
+            // Compute stats and health in same update
+            const newStats = computeStats(state.recentBlocks, newErrors)
+            const newHealth = computeNetworkHealth(state.recentBlocks, newErrors, newStats)
 
-          get()._updateStats()
-          get()._updateNetworkHealth()
+            return {
+              recentErrors: newErrors,
+              stats: newStats,
+              networkHealth: newHealth,
+            }
+          })
         },
 
         clearErrors: () => {
-          set({ recentErrors: [] })
-          get()._updateStats()
+          set((state) => {
+            const newStats = computeStats(state.recentBlocks, [])
+            return {
+              recentErrors: [],
+              stats: newStats,
+            }
+          })
         },
 
         acknowledgeError: (blockNumber) => {
-          set((state) => ({
-            recentErrors: state.recentErrors.filter((e) => e.blockNumber !== blockNumber),
-          }))
-          get()._updateStats()
+          set((state) => {
+            const newErrors = state.recentErrors.filter((e) => e.blockNumber !== blockNumber)
+            const newStats = computeStats(state.recentBlocks, newErrors)
+            return {
+              recentErrors: newErrors,
+              stats: newStats,
+            }
+          })
         },
 
         // Fork event handling
@@ -218,7 +327,7 @@ export const useConsensusStore = create<ConsensusState>()(
           }
 
           set((state) => ({
-            recentForks: [forkWithTimestamp, ...state.recentForks].slice(0, MAX_RECENT_FORKS),
+            recentForks: [forkWithTimestamp, ...state.recentForks].slice(0, CONSENSUS.MAX_RECENT_FORKS),
           }))
         },
 
@@ -244,7 +353,7 @@ export const useConsensusStore = create<ConsensusState>()(
           set((state) => ({
             recentValidatorChanges: [changeWithTimestamp, ...state.recentValidatorChanges].slice(
               0,
-              MAX_RECENT_VALIDATOR_CHANGES
+              CONSENSUS.MAX_RECENT_VALIDATOR_CHANGES
             ),
           }))
         },
@@ -263,99 +372,6 @@ export const useConsensusStore = create<ConsensusState>()(
             recentValidatorChanges: [],
             stats: initialStats,
             networkHealth: initialNetworkHealth,
-          })
-        },
-
-        // Internal: Update statistics
-        _updateStats: () => {
-          const { recentBlocks, recentErrors } = get()
-
-          const totalBlocks = recentBlocks.length
-          const roundChanges = recentBlocks.filter((b) => b.roundChanged).length
-          const averageParticipation =
-            totalBlocks > 0
-              ? recentBlocks.reduce((sum, b) => sum + b.participationRate, 0) / totalBlocks
-              : 0
-
-          const errorsBySeverity = {
-            critical: recentErrors.filter((e) => e.severity === 'critical').length,
-            high: recentErrors.filter((e) => e.severity === 'high').length,
-            medium: recentErrors.filter((e) => e.severity === 'medium').length,
-            low: recentErrors.filter((e) => e.severity === 'low').length,
-          }
-
-          set({
-            stats: {
-              totalBlocks,
-              roundChanges,
-              averageParticipation,
-              errorCount: recentErrors.length,
-              errorsBySeverity,
-              lastUpdated: new Date().toISOString(),
-            },
-          })
-        },
-
-        // Internal: Update network health
-        _updateNetworkHealth: () => {
-          const { recentBlocks, recentErrors, stats } = get()
-
-          // Calculate health score (0-100)
-          let score = 100
-
-          // Deduct for low participation (max -40 points)
-          if (stats.averageParticipation < 100) {
-            score -= Math.min(40, (100 - stats.averageParticipation) * 0.8)
-          }
-
-          // Deduct for round changes (max -20 points)
-          const roundChangeRate =
-            stats.totalBlocks > 0 ? stats.roundChanges / stats.totalBlocks : 0
-          score -= Math.min(20, roundChangeRate * 100)
-
-          // Deduct for errors (max -40 points)
-          const errorPenalty =
-            stats.errorsBySeverity.critical * 15 +
-            stats.errorsBySeverity.high * 8 +
-            stats.errorsBySeverity.medium * 3 +
-            stats.errorsBySeverity.low * 1
-          score -= Math.min(40, errorPenalty)
-
-          // Ensure score is between 0 and 100
-          score = Math.max(0, Math.min(100, Math.round(score)))
-
-          // Determine status
-          let status: NetworkHealth['status']
-          if (score >= 90) status = 'excellent'
-          else if (score >= 75) status = 'good'
-          else if (score >= 60) status = 'fair'
-          else status = 'poor'
-
-          // Calculate time since last error
-          const lastError = recentErrors[0]
-          const timeSinceLastError = lastError?.receivedAt
-            ? Date.now() - lastError.receivedAt.getTime()
-            : null
-
-          // Get latest participation rate
-          const latestBlock = recentBlocks[0]
-          const participationRate = latestBlock?.participationRate ?? 100
-
-          // Build network health object, conditionally including timeSinceLastError
-          const networkHealthUpdate: NetworkHealth = {
-            score,
-            status,
-            isHealthy: score >= 60,
-            participationRate,
-            roundChangeRate,
-          }
-
-          if (timeSinceLastError !== null) {
-            networkHealthUpdate.timeSinceLastError = timeSinceLastError
-          }
-
-          set({
-            networkHealth: networkHealthUpdate,
           })
         },
       }),

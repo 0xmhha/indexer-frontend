@@ -10,6 +10,7 @@ import {
 } from '@/lib/utils/gas'
 import { formatCurrency } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
+import { GAS, THRESHOLDS } from '@/lib/config/constants'
 
 interface TransactionSimulatorProps {
   className?: string
@@ -40,30 +41,30 @@ export function TransactionSimulator({ className }: TransactionSimulatorProps) {
   const [networkCondition, setNetworkCondition] = useState<NetworkCondition>('medium')
 
   // Gas parameters
-  const [baseFeeGwei, setBaseFeeGwei] = useState<number>(25)
-  const [priorityFeeGwei, setPriorityFeeGwei] = useState<number>(2)
-  const [maxFeeGwei, setMaxFeeGwei] = useState<number>(35)
+  const [baseFeeGwei, setBaseFeeGwei] = useState<number>(GAS.BASE_FEE_MEDIUM)
+  const [priorityFeeGwei, setPriorityFeeGwei] = useState<number>(GAS.PRIORITY_FEE_STANDARD_THRESHOLD)
+  const [maxFeeGwei, setMaxFeeGwei] = useState<number>(GAS.MAX_GAS_PRICE)
 
   // Gas limits by transaction type
   const gasLimits: Record<TransactionType, number> = {
-    transfer: 21000,
-    contract: 100000,
-    token: 65000,
-    nft: 150000,
+    transfer: GAS.GAS_LIMIT_TRANSFER,
+    contract: GAS.GAS_LIMIT_CONTRACT,
+    token: GAS.GAS_LIMIT_TOKEN,
+    nft: GAS.GAS_LIMIT_NFT,
   }
 
   // Network condition base fees (simulated)
   const networkBaseFees: Record<NetworkCondition, number> = {
-    low: 15,
-    medium: 25,
-    high: 50,
-    extreme: 100,
+    low: GAS.BASE_FEE_LOW,
+    medium: GAS.BASE_FEE_MEDIUM,
+    high: GAS.BASE_FEE_HIGH,
+    extreme: GAS.BASE_FEE_EXTREME,
   }
 
   // Update base fee when network condition changes
   useEffect(() => {
     setBaseFeeGwei(networkBaseFees[networkCondition])
-    setMaxFeeGwei(networkBaseFees[networkCondition] + priorityFeeGwei + 10)
+    setMaxFeeGwei(networkBaseFees[networkCondition] + priorityFeeGwei + GAS.MAX_FEE_OFFSET)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [networkCondition])
 
@@ -83,30 +84,30 @@ export function TransactionSimulator({ className }: TransactionSimulatorProps) {
     let successProbability: number
     let recommendation: string
 
-    if (priorityFeeGwei < 1) {
+    if (priorityFeeGwei < GAS.PRIORITY_FEE_LOW_THRESHOLD) {
       estimatedConfirmTime = '5-10 minutes'
-      successProbability = 60
+      successProbability = GAS.SUCCESS_PROB_LOW_PRIORITY
       recommendation = 'Low priority - may take longer during high network activity'
-    } else if (priorityFeeGwei < 2) {
+    } else if (priorityFeeGwei < GAS.PRIORITY_FEE_STANDARD_THRESHOLD) {
       estimatedConfirmTime = '2-5 minutes'
-      successProbability = 75
+      successProbability = GAS.SUCCESS_PROB_STANDARD_PRIORITY
       recommendation = 'Standard priority - reasonable for most transactions'
-    } else if (priorityFeeGwei < 5) {
+    } else if (priorityFeeGwei < GAS.PRIORITY_FEE_HIGH_THRESHOLD) {
       estimatedConfirmTime = '30-120 seconds'
-      successProbability = 90
+      successProbability = GAS.SUCCESS_PROB_HIGH_PRIORITY
       recommendation = 'High priority - good for time-sensitive transactions'
     } else {
       estimatedConfirmTime = '< 30 seconds'
-      successProbability = 98
+      successProbability = GAS.SUCCESS_PROB_VERY_HIGH_PRIORITY
       recommendation = 'Very high priority - fast confirmation guaranteed'
     }
 
     // Adjust for network conditions
     if (networkCondition === 'extreme') {
-      successProbability = Math.max(successProbability - 20, 50)
+      successProbability = Math.max(successProbability - GAS.PROB_ADJUSTMENT_EXTREME, GAS.PROB_MIN_EXTREME)
       recommendation += '. Consider waiting for network to stabilize.'
     } else if (networkCondition === 'high') {
-      successProbability = Math.max(successProbability - 10, 60)
+      successProbability = Math.max(successProbability - GAS.PROB_ADJUSTMENT_HIGH, GAS.PROB_MIN_HIGH)
     }
 
     return {
@@ -274,11 +275,11 @@ export function TransactionSimulator({ className }: TransactionSimulatorProps) {
               <div className="h-3 overflow-hidden rounded-full bg-bg-primary">
                 <div
                   className={`h-full transition-all ${
-                    result.successProbability >= 90
+                    result.successProbability >= THRESHOLDS.HEALTH_EXCELLENT
                       ? 'bg-accent-green'
-                      : result.successProbability >= 75
+                      : result.successProbability >= THRESHOLDS.HEALTH_GOOD
                         ? 'bg-accent-blue'
-                        : result.successProbability >= 60
+                        : result.successProbability >= THRESHOLDS.HEALTH_FAIR
                           ? 'bg-accent-orange'
                           : 'bg-accent-red'
                   }`}
@@ -290,9 +291,9 @@ export function TransactionSimulator({ className }: TransactionSimulatorProps) {
             {/* Recommendation */}
             <div
               className={`rounded border p-4 ${
-                result.successProbability >= 90
+                result.successProbability >= THRESHOLDS.HEALTH_EXCELLENT
                   ? 'border-accent-green/30 bg-accent-green/5'
-                  : result.successProbability >= 75
+                  : result.successProbability >= THRESHOLDS.HEALTH_GOOD
                     ? 'border-accent-blue/30 bg-accent-blue/5'
                     : 'border-accent-orange/30 bg-accent-orange/5'
               }`}

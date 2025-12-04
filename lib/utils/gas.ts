@@ -4,6 +4,8 @@
  * Utilities for calculating gas prices, especially for EIP-1559 transactions
  */
 
+import { FORMATTING, BLOCKCHAIN } from '@/lib/config/constants'
+
 /**
  * Calculate effective gas price for EIP-1559 transaction
  *
@@ -53,7 +55,7 @@ export function calculateRefund(
   gasUsed: bigint
 ): bigint {
   if (effectiveGasPrice >= maxFeePerGas) {
-    return BigInt(0)
+    return BLOCKCHAIN.ZERO_BIGINT
   }
 
   return (maxFeePerGas - effectiveGasPrice) * gasUsed
@@ -73,7 +75,7 @@ export function calculatePriorityFee(
   gasUsed: bigint
 ): bigint {
   if (effectiveGasPrice <= baseFeePerGas) {
-    return BigInt(0)
+    return BLOCKCHAIN.ZERO_BIGINT
   }
 
   const priorityFeePerGas = effectiveGasPrice - baseFeePerGas
@@ -87,7 +89,7 @@ export function calculatePriorityFee(
  * @returns Formatted string in Gwei (e.g., "25.5 Gwei")
  */
 export function formatGasPrice(wei: bigint): string {
-  const gwei = Number(wei) / 1e9
+  const gwei = Number(wei) / FORMATTING.WEI_PER_GWEI
   return `${gwei.toFixed(2)} Gwei`
 }
 
@@ -98,7 +100,7 @@ export function formatGasPrice(wei: bigint): string {
  * @returns Amount in Gwei
  */
 export function weiToGwei(wei: bigint): number {
-  return Number(wei) / 1e9
+  return Number(wei) / FORMATTING.WEI_PER_GWEI
 }
 
 /**
@@ -108,5 +110,5 @@ export function weiToGwei(wei: bigint): number {
  * @returns Amount in wei
  */
 export function gweiToWei(gwei: number): bigint {
-  return BigInt(Math.floor(gwei * 1e9))
+  return BigInt(Math.floor(gwei * FORMATTING.WEI_PER_GWEI))
 }

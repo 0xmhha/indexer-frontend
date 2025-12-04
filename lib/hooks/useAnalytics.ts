@@ -97,6 +97,7 @@ export function useTopMiners(limit = PAGINATION.STATS_LIMIT) {
   useEffect(() => {
     // Simulate API call with mock data
     const timer = setTimeout(() => {
+      /* eslint-disable no-magic-numbers -- Mock data with representative block numbers and percentages */
       const mockMiners: MinerStats[] = [
         {
           address: '0x742d35Cc6634C0532925a3b844Bc9e7595f0bEb',
@@ -159,6 +160,7 @@ export function useTopMiners(limit = PAGINATION.STATS_LIMIT) {
           percentage: 5.67,
         },
       ].slice(0, limit)
+      /* eslint-enable no-magic-numbers */
 
       setMiners(mockMiners)
       setLoading(false)

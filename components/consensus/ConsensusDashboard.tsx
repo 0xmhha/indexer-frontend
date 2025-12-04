@@ -14,7 +14,7 @@ import { RealTimeBlockCard } from './RealTimeBlockCard'
 import { NetworkHealthStatus, ConnectionStatus } from './NetworkHealth'
 import dynamic from 'next/dynamic'
 import { ConsensusErrorHistory, ConsensusErrorAlert } from './ConsensusErrorAlert'
-import { FEATURES } from '@/lib/config/constants'
+import { FEATURES, THRESHOLDS, UI } from '@/lib/config/constants'
 
 // Dynamic import for Recharts component to avoid SSR issues
 const ParticipationChart = dynamic(
@@ -93,7 +93,7 @@ export function ConsensusDashboard() {
                 ? '...'
                 : 'N/A'
           }
-          status={stats.averageParticipation >= 90 ? 'success' : stats.averageParticipation >= 75 ? 'warning' : 'danger'}
+          status={stats.averageParticipation >= THRESHOLDS.HEALTH_EXCELLENT ? 'success' : stats.averageParticipation >= THRESHOLDS.HEALTH_GOOD ? 'warning' : 'danger'}
           icon="📊"
         />
         <ConsensusStatusCard
@@ -257,7 +257,7 @@ function EpochInfoPanel({ epochData, loading, error }: EpochInfoPanelProps) {
 
   const displayValidators = showAllValidators
     ? epochData.validators
-    : epochData.validators.slice(0, 5)
+    : epochData.validators.slice(0, UI.MAX_LIST_PREVIEW)
 
   return (
     <Card>
@@ -314,7 +314,7 @@ function EpochInfoPanel({ epochData, loading, error }: EpochInfoPanelProps) {
                 )
               })}
             </div>
-            {epochData.validators.length > 5 && (
+            {epochData.validators.length > UI.MAX_LIST_PREVIEW && (
               <button
                 onClick={() => setShowAllValidators(!showAllValidators)}
                 className="mt-2 w-full rounded border border-bg-tertiary p-2 font-mono text-xs text-text-muted transition-colors hover:border-accent-blue hover:text-accent-blue"

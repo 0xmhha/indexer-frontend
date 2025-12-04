@@ -1,5 +1,7 @@
 'use client'
 
+import { THRESHOLDS } from '@/lib/config/constants'
+
 interface ParticipationRateProps {
   rate: number
   size?: 'sm' | 'md' | 'lg'
@@ -23,9 +25,9 @@ export function ParticipationRate({
   label,
 }: ParticipationRateProps) {
   const getColor = () => {
-    if (rate >= 95) return { text: 'text-accent-green', bg: 'bg-accent-green' }
-    if (rate >= 80) return { text: 'text-accent-cyan', bg: 'bg-accent-cyan' }
-    if (rate >= 67) return { text: 'text-yellow-500', bg: 'bg-yellow-500' }
+    if (rate >= THRESHOLDS.PARTICIPATION_EXCELLENT) {return { text: 'text-accent-green', bg: 'bg-accent-green' }}
+    if (rate >= THRESHOLDS.PARTICIPATION_GOOD) {return { text: 'text-accent-cyan', bg: 'bg-accent-cyan' }}
+    if (rate >= THRESHOLDS.PARTICIPATION_MINIMUM) {return { text: 'text-yellow-500', bg: 'bg-yellow-500' }}
     return { text: 'text-accent-red', bg: 'bg-accent-red' }
   }
 

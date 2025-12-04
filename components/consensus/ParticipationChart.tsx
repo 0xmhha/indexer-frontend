@@ -16,7 +16,7 @@ import type { NameType, ValueType } from 'recharts/types/component/DefaultToolti
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { useConsensusStore } from '@/stores/consensusStore'
-import { CONSENSUS } from '@/lib/config/constants'
+import { CONSENSUS, UI } from '@/lib/config/constants'
 
 /**
  * Participation Rate History Chart
@@ -64,10 +64,10 @@ export function ParticipationChart() {
   // Custom tooltip render function
   const renderTooltip = (props: TooltipProps<ValueType, NameType>) => {
     const { active, payload } = props
-    if (!active || !payload || payload.length === 0) return null
+    if (!active || !payload || payload.length === 0) {return null}
 
     const firstPayload = payload[0]
-    if (!firstPayload?.payload) return null
+    if (!firstPayload?.payload) {return null}
 
     const data = firstPayload.payload as (typeof chartData)[0]
     return (
@@ -184,8 +184,8 @@ export function ParticipationChart() {
                 />
                 <YAxis
                   domain={[
-                    (dataMin: number) => Math.max(0, Math.floor(dataMin - 5)),
-                    100,
+                    (dataMin: number) => Math.max(0, Math.floor(dataMin - UI.CHART_Y_AXIS_PADDING)),
+                    CONSENSUS.DEFAULT_PARTICIPATION_RATE,
                   ]}
                   tick={{ fill: '#8b8b8b', fontSize: 10, fontFamily: 'monospace' }}
                   tickLine={{ stroke: '#2a2a2a' }}
@@ -261,8 +261,8 @@ export function ParticipationIndicator() {
   const rate = latestBlock?.participationRate ?? stats.averageParticipation
 
   const getColor = (value: number) => {
-    if (value >= CONSENSUS.PARTICIPATION_WARNING_THRESHOLD) return 'text-accent-green'
-    if (value >= CONSENSUS.PARTICIPATION_CRITICAL_THRESHOLD) return 'text-yellow-400'
+    if (value >= CONSENSUS.PARTICIPATION_WARNING_THRESHOLD) {return 'text-accent-green'}
+    if (value >= CONSENSUS.PARTICIPATION_CRITICAL_THRESHOLD) {return 'text-yellow-400'}
     return 'text-accent-red'
   }
 
@@ -280,10 +280,10 @@ export function ParticipationIndicator() {
 export function ParticipationSparkline() {
   const { recentBlocks } = useConsensusStore()
 
-  // Get last 20 blocks for sparkline
+  // Get last blocks for sparkline
   const sparklineData = useMemo(() => {
     return recentBlocks
-      .slice(0, 20)
+      .slice(0, UI.SPARKLINE_BLOCKS)
       .reverse()
       .map((block) => ({
         value: block.participationRate,

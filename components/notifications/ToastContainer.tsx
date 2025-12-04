@@ -16,7 +16,7 @@ interface ToastContainerProps {
  * @param onClose - Callback when a toast is closed
  */
 export function ToastContainer({ toasts, onClose }: ToastContainerProps) {
-  if (toasts.length === 0) return null
+  if (toasts.length === 0) {return null}
 
   return (
     <div

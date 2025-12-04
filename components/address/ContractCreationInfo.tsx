@@ -14,6 +14,7 @@ import {
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { formatHash, formatNumber, formatDate } from '@/lib/utils/format'
+import { UI } from '@/lib/config/constants'
 import type { ContractCreation } from '@/types/address-indexing'
 
 interface ContractCreationInfoProps {
@@ -34,7 +35,7 @@ export function ContractCreationInfo({ address }: ContractCreationInfoProps) {
     totalCount,
     loading: createdLoading,
     error: createdError,
-  } = useContractsByCreator(address, { limit: 5, offset: 0 })
+  } = useContractsByCreator(address, { limit: UI.MAX_LIST_PREVIEW, offset: 0 })
 
   const hasCreationInfo = contractCreation !== null
   const hasCreatedContracts = createdContracts.length > 0
@@ -179,7 +180,7 @@ export function ContractCreationInfo({ address }: ContractCreationInfoProps) {
                     </TableBody>
                   </Table>
                 </div>
-                {totalCount > 5 && (
+                {totalCount > UI.MAX_LIST_PREVIEW && (
                   <div className="border-t border-bg-tertiary p-4 text-center">
                     <p className="font-mono text-xs text-text-secondary">
                       Showing first 5 contracts. Visit creator&apos;s page to see all {formatNumber(totalCount)}

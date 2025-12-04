@@ -12,8 +12,8 @@ export function NetworkStats() {
 
   // Format average block time
   const formatBlockTime = (seconds: number | null) => {
-    if (seconds === null) return '—'
-    if (seconds < 1) return `${(seconds * 1000).toFixed(0)}ms`
+    if (seconds === null) {return '—'}
+    if (seconds < 1) {return `${(seconds * 1000).toFixed(0)}ms`}
     return `${seconds.toFixed(2)}s`
   }
 

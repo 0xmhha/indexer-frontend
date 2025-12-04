@@ -6,6 +6,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useValidatorStats, useValidatorParticipation } from '@/lib/hooks/useConsensus'
 import { formatNumber } from '@/lib/utils/format'
+import { THRESHOLDS } from '@/lib/config/constants'
 import { ParticipationRate } from '@/components/consensus/ParticipationRate'
 import { RoundIndicator } from '@/components/consensus/RoundIndicator'
 
@@ -190,11 +191,11 @@ function ValidatorStatsOverview({ stats, loading, error }: ValidatorStatsOvervie
               <div className="font-mono text-xs text-text-muted">Prepare Rate</div>
               <div
                 className={`font-mono text-xl font-bold ${
-                  prepareRate >= 95
+                  prepareRate >= THRESHOLDS.PARTICIPATION_EXCELLENT
                     ? 'text-accent-green'
-                    : prepareRate >= 80
+                    : prepareRate >= THRESHOLDS.PARTICIPATION_GOOD
                       ? 'text-accent-cyan'
-                      : prepareRate >= 67
+                      : prepareRate >= THRESHOLDS.PARTICIPATION_MINIMUM
                         ? 'text-yellow-500'
                         : 'text-accent-red'
                 }`}
@@ -224,11 +225,11 @@ function ValidatorStatsOverview({ stats, loading, error }: ValidatorStatsOvervie
               <div className="font-mono text-xs text-text-muted">Commit Rate</div>
               <div
                 className={`font-mono text-xl font-bold ${
-                  commitRate >= 95
+                  commitRate >= THRESHOLDS.PARTICIPATION_EXCELLENT
                     ? 'text-accent-green'
-                    : commitRate >= 80
+                    : commitRate >= THRESHOLDS.PARTICIPATION_GOOD
                       ? 'text-accent-cyan'
-                      : commitRate >= 67
+                      : commitRate >= THRESHOLDS.PARTICIPATION_MINIMUM
                         ? 'text-yellow-500'
                         : 'text-accent-red'
                 }`}

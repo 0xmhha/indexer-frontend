@@ -6,7 +6,7 @@ import {
   transformBalanceSnapshot,
   type TransformedBalanceSnapshot,
 } from '@/lib/utils/graphql-transforms'
-import { PAGINATION } from '@/lib/config/constants'
+import { PAGINATION, BLOCKCHAIN } from '@/lib/config/constants'
 
 interface RawBalanceHistoryNode {
   blockNumber: string
@@ -56,7 +56,7 @@ export function useBalanceHistory(options: BalanceHistoryOptions): BalanceHistor
       limit,
       offset,
     },
-    skip: !address || fromBlock < 0n || toBlock < 0n,
+    skip: !address || fromBlock < BLOCKCHAIN.ZERO_BIGINT || toBlock < BLOCKCHAIN.ZERO_BIGINT,
   })
 
   const rawNodes: RawBalanceHistoryNode[] = data?.balanceHistory?.nodes ?? []

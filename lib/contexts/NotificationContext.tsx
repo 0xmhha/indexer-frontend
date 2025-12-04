@@ -3,6 +3,7 @@
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
 import { ToastContainer } from '@/components/notifications/ToastContainer'
 import type { ToastType } from '@/components/notifications/Toast'
+import { TIMEOUTS, FORMATTING } from '@/lib/config/constants'
 
 interface ToastData {
   id: string
@@ -37,8 +38,8 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
   const [toasts, setToasts] = useState<ToastData[]>([])
 
   const showToast = useCallback(
-    (type: ToastType, title: string, message?: string, duration = 5000) => {
-      const id = `toast-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    (type: ToastType, title: string, message?: string, duration: number = TIMEOUTS.TOAST_DURATION) => {
+      const id = `toast-${Date.now()}-${Math.random().toString(FORMATTING.BASE36_RADIX).substr(2, FORMATTING.RANDOM_ID_LENGTH)}`
 
       const newToast: ToastData = {
         id,
@@ -69,14 +70,14 @@ export function NotificationProvider({ children }: NotificationProviderProps) {
 
   const showWarning = useCallback(
     (title: string, message?: string) => {
-      showToast('warning', title, message, 7000) // Warnings stay longer
+      showToast('warning', title, message, TIMEOUTS.TOAST_WARNING_DURATION)
     },
     [showToast]
   )
 
   const showError = useCallback(
     (title: string, message?: string) => {
-      showToast('error', title, message, 10000) // Errors stay even longer
+      showToast('error', title, message, TIMEOUTS.TOAST_ERROR_DURATION)
     },
     [showToast]
   )

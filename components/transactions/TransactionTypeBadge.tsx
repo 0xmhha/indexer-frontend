@@ -2,6 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import { getTxTypeName, getTxTypeColor, isValidTxType } from '@/lib/constants/transactions'
+import { FORMATTING } from '@/lib/config/constants'
 
 interface TransactionTypeMeta {
   label: string
@@ -14,7 +15,7 @@ const DEFAULT_META: TransactionTypeMeta = {
 }
 
 function formatHexType(type: number): string {
-  return `0x${type.toString(16).padStart(2, '0')}`
+  return `0x${type.toString(FORMATTING.HEX_RADIX).padStart(2, '0')}`
 }
 
 export function getTransactionTypeMeta(type?: number | null) {

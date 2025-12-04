@@ -6,6 +6,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useAllValidatorStats, type ValidatorStats } from '@/lib/hooks/useConsensus'
 import { truncateAddress, formatNumber } from '@/lib/utils/format'
+import { THRESHOLDS, BLOCKCHAIN } from '@/lib/config/constants'
 import { ParticipationRate } from './ParticipationRate'
 
 interface ValidatorLeaderboardProps {
@@ -144,23 +145,27 @@ interface ValidatorRowProps {
   rank: number
 }
 
+const RANK_FIRST = 1
+const RANK_SECOND = 2
+const RANK_THIRD = 3
+
 function ValidatorRow({ validator, rank }: ValidatorRowProps) {
   const getRankBadge = () => {
-    if (rank === 1) {
+    if (rank === RANK_FIRST) {
       return (
         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-yellow-500/20 font-mono text-xs font-bold text-yellow-500">
           1
         </span>
       )
     }
-    if (rank === 2) {
+    if (rank === RANK_SECOND) {
       return (
         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-gray-400/20 font-mono text-xs font-bold text-gray-400">
           2
         </span>
       )
     }
-    if (rank === 3) {
+    if (rank === RANK_THIRD) {
       return (
         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-orange-600/20 font-mono text-xs font-bold text-orange-600">
           3
@@ -176,10 +181,10 @@ function ValidatorRow({ validator, rank }: ValidatorRowProps) {
 
   const prepareRate =
     Number(validator.preparesSigned) /
-    (Number(validator.preparesSigned) + Number(validator.preparesMissed)) * 100 || 0
+    (Number(validator.preparesSigned) + Number(validator.preparesMissed)) * BLOCKCHAIN.PERCENTAGE_MULTIPLIER || 0
   const commitRate =
     Number(validator.commitsSigned) /
-    (Number(validator.commitsSigned) + Number(validator.commitsMissed)) * 100 || 0
+    (Number(validator.commitsSigned) + Number(validator.commitsMissed)) * BLOCKCHAIN.PERCENTAGE_MULTIPLIER || 0
 
   return (
     <tr className="border-b border-bg-tertiary hover:bg-bg-secondary">
@@ -202,11 +207,11 @@ function ValidatorRow({ validator, rank }: ValidatorRowProps) {
       <td className="px-4 py-3 text-center">
         <span
           className={`font-mono text-sm ${
-            prepareRate >= 95
+            prepareRate >= THRESHOLDS.PARTICIPATION_EXCELLENT
               ? 'text-accent-green'
-              : prepareRate >= 80
+              : prepareRate >= THRESHOLDS.PARTICIPATION_GOOD
                 ? 'text-accent-cyan'
-                : prepareRate >= 67
+                : prepareRate >= THRESHOLDS.PARTICIPATION_MINIMUM
                   ? 'text-yellow-500'
                   : 'text-accent-red'
           }`}
@@ -217,11 +222,11 @@ function ValidatorRow({ validator, rank }: ValidatorRowProps) {
       <td className="px-4 py-3 text-center">
         <span
           className={`font-mono text-sm ${
-            commitRate >= 95
+            commitRate >= THRESHOLDS.PARTICIPATION_EXCELLENT
               ? 'text-accent-green'
-              : commitRate >= 80
+              : commitRate >= THRESHOLDS.PARTICIPATION_GOOD
                 ? 'text-accent-cyan'
-                : commitRate >= 67
+                : commitRate >= THRESHOLDS.PARTICIPATION_MINIMUM
                   ? 'text-yellow-500'
                   : 'text-accent-red'
           }`}

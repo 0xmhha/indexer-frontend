@@ -29,7 +29,7 @@ export function NotificationSettings() {
 
   // Load preferences from localStorage using lazy initialization
   const [preferences, setPreferences] = useState<NotificationPreferences>(() => {
-    if (typeof window === 'undefined') return DEFAULT_PREFERENCES
+    if (typeof window === 'undefined') {return DEFAULT_PREFERENCES}
 
     try {
       const saved = localStorage.getItem('notification-preferences')
@@ -176,7 +176,7 @@ function SettingToggle({ label, description, enabled, onToggle }: SettingToggleP
 export function useNotificationPreferences(): NotificationPreferences {
   // Load preferences from localStorage using lazy initialization
   const [preferences] = useState<NotificationPreferences>(() => {
-    if (typeof window === 'undefined') return DEFAULT_PREFERENCES
+    if (typeof window === 'undefined') {return DEFAULT_PREFERENCES}
 
     try {
       const saved = localStorage.getItem('notification-preferences')

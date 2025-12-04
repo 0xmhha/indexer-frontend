@@ -9,6 +9,7 @@ import { useTopMiners } from '@/lib/hooks/useStats'
 import { TopMinersTable } from '@/components/stats/TopMinersTable'
 import { AdvancedLogsViewer } from '@/components/logs/AdvancedLogsViewer'
 import { formatNumber } from '@/lib/utils/format'
+import { BLOCKCHAIN } from '@/lib/config/constants'
 
 // Lazy load heavy chart components
 const TransactionsOverTimeChart = dynamic(
@@ -46,7 +47,7 @@ export default function StatsPage() {
 
   // Calculate time range for last 24 hours
   const now = Math.floor(Date.now() / 1000)
-  const dayAgo = now - 24 * 60 * 60
+  const dayAgo = now - BLOCKCHAIN.HOURS_PER_DAY * BLOCKCHAIN.MINUTES_PER_HOUR * BLOCKCHAIN.SECONDS_PER_MINUTE
   const toTime = BigInt(now)
   const fromTime = BigInt(dayAgo)
 

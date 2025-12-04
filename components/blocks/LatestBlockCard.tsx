@@ -3,32 +3,18 @@
 import { useNewBlocks } from '@/lib/hooks/useSubscriptions'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
-import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { formatNumber, formatTimeAgo } from '@/lib/utils/format'
 import Link from 'next/link'
 
 export function LatestBlockCard() {
-  // Use subscription for real-time updates (no polling)
-  const { latestBlock, loading, error } = useNewBlocks(1)
+  // Use centralized store for real-time updates (no direct subscription)
+  const { latestBlock, loading } = useNewBlocks(1)
 
   if (loading && !latestBlock) {
     return (
       <Card>
         <CardContent className="flex h-48 items-center justify-center">
           <LoadingSpinner />
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardContent className="p-6">
-          <ErrorDisplay
-            title="Failed to load latest block"
-            message={error.message || 'Unknown error'}
-          />
         </CardContent>
       </Card>
     )

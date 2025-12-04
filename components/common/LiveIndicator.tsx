@@ -1,15 +1,13 @@
 'use client'
 
-import { useSubscription } from '@apollo/client'
-import { SUBSCRIBE_NEW_BLOCK } from '@/lib/apollo/queries'
+import { useRealtimeStore, selectIsConnected } from '@/stores/realtimeStore'
 
+/**
+ * LiveIndicator - Shows WebSocket connection status
+ * Reads from centralized RealtimeStore instead of subscribing directly
+ */
 export function LiveIndicator() {
-  // Use Apollo Client subscription to check connection status
-  const { loading, error } = useSubscription(SUBSCRIBE_NEW_BLOCK, {
-    fetchPolicy: 'no-cache',
-  })
-
-  const isConnected = !loading && !error
+  const isConnected = useRealtimeStore(selectIsConnected)
 
   return (
     <div className="flex items-center gap-2">

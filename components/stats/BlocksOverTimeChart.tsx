@@ -21,7 +21,7 @@ interface ChartDataPoint {
 
 export function BlocksOverTimeChart({ data }: BlocksOverTimeChartProps) {
   const chartData = useMemo<ChartDataPoint[]>(() => {
-    if (!data || data.length === 0) return []
+    if (!data || data.length === 0) {return []}
 
     return data.map((entry) => ({
       timestamp: new Date(Number(entry.timestamp) * 1000).toLocaleString('en-US', {

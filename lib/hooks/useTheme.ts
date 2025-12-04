@@ -14,12 +14,12 @@ interface UseThemeResult {
 const STORAGE_KEY = 'theme-preference'
 
 function getSystemTheme(): 'dark' | 'light' {
-  if (typeof window === 'undefined') return 'dark'
+  if (typeof window === 'undefined') {return 'dark'}
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
 }
 
 function applyTheme(theme: 'dark' | 'light'): void {
-  if (typeof document === 'undefined') return
+  if (typeof document === 'undefined') {return}
 
   const root = document.documentElement
   root.classList.remove('dark', 'light')
@@ -36,7 +36,7 @@ function applyTheme(theme: 'dark' | 'light'): void {
  */
 export function useTheme(): UseThemeResult {
   const [theme, setThemeState] = useState<Theme>(() => {
-    if (typeof window === 'undefined') return 'dark'
+    if (typeof window === 'undefined') {return 'dark'}
 
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
@@ -75,7 +75,7 @@ export function useTheme(): UseThemeResult {
 
   // Listen for system theme changes
   useEffect(() => {
-    if (theme !== 'system') return
+    if (theme !== 'system') {return}
 
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
 
@@ -95,8 +95,8 @@ export function useTheme(): UseThemeResult {
 
   const toggleTheme = useCallback(() => {
     setThemeState((current) => {
-      if (current === 'dark') return 'light'
-      if (current === 'light') return 'dark'
+      if (current === 'dark') {return 'light'}
+      if (current === 'light') {return 'dark'}
       // If system, toggle to opposite of current resolved theme
       return resolvedTheme === 'dark' ? 'light' : 'dark'
     })

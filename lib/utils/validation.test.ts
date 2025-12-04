@@ -28,8 +28,8 @@ describe('isValidHash', () => {
   it('should validate correct hashes', () => {
     const validHash = '0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef'
     expect(isValidHash(validHash)).toBe(true)
-    expect(isValidHash('0x' + '0'.repeat(64))).toBe(true)
-    expect(isValidHash('0x' + 'f'.repeat(64))).toBe(true)
+    expect(isValidHash(`0x${  '0'.repeat(64)}`)).toBe(true)
+    expect(isValidHash(`0x${  'f'.repeat(64)}`)).toBe(true)
   })
 
   it('should reject invalid hashes', () => {
@@ -93,11 +93,11 @@ describe('detectInputType', () => {
 
   it('should handle ambiguous cases correctly', () => {
     // 0x + 40 hex chars could be address or invalid hash (too short)
-    const fortyCharHex = '0x' + '1234567890abcdef'.repeat(2) + '12345678'
+    const fortyCharHex = `0x${  '1234567890abcdef'.repeat(2)  }12345678`
     expect(detectInputType(fortyCharHex)).toBe('address')
 
     // 0x + 64 hex chars is hash (addresses are 40 chars)
-    const sixtyFourCharHex = '0x' + '1234567890abcdef'.repeat(4)
+    const sixtyFourCharHex = `0x${  '1234567890abcdef'.repeat(4)}`
     expect(detectInputType(sixtyFourCharHex)).toBe('hash')
   })
 })

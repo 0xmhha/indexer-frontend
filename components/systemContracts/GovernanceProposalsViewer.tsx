@@ -370,7 +370,7 @@ function ProposalVotesDetail({ contract, proposalId, isVisible }: ProposalVotesD
     isVisible ? proposalId : ''
   )
 
-  if (!isVisible) return null
+  if (!isVisible) {return null}
 
   if (loading) {
     return (
@@ -397,7 +397,7 @@ function ProposalVotesDetail({ contract, proposalId, isVisible }: ProposalVotesD
     <div className="space-y-2">
       <div className="font-mono text-xs text-text-muted">Recent Votes ({votes.length})</div>
       <div className="max-h-32 space-y-1 overflow-auto">
-        {votes.slice(0, 5).map((vote, idx) => (
+        {votes.slice(0, UI.MAX_LIST_PREVIEW).map((vote, idx) => (
           <div
             key={`${vote.voter}-${idx}`}
             className="flex items-center justify-between rounded border border-bg-tertiary bg-bg-primary px-2 py-1"

@@ -6,6 +6,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useEpochData, useLatestEpochData } from '@/lib/hooks/useConsensus'
 import { truncateAddress } from '@/lib/utils/format'
+import { FORMATTING, BLOCKCHAIN, THRESHOLDS } from '@/lib/config/constants'
 
 interface EpochDetailProps {
   epochNumber: string
@@ -221,7 +222,7 @@ export function EpochDetail({ epochNumber }: EpochDetailProps) {
                           title={blsPubKey}
                         >
                           {blsPubKey
-                            ? `${blsPubKey.slice(0, 20)}...${blsPubKey.slice(-8)}`
+                            ? `${blsPubKey.slice(0, FORMATTING.BLS_KEY_START_CHARS)}...${blsPubKey.slice(-FORMATTING.BLS_KEY_END_CHARS)}`
                             : '-'}
                         </span>
                       </td>
@@ -258,7 +259,7 @@ export function EpochDetail({ epochNumber }: EpochDetailProps) {
                 </thead>
                 <tbody>
                   {epochData.candidates.map((candidate) => {
-                    const diligence = parseFloat(candidate.diligence) * 100
+                    const diligence = parseFloat(candidate.diligence) * BLOCKCHAIN.PERCENTAGE_MULTIPLIER
                     return (
                       <tr
                         key={candidate.address}
@@ -276,11 +277,11 @@ export function EpochDetail({ epochNumber }: EpochDetailProps) {
                         <td className="px-4 py-3 text-center">
                           <span
                             className={`font-mono text-sm ${
-                              diligence >= 95
+                              diligence >= THRESHOLDS.PARTICIPATION_EXCELLENT
                                 ? 'text-accent-green'
-                                : diligence >= 80
+                                : diligence >= THRESHOLDS.PARTICIPATION_GOOD
                                   ? 'text-accent-cyan'
-                                  : diligence >= 67
+                                  : diligence >= THRESHOLDS.PARTICIPATION_MINIMUM
                                     ? 'text-yellow-500'
                                     : 'text-accent-red'
                             }`}

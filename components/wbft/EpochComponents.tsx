@@ -3,6 +3,7 @@
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { truncateAddress } from '@/lib/utils/format'
 import type { ValidatorDisplayInfo, Epoch } from '@/lib/hooks/useWBFT'
+import { FORMATTING } from '@/lib/config/constants'
 
 // ============================================================
 // Stat Card
@@ -177,7 +178,7 @@ function ValidatorItem({ validator }: { validator: ValidatorDisplayInfo }) {
         <div className="sm:col-span-2">
           <div className="font-mono text-xs text-text-muted">BLS Public Key</div>
           <div className="font-mono text-xs text-text-secondary break-all" title={validator.blsPubKey}>
-            {validator.blsPubKey ? `${validator.blsPubKey.slice(0, 32)}...` : 'N/A'}
+            {validator.blsPubKey ? `${validator.blsPubKey.slice(0, FORMATTING.BLS_KEY_PREVIEW_LENGTH)}...` : 'N/A'}
           </div>
         </div>
       </div>

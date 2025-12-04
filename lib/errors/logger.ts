@@ -4,6 +4,7 @@
  */
 
 import { AppError, getErrorMessage } from './types'
+import { ERROR_LOGGING, TIMEOUTS } from '@/lib/config/constants'
 
 interface ErrorContext {
   component?: string | undefined
@@ -31,13 +32,13 @@ interface SerializedErrorLog {
 
 class ErrorLogger {
   private logs: ErrorLog[] = []
-  private maxLogs = 100 // Keep last 100 errors in memory
+  private maxLogs = ERROR_LOGGING.MAX_IN_MEMORY_LOGS
   private errorQueue: SerializedErrorLog[] = []
   private batchTimeout: NodeJS.Timeout | null = null
-  private readonly BATCH_DELAY = 5000 // 5 seconds
-  private readonly MAX_BATCH_SIZE = 10
+  private readonly BATCH_DELAY = TIMEOUTS.ERROR_BATCH_DELAY
+  private readonly MAX_BATCH_SIZE = ERROR_LOGGING.MAX_BATCH_SIZE
   private readonly STORAGE_KEY = 'app_error_logs'
-  private readonly MAX_STORED_ERRORS = 50
+  private readonly MAX_STORED_ERRORS = ERROR_LOGGING.MAX_STORED_ERRORS
 
   /**
    * Log an error with context
@@ -93,7 +94,7 @@ class ErrorLogger {
   /**
    * Get recent error logs
    */
-  getRecentLogs(count = 10): ErrorLog[] {
+  getRecentLogs(count: number = ERROR_LOGGING.DEFAULT_RECENT_COUNT): ErrorLog[] {
     return this.logs.slice(-count)
   }
 

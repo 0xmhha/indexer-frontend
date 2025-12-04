@@ -62,3 +62,73 @@ export interface TokenBalance {
   decimals: number | null
   metadata: string | null // JSON string for additional token metadata
 }
+
+// ============================================================================
+// Receipt Types (from useReceipt hook)
+// ============================================================================
+
+export type {
+  ReceiptLog,
+  TransactionReceipt,
+  ParsedReceipt,
+  TransferEvent,
+} from '@/lib/hooks/useReceipt'
+
+export {
+  parseReceipt,
+  formatGas,
+  calculateTxCost,
+  formatWeiToEther,
+  parseTransferLogs,
+  filterLogsByAddress,
+  filterLogsByTopic,
+  EVENT_SIGNATURES,
+} from '@/lib/hooks/useReceipt'
+
+// ============================================================================
+// System Contract Types (from useSystemContracts hook)
+// ============================================================================
+
+export type {
+  // System Contract Event Types
+  SystemContractSubscriptionFilter,
+  SystemContractEventMessage,
+  ParsedSystemContractEvent,
+  // Dynamic Contract Types
+  RegisterContractInput,
+  RegisteredContract,
+  DynamicContractSubscriptionFilter,
+  DynamicContractEventMessage,
+  ParsedDynamicContractEvent,
+  // Governance Types
+  Proposal,
+  ProposalVote,
+  ProposalStatus,
+  ProposalStatusFilter,
+  DepositMintProposal,
+  // Event Types
+  MintEvent,
+  BurnEvent,
+  MinterInfo,
+  ValidatorInfo,
+  MinterConfigEvent,
+  GasTipUpdateEvent,
+  ValidatorChangeEvent,
+  EmergencyPauseEvent,
+  BlacklistEvent,
+  MemberChangeEvent,
+  MaxProposalsUpdateEvent,
+  ProposalExecutionSkippedEvent,
+} from '@/lib/hooks/useSystemContracts'
+
+export {
+  // Constants
+  SYSTEM_CONTRACTS,
+  // Utility Functions
+  parseSystemContractEvent,
+  parseDynamicContractEvent,
+  isAddressBlacklisted,
+  filterToBackendStatus,
+  getProposalStatusLabel,
+  getProposalStatusColor,
+} from '@/lib/hooks/useSystemContracts'

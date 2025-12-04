@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts'
+import { THRESHOLDS } from '@/lib/config/constants'
 
 export interface AreaChartProps {
   data: Array<Record<string, unknown>>
@@ -78,7 +79,7 @@ export function AreaChart({
             dataKey={yKey.key}
             stroke={yKey.color}
             fill={yKey.color}
-            fillOpacity={yKey.fillOpacity || 0.6}
+            fillOpacity={yKey.fillOpacity || THRESHOLDS.CHART_OPACITY}
             name={yKey.name || yKey.key}
             {...(stacked && { stackId: '1' })}
           />

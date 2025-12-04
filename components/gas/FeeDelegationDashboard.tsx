@@ -15,6 +15,7 @@ import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useFeeDelegationStats } from '@/lib/hooks/useAnalytics'
 import { formatCurrency, formatHash, formatNumber } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
+import { THRESHOLDS } from '@/lib/config/constants'
 
 interface FeeDelegationDashboardProps {
   className?: string
@@ -114,21 +115,21 @@ export function FeeDelegationDashboard({ className }: FeeDelegationDashboardProp
             <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
               <AdoptionMilestone
                 label="Early Adoption"
-                threshold={5}
+                threshold={THRESHOLDS.ADOPTION_EARLY}
                 current={stats.adoptionRate}
-                reached={stats.adoptionRate >= 5}
+                reached={stats.adoptionRate >= THRESHOLDS.ADOPTION_EARLY}
               />
               <AdoptionMilestone
                 label="Growing Usage"
-                threshold={15}
+                threshold={THRESHOLDS.ADOPTION_GROWING}
                 current={stats.adoptionRate}
-                reached={stats.adoptionRate >= 15}
+                reached={stats.adoptionRate >= THRESHOLDS.ADOPTION_GROWING}
               />
               <AdoptionMilestone
                 label="Mainstream"
-                threshold={30}
+                threshold={THRESHOLDS.ADOPTION_MAINSTREAM}
                 current={stats.adoptionRate}
-                reached={stats.adoptionRate >= 30}
+                reached={stats.adoptionRate >= THRESHOLDS.ADOPTION_MAINSTREAM}
               />
             </div>
           </div>

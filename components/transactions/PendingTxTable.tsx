@@ -47,7 +47,7 @@ function AddressLink({ address, isTo = false }: { address: string | null | undef
  */
 function GasPriceCell({ gasPrice, maxFeePerGas }: { gasPrice: bigint | null; maxFeePerGas: bigint | null }) {
   const price = gasPrice || maxFeePerGas
-  if (!price) return <span className="text-text-muted">N/A</span>
+  if (!price) {return <span className="text-text-muted">N/A</span>}
   return <>{weiToGwei(price).toFixed(2)} Gwei</>
 }
 

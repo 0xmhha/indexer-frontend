@@ -5,6 +5,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { usePendingTransactions } from '@/lib/hooks/useSubscriptions'
 import { weiToGwei } from '@/lib/utils/gas'
+import { UI, BLOCKCHAIN, FORMATTING } from '@/lib/config/constants'
 
 interface ChartDataPoint {
   time: string
@@ -47,7 +48,7 @@ export function RealtimeActivityChart({
       })
 
       // Calculate average gas price from recent transactions
-      const recentTxs = pendingTransactions.slice(0, 20)
+      const recentTxs = pendingTransactions.slice(0, UI.REALTIME_CHART_TX_COUNT)
       let avgGasPrice = 0
 
       if (recentTxs.length > 0) {
@@ -68,7 +69,7 @@ export function RealtimeActivityChart({
       setChartData((prev) => {
         const updated = [...prev, newDataPoint]
         // Keep only data within time window
-        const maxDataPoints = Math.ceil((timeWindowMinutes * 60 * 1000) / updateIntervalMs)
+        const maxDataPoints = Math.ceil((timeWindowMinutes * BLOCKCHAIN.SECONDS_PER_MINUTE * FORMATTING.MS_PER_SECOND) / updateIntervalMs)
         return updated.slice(-maxDataPoints)
       })
     }, updateIntervalMs)

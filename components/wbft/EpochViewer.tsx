@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useEpochSearch } from '@/lib/hooks/useEpochSearch'
+import { FORMATTING } from '@/lib/config/constants'
 import {
   EpochStatsGrid,
   EpochSearchForm,
@@ -33,16 +34,20 @@ function EpochDetailsCard({
   refetchCurrent,
 }: EpochDetailsCardProps) {
   // Transform validator indices + BLS keys into ValidatorDisplayInfo[]
-  const validatorDisplayInfos: ValidatorDisplayInfo[] = useMemo(() => {
-    if (!displayedEpoch?.validators) return []
+  // Extract stable references to avoid React Compiler memoization issues
+  const validators = displayedEpoch?.validators
+  const blsPublicKeys = displayedEpoch?.blsPublicKeys
 
-    return displayedEpoch.validators.map((validatorIndex, i) => ({
+  const validatorDisplayInfos: ValidatorDisplayInfo[] = useMemo(() => {
+    if (!validators) {return []}
+
+    return validators.map((validatorIndex, i) => ({
       index: validatorIndex,
       // Backend doesn't provide addresses, use BLS key prefix or index as placeholder
-      address: displayedEpoch.blsPublicKeys?.[i]?.slice(0, 42) || `Validator #${validatorIndex}`,
-      blsPubKey: displayedEpoch.blsPublicKeys?.[i] || '',
+      address: blsPublicKeys?.[i]?.slice(0, FORMATTING.ETH_ADDRESS_LENGTH) || `Validator #${validatorIndex}`,
+      blsPubKey: blsPublicKeys?.[i] || '',
     }))
-  }, [displayedEpoch?.validators, displayedEpoch?.blsPublicKeys])
+  }, [validators, blsPublicKeys])
 
   return (
     <Card>

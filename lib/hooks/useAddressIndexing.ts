@@ -38,6 +38,7 @@ import type {
   RawERC721Transfer,
   RawERC721Owner,
 } from '@/types/address-indexing'
+import { PAGINATION } from '@/lib/config/constants'
 
 // ============================================================================
 // Helper Functions
@@ -48,7 +49,7 @@ import type {
  * This is a known limitation when the backend doesn't have address indexing enabled
  */
 function isAddressIndexingNotSupportedError(error: ApolloError | undefined): boolean {
-  if (!error) return false
+  if (!error) {return false}
   return error.message.includes('does not support address indexing')
 }
 
@@ -177,13 +178,13 @@ export function useContractsByCreator(
   const pageInfo = rawData?.pageInfo || { hasNextPage: false, hasPreviousPage: false }
 
   const loadMore = () => {
-    if (!pageInfo.hasNextPage) return
+    if (!pageInfo.hasNextPage) {return}
 
     return fetchMore({
       variables: {
         pagination: {
-          limit: pagination?.limit || 20,
-          offset: (pagination?.offset || 0) + (pagination?.limit || 20),
+          limit: pagination?.limit || PAGINATION.DEFAULT_PAGE_SIZE,
+          offset: (pagination?.offset || 0) + (pagination?.limit || PAGINATION.DEFAULT_PAGE_SIZE),
         },
       },
     })
@@ -228,13 +229,13 @@ export function useInternalTransactions(
   const pageInfo = rawData?.pageInfo || { hasNextPage: false, hasPreviousPage: false }
 
   const loadMore = () => {
-    if (!pageInfo.hasNextPage) return
+    if (!pageInfo.hasNextPage) {return}
 
     return fetchMore({
       variables: {
         pagination: {
-          limit: pagination?.limit || 20,
-          offset: (pagination?.offset || 0) + (pagination?.limit || 20),
+          limit: pagination?.limit || PAGINATION.DEFAULT_PAGE_SIZE,
+          offset: (pagination?.offset || 0) + (pagination?.limit || PAGINATION.DEFAULT_PAGE_SIZE),
         },
       },
     })
@@ -266,6 +267,7 @@ export function useInternalTransactionsByAddress(
       },
       skip: !address,
       returnPartialData: true,
+      errorPolicy: 'all',
     }
   )
 
@@ -276,13 +278,13 @@ export function useInternalTransactionsByAddress(
   const pageInfo = rawData?.pageInfo || { hasNextPage: false, hasPreviousPage: false }
 
   const loadMore = () => {
-    if (!pageInfo.hasNextPage) return
+    if (!pageInfo.hasNextPage) {return}
 
     return fetchMore({
       variables: {
         pagination: {
-          limit: pagination?.limit || 20,
-          offset: (pagination?.offset || 0) + (pagination?.limit || 20),
+          limit: pagination?.limit || PAGINATION.DEFAULT_PAGE_SIZE,
+          offset: (pagination?.offset || 0) + (pagination?.limit || PAGINATION.DEFAULT_PAGE_SIZE),
         },
       },
     })
@@ -293,9 +295,12 @@ export function useInternalTransactionsByAddress(
     totalCount,
     pageInfo,
     loading,
-    error,
+    // Filter out "address indexing not supported" errors
+    error: filterAddressIndexingError(error),
     refetch,
     loadMore,
+    // Flag to indicate if feature is available
+    isFeatureAvailable: !isAddressIndexingNotSupportedError(error),
   }
 }
 
@@ -345,13 +350,13 @@ export function useERC20TransfersByToken(
   const pageInfo = rawData?.pageInfo || { hasNextPage: false, hasPreviousPage: false }
 
   const loadMore = () => {
-    if (!pageInfo.hasNextPage) return
+    if (!pageInfo.hasNextPage) {return}
 
     return fetchMore({
       variables: {
         pagination: {
-          limit: pagination?.limit || 20,
-          offset: (pagination?.offset || 0) + (pagination?.limit || 20),
+          limit: pagination?.limit || PAGINATION.DEFAULT_PAGE_SIZE,
+          offset: (pagination?.offset || 0) + (pagination?.limit || PAGINATION.DEFAULT_PAGE_SIZE),
         },
       },
     })
@@ -383,6 +388,7 @@ export function useERC20TransfersByAddress(
       },
       skip: !address,
       returnPartialData: true,
+      errorPolicy: 'all',
     }
   )
 
@@ -392,13 +398,13 @@ export function useERC20TransfersByAddress(
   const pageInfo = rawData?.pageInfo || { hasNextPage: false, hasPreviousPage: false }
 
   const loadMore = () => {
-    if (!pageInfo.hasNextPage) return
+    if (!pageInfo.hasNextPage) {return}
 
     return fetchMore({
       variables: {
         pagination: {
-          limit: pagination?.limit || 20,
-          offset: (pagination?.offset || 0) + (pagination?.limit || 20),
+          limit: pagination?.limit || PAGINATION.DEFAULT_PAGE_SIZE,
+          offset: (pagination?.offset || 0) + (pagination?.limit || PAGINATION.DEFAULT_PAGE_SIZE),
         },
       },
     })
@@ -409,9 +415,12 @@ export function useERC20TransfersByAddress(
     totalCount,
     pageInfo,
     loading,
-    error,
+    // Filter out "address indexing not supported" errors
+    error: filterAddressIndexingError(error),
     refetch,
     loadMore,
+    // Flag to indicate if feature is available
+    isFeatureAvailable: !isAddressIndexingNotSupportedError(error),
   }
 }
 
@@ -461,13 +470,13 @@ export function useERC721TransfersByToken(
   const pageInfo = rawData?.pageInfo || { hasNextPage: false, hasPreviousPage: false }
 
   const loadMore = () => {
-    if (!pageInfo.hasNextPage) return
+    if (!pageInfo.hasNextPage) {return}
 
     return fetchMore({
       variables: {
         pagination: {
-          limit: pagination?.limit || 20,
-          offset: (pagination?.offset || 0) + (pagination?.limit || 20),
+          limit: pagination?.limit || PAGINATION.DEFAULT_PAGE_SIZE,
+          offset: (pagination?.offset || 0) + (pagination?.limit || PAGINATION.DEFAULT_PAGE_SIZE),
         },
       },
     })
@@ -499,6 +508,7 @@ export function useERC721TransfersByAddress(
       },
       skip: !address,
       returnPartialData: true,
+      errorPolicy: 'all',
     }
   )
 
@@ -508,13 +518,13 @@ export function useERC721TransfersByAddress(
   const pageInfo = rawData?.pageInfo || { hasNextPage: false, hasPreviousPage: false }
 
   const loadMore = () => {
-    if (!pageInfo.hasNextPage) return
+    if (!pageInfo.hasNextPage) {return}
 
     return fetchMore({
       variables: {
         pagination: {
-          limit: pagination?.limit || 20,
-          offset: (pagination?.offset || 0) + (pagination?.limit || 20),
+          limit: pagination?.limit || PAGINATION.DEFAULT_PAGE_SIZE,
+          offset: (pagination?.offset || 0) + (pagination?.limit || PAGINATION.DEFAULT_PAGE_SIZE),
         },
       },
     })
@@ -525,9 +535,12 @@ export function useERC721TransfersByAddress(
     totalCount,
     pageInfo,
     loading,
-    error,
+    // Filter out "address indexing not supported" errors
+    error: filterAddressIndexingError(error),
     refetch,
     loadMore,
+    // Flag to indicate if feature is available
+    isFeatureAvailable: !isAddressIndexingNotSupportedError(error),
   }
 }
 

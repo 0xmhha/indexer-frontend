@@ -12,6 +12,7 @@ import {
   type Proposal,
 } from '@/lib/hooks/useGovernance'
 import { formatNumber, formatDateTime, truncateAddress } from '@/lib/utils/format'
+import { UI, BLOCKCHAIN } from '@/lib/config/constants'
 
 /**
  * Governance Dashboard
@@ -26,7 +27,7 @@ export function GovernanceDashboard() {
     totalCount: totalProposals,
     loading: proposalsLoading,
     error: proposalsError,
-  } = useProposals({ limit: 10 })
+  } = useProposals({ limit: UI.GOVERNANCE_PROPOSALS_LIMIT })
 
   const { validators, loading: validatorsLoading } = useActiveValidators()
   const { addresses: blacklistedAddresses, loading: blacklistLoading } = useBlacklistedAddresses()
@@ -124,7 +125,7 @@ export function GovernanceDashboard() {
             </div>
           ) : (
             <div className="divide-y divide-bg-tertiary">
-              {proposals.slice(0, 5).map((proposal) => (
+              {proposals.slice(0, UI.MAX_LIST_PREVIEW).map((proposal) => (
                 <RecentProposalCard key={`${proposal.contract}-${proposal.proposalId}`} proposal={proposal} />
               ))}
             </div>
@@ -150,7 +151,7 @@ export function GovernanceDashboard() {
               </div>
             ) : (
               <div className="divide-y divide-bg-tertiary">
-                {validators.slice(0, 5).map((validator, idx) => (
+                {validators.slice(0, UI.MAX_LIST_PREVIEW).map((validator, idx) => (
                   <div key={`${validator.address}-${idx}`} className="p-4 hover:bg-bg-secondary">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -186,7 +187,7 @@ export function GovernanceDashboard() {
               </div>
             ) : (
               <div className="divide-y divide-bg-tertiary">
-                {blacklistedAddresses.slice(0, 5).map((address, idx) => (
+                {blacklistedAddresses.slice(0, UI.MAX_LIST_PREVIEW).map((address, idx) => (
                   <div key={`${address}-${idx}`} className="p-4 hover:bg-bg-secondary">
                     <div className="flex items-center gap-2">
                       <div className="h-2 w-2 rounded-full bg-accent-red" />
@@ -258,7 +259,7 @@ function StatusItem({ label, count, color }: { label: string; count: number; col
 function RecentProposalCard({ proposal }: { proposal: Proposal }) {
   const approvalPercentage =
     proposal.requiredApprovals > 0
-      ? Math.round((proposal.approved / proposal.requiredApprovals) * 100)
+      ? Math.round((proposal.approved / proposal.requiredApprovals) * BLOCKCHAIN.PERCENTAGE_MULTIPLIER)
       : 0
 
   const statusStyles = getStatusStyles(proposal.status)
@@ -291,7 +292,7 @@ function RecentProposalCard({ proposal }: { proposal: Proposal }) {
             <div
               className="flex h-full w-full items-center justify-center rounded-full border-4 border-accent-green"
               style={{
-                clipPath: `polygon(50% 50%, 50% 0%, ${approvalPercentage >= 25 ? '100% 0%' : '50% 0%'}, ${approvalPercentage >= 50 ? '100% 100%' : '100% 0%'}, ${approvalPercentage >= 75 ? '0% 100%' : approvalPercentage >= 50 ? '100% 100%' : '100% 0%'}, ${approvalPercentage >= 100 ? '0% 0%' : approvalPercentage >= 75 ? '0% 100%' : '100% 0%'})`,
+                clipPath: `polygon(50% 50%, 50% 0%, ${approvalPercentage >= BLOCKCHAIN.PERCENTAGE_QUARTER ? '100% 0%' : '50% 0%'}, ${approvalPercentage >= BLOCKCHAIN.PERCENTAGE_HALF ? '100% 100%' : '100% 0%'}, ${approvalPercentage >= BLOCKCHAIN.PERCENTAGE_THREE_QUARTERS ? '0% 100%' : approvalPercentage >= BLOCKCHAIN.PERCENTAGE_HALF ? '100% 100%' : '100% 0%'}, ${approvalPercentage >= BLOCKCHAIN.PERCENTAGE_FULL ? '0% 0%' : approvalPercentage >= BLOCKCHAIN.PERCENTAGE_THREE_QUARTERS ? '0% 100%' : '100% 0%'})`,
               }}
             >
               <span className="font-mono text-xs font-bold text-text-secondary">{approvalPercentage}%</span>

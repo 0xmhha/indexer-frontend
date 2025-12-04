@@ -99,7 +99,7 @@ export function ContractWriter({ contractAddress, abi }: ContractWriterProps) {
         }
 
         const signer = await getSigner()
-        if (!signer) throw new Error('No Web3 provider found')
+        if (!signer) {throw new Error('No Web3 provider found')}
 
         const contract = new ethers.Contract(contractAddress, abi, signer)
 

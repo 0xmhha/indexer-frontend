@@ -4,6 +4,7 @@
  */
 
 import { env } from '@/lib/config/env'
+import { TIMEOUTS } from '@/lib/config/constants'
 
 export type WebSocketMessage =
   | { type: 'newBlock'; data: unknown }
@@ -119,7 +120,7 @@ function createWebSocketClientInternal(): WebSocketClient {
         }
         reconnectTimer = setTimeout(() => {
           connect()
-        }, 5000)
+        }, TIMEOUTS.WS_RECONNECT_DELAY)
       }
     } catch (error) {
       console.error('[WebSocket] Connection failed:', error)

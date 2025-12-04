@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { detectInputType } from '@/lib/utils/validation'
 import { formatNumber, formatHash } from '@/lib/utils/format'
 import type { SearchHistoryItem } from '@/lib/hooks/useSearchHistory'
+import { PAGINATION, UI, FORMATTING } from '@/lib/config/constants'
 
 export interface Suggestion {
   type: 'block' | 'hint' | 'history' | 'search-all'
@@ -16,11 +17,15 @@ export interface Suggestion {
 // Suggestion Builders (SRP: Each builds specific suggestion type)
 // ============================================================
 
+const TYPE_LABELS: Record<string, string> = {
+  blockNumber: 'Block',
+  hash: 'Hash',
+  address: 'Address',
+}
+
 function buildHistorySuggestions(history: SearchHistoryItem[]): Suggestion[] {
-  return history.slice(0, 5).map((item) => {
-    const typeLabel =
-      item.type === 'blockNumber' ? 'Block' :
-      item.type === 'hash' ? 'Hash' : 'Address'
+  return history.slice(0, PAGINATION.AUTOCOMPLETE_LIMIT).map((item) => {
+    const typeLabel = TYPE_LABELS[item.type] ?? 'Unknown'
     const label =
       item.type === 'hash' || item.type === 'address'
         ? formatHash(item.query)
@@ -35,7 +40,7 @@ function buildHistorySuggestions(history: SearchHistoryItem[]): Suggestion[] {
   })
 }
 
-function buildRecentBlockSuggestions(latestHeight: bigint, count = 3): Suggestion[] {
+function buildRecentBlockSuggestions(latestHeight: bigint, count = UI.MAX_VISIBLE_ALERTS): Suggestion[] {
   const suggestions: Suggestion[] = []
   for (let i = 0; i < count; i++) {
     const num = latestHeight - BigInt(i)
@@ -77,19 +82,19 @@ function buildFormatHints(): Suggestion[] {
 function buildMatchingBlockSuggestions(
   query: string,
   latestHeight: bigint,
-  maxResults = 5
+  maxResults = PAGINATION.AUTOCOMPLETE_LIMIT
 ): Suggestion[] {
   const suggestions: Suggestion[] = []
   const isNumericOrHex = /^\d+$/.test(query) || /^0x[\da-f]*$/i.test(query)
 
-  if (!isNumericOrHex) return suggestions
+  if (!isNumericOrHex) {return suggestions}
 
   for (let i = 0; i < 10 && suggestions.length < maxResults; i++) {
     const num = latestHeight - BigInt(i)
-    if (num < BigInt(0)) break
+    if (num < BigInt(0)) {break}
 
     const numStr = num.toString()
-    const hexStr = `0x${num.toString(16)}`.toLowerCase()
+    const hexStr = `0x${num.toString(FORMATTING.HEX_RADIX)}`.toLowerCase()
     const queryLower = query.toLowerCase()
 
     if (numStr.includes(query) || hexStr.includes(queryLower)) {

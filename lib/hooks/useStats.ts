@@ -14,7 +14,7 @@ import {
   type NetworkStats,
   type GetNetworkStatsData,
 } from '@/lib/graphql/queries/stats'
-import { PAGINATION, POLLING_INTERVALS } from '@/lib/config/constants'
+import { PAGINATION, POLLING_INTERVALS, BLOCKCHAIN, FORMATTING } from '@/lib/config/constants'
 
 // ============================================================================
 // Top Miners Hook
@@ -153,27 +153,28 @@ export function useNetworkStats(
 export function getBlockRange(
   currentBlock: bigint,
   period: '24h' | '7d' | '30d' | 'all',
-  avgBlockTime: number = 12 // Average block time in seconds
+  avgBlockTime: number = FORMATTING.AVG_BLOCK_TIME
 ): { fromBlock?: bigint; toBlock: bigint } {
   const toBlock = currentBlock
+  const secondsPerDay = FORMATTING.SECONDS_PER_DAY
 
   switch (period) {
     case '24h': {
-      const blocksPerDay = Math.floor((24 * 60 * 60) / avgBlockTime)
+      const blocksPerDay = Math.floor(secondsPerDay / avgBlockTime)
       return {
         fromBlock: currentBlock - BigInt(blocksPerDay),
         toBlock,
       }
     }
     case '7d': {
-      const blocksPerWeek = Math.floor((7 * 24 * 60 * 60) / avgBlockTime)
+      const blocksPerWeek = Math.floor((FORMATTING.DAYS_PER_WEEK * secondsPerDay) / avgBlockTime)
       return {
         fromBlock: currentBlock - BigInt(blocksPerWeek),
         toBlock,
       }
     }
     case '30d': {
-      const blocksPerMonth = Math.floor((30 * 24 * 60 * 60) / avgBlockTime)
+      const blocksPerMonth = Math.floor((FORMATTING.DAYS_PER_MONTH * secondsPerDay) / avgBlockTime)
       return {
         fromBlock: currentBlock - BigInt(blocksPerMonth),
         toBlock,
@@ -191,8 +192,8 @@ export function getBlockRange(
 export function formatMinerRewards(weiAmount: string): string {
   try {
     const wei = BigInt(weiAmount)
-    const eth = Number(wei) / 1e18
-    return eth.toFixed(4) + ' ETH'
+    const eth = Number(wei) / BLOCKCHAIN.WEI_PER_ETHER
+    return `${eth.toFixed(FORMATTING.DECIMAL_PLACES_STANDARD)} ETH`
   } catch {
     return '0 ETH'
   }
@@ -201,6 +202,6 @@ export function formatMinerRewards(weiAmount: string): string {
 /**
  * Format percentage with precision
  */
-export function formatPercentage(percentage: number, decimals: number = 2): string {
-  return percentage.toFixed(decimals) + '%'
+export function formatPercentage(percentage: number, decimals: number = FORMATTING.DECIMAL_PLACES_PERCENTAGE): string {
+  return `${percentage.toFixed(decimals)}%`
 }

@@ -22,6 +22,7 @@ import { formatNumber, formatHash, formatCurrency } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
 import type { Transaction } from '@/types/graphql'
 import { TransactionTypeBadge } from '@/components/transactions/TransactionTypeBadge'
+import { PAGINATION } from '@/lib/config/constants'
 
 function TransactionsListContent() {
   const searchParams = useSearchParams()
@@ -32,7 +33,7 @@ function TransactionsListContent() {
   const pageParam = searchParams.get('page')
   const limitParam = searchParams.get('limit')
   const currentPageFromURL = pageParam ? parseInt(pageParam, 10) : 1
-  const itemsPerPageFromURL = limitParam ? parseInt(limitParam, 10) : 20
+  const itemsPerPageFromURL = limitParam ? parseInt(limitParam, 10) : PAGINATION.DEFAULT_PAGE_SIZE
   const offsetFromURL = (currentPageFromURL - 1) * itemsPerPageFromURL
 
   // Fetch transactions with WebSocket subscription for real-time updates

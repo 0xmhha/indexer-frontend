@@ -299,7 +299,7 @@ export function PaginationControls({
   showItemsPerPage = true,
   showResultsInfo = true,
   showPageInput = false,
-  itemsPerPageOptions = [10, 20, 50, 100],
+  itemsPerPageOptions = [...UI.DEFAULT_PAGE_SIZE_OPTIONS],
   loading = false,
 }: PaginationControlsProps) {
   usePaginationKeyboard(currentPage, totalPages, onPageChange)

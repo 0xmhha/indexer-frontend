@@ -6,6 +6,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useLatestEpochData, useEpochData, type EpochData } from '@/lib/hooks/useConsensus'
 import { formatNumber } from '@/lib/utils/format'
+import { UI } from '@/lib/config/constants'
 
 /**
  * Epochs List Viewer Component
@@ -142,7 +143,7 @@ function CurrentEpochCard({ epochData }: CurrentEpochCardProps) {
           <div className="col-span-2">
             <div className="font-mono text-xs text-text-muted">ACTIVE VALIDATORS (by index)</div>
             <div className="mt-2 flex flex-wrap gap-2">
-              {epochData.validators.slice(0, 8).map((validatorIndex, idx) => (
+              {epochData.validators.slice(0, UI.EPOCH_PREVIEW_VALIDATORS).map((validatorIndex, idx) => (
                 <span
                   key={`validator-${validatorIndex}-${idx}`}
                   className="rounded bg-bg-tertiary px-2 py-1 font-mono text-xs text-text-secondary"
@@ -151,9 +152,9 @@ function CurrentEpochCard({ epochData }: CurrentEpochCardProps) {
                   #{validatorIndex}
                 </span>
               ))}
-              {epochData.validators.length > 8 && (
+              {epochData.validators.length > UI.EPOCH_PREVIEW_VALIDATORS && (
                 <span className="rounded bg-bg-tertiary px-2 py-1 font-mono text-xs text-text-muted">
-                  +{epochData.validators.length - 8} more
+                  +{epochData.validators.length - UI.EPOCH_PREVIEW_VALIDATORS} more
                 </span>
               )}
             </div>

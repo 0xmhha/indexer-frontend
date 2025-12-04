@@ -25,7 +25,7 @@ interface UseSearchHistoryResult {
 export function useSearchHistory(): UseSearchHistoryResult {
   const [history, setHistory] = useState<SearchHistoryItem[]>(() => {
     // Initialize from localStorage synchronously
-    if (typeof window === 'undefined') return []
+    if (typeof window === 'undefined') {return []}
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
       if (stored) {

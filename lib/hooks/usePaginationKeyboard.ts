@@ -75,7 +75,7 @@ export function calculateShowingRange(
   itemsPerPage: number,
   totalCount: number | undefined
 ): { start: number; end: number } {
-  if (!totalCount) return { start: 0, end: 0 }
+  if (!totalCount) {return { start: 0, end: 0 }}
   const start = (currentPage - 1) * itemsPerPage + 1
   const end = Math.min(currentPage * itemsPerPage, totalCount)
   return { start, end }

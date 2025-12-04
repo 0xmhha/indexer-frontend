@@ -23,12 +23,12 @@ export interface TransactionResult {
  * Get placeholder text for input based on type
  */
 export function getPlaceholder(type: string): string {
-  if (type === 'address') return '0x...'
-  if (type.includes('uint') || type.includes('int')) return '0'
-  if (type === 'bool' || type === 'boolean') return 'true or false'
-  if (type === 'string') return 'Enter string'
-  if (type.includes('bytes')) return '0x...'
-  if (type.includes('[]')) return '[value1, value2, ...]'
+  if (type === 'address') {return '0x...'}
+  if (type.includes('uint') || type.includes('int')) {return '0'}
+  if (type === 'bool' || type === 'boolean') {return 'true or false'}
+  if (type === 'string') {return 'Enter string'}
+  if (type.includes('bytes')) {return '0x...'}
+  if (type.includes('[]')) {return '[value1, value2, ...]'}
   return `Enter ${type}`
 }
 
@@ -135,7 +135,7 @@ interface TransactionResultDisplayProps {
 }
 
 export function TransactionResultDisplay({ result }: TransactionResultDisplayProps) {
-  if (!result.hash) return null
+  if (!result.hash) {return null}
 
   return (
     <div className="border-t border-bg-tertiary pt-4">

@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react'
 import { useConsensusErrorSubscription } from '@/lib/hooks/useConsensus'
-import { FEATURES } from '@/lib/config/constants'
+import { FEATURES, UI } from '@/lib/config/constants'
 import { formatNumber } from '@/lib/utils/format'
 import {
   getSeverityBgColor,
@@ -31,10 +31,10 @@ export function ConsensusErrorAlert() {
 
   // Send browser notification for critical errors
   useEffect(() => {
-    if (!FEATURES.ENABLE_BROWSER_NOTIFICATIONS) return
+    if (!FEATURES.ENABLE_BROWSER_NOTIFICATIONS) {return}
 
     const latestError = recentErrors[0]
-    if (!latestError || latestError.severity !== 'critical') return
+    if (!latestError || latestError.severity !== 'critical') {return}
 
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification('Critical Consensus Error', {
@@ -54,12 +54,12 @@ export function ConsensusErrorAlert() {
 
   return (
     <div className="fixed right-4 top-4 z-50 flex w-96 flex-col gap-2">
-      {highPriorityErrors.slice(0, 3).map((error, index) => (
+      {highPriorityErrors.slice(0, UI.MAX_VISIBLE_ALERTS).map((error, index) => (
         <ErrorAlertCard key={`${error.blockNumber}-${index}`} error={error} />
       ))}
-      {highPriorityErrors.length > 3 && (
+      {highPriorityErrors.length > UI.MAX_VISIBLE_ALERTS && (
         <div className="rounded-lg border border-bg-tertiary bg-bg-secondary p-2 text-center font-mono text-xs text-text-muted">
-          +{highPriorityErrors.length - 3} more alerts
+          +{highPriorityErrors.length - UI.MAX_VISIBLE_ALERTS} more alerts
         </div>
       )}
     </div>

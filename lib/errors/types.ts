@@ -2,6 +2,8 @@
  * Custom Error Types for type-safe error handling
  */
 
+import { HTTP_STATUS } from '@/lib/config/constants'
+
 /**
  * Base application error
  */
@@ -23,7 +25,7 @@ export class AppError extends Error {
  */
 export class NetworkError extends AppError {
   constructor(message: string, details?: unknown) {
-    super(message, 'NETWORK_ERROR', 0, details)
+    super(message, 'NETWORK_ERROR', HTTP_STATUS.NETWORK_ERROR, details)
   }
 }
 
@@ -36,7 +38,7 @@ export class GraphQLError extends AppError {
     public graphQLErrors?: unknown[],
     details?: unknown
   ) {
-    super(message, 'GRAPHQL_ERROR', 400, details)
+    super(message, 'GRAPHQL_ERROR', HTTP_STATUS.BAD_REQUEST, details)
   }
 }
 
@@ -45,7 +47,7 @@ export class GraphQLError extends AppError {
  */
 export class ValidationError extends AppError {
   constructor(message: string, public field?: string, details?: unknown) {
-    super(message, 'VALIDATION_ERROR', 400, details)
+    super(message, 'VALIDATION_ERROR', HTTP_STATUS.BAD_REQUEST, details)
   }
 }
 
@@ -54,7 +56,7 @@ export class ValidationError extends AppError {
  */
 export class NotFoundError extends AppError {
   constructor(resource: string) {
-    super(`${resource} not found`, 'NOT_FOUND', 404)
+    super(`${resource} not found`, 'NOT_FOUND', HTTP_STATUS.NOT_FOUND)
   }
 }
 
@@ -63,7 +65,7 @@ export class NotFoundError extends AppError {
  */
 export class TimeoutError extends AppError {
   constructor(operation: string) {
-    super(`Operation timed out: ${operation}`, 'TIMEOUT', 408)
+    super(`Operation timed out: ${operation}`, 'TIMEOUT', HTTP_STATUS.TIMEOUT)
   }
 }
 
@@ -72,7 +74,7 @@ export class TimeoutError extends AppError {
  */
 export class Web3Error extends AppError {
   constructor(message: string, details?: unknown) {
-    super(message, 'WEB3_ERROR', 400, details)
+    super(message, 'WEB3_ERROR', HTTP_STATUS.BAD_REQUEST, details)
   }
 }
 
@@ -125,7 +127,11 @@ export function isRetryableError(error: unknown): boolean {
     return true
   }
   if (isAppError(error)) {
-    return error.statusCode === 408 || error.statusCode === 429 || error.statusCode === 503
+    return (
+      error.statusCode === HTTP_STATUS.TIMEOUT ||
+      error.statusCode === HTTP_STATUS.TOO_MANY_REQUESTS ||
+      error.statusCode === HTTP_STATUS.SERVICE_UNAVAILABLE
+    )
   }
   return false
 }

@@ -31,7 +31,7 @@ interface TransactionData {
   feePayer?: string | null
   feePayerSignatures?: TransformedFeePayerSignature[] | null
   receipt?: {
-    status: string
+    status: number | string  // 1 = success, 0 = failed (may be number or string from GraphQL)
     gasUsed: string
     contractAddress?: string | null
     logs?: Log[]
@@ -44,10 +44,24 @@ interface TransactionData {
 
 function StatusBadge({ status }: { status: string }) {
   const isSuccess = status === 'Success'
+  const isPending = status === 'Pending'
+
+  const getBgColor = () => {
+    if (isSuccess) { return 'bg-success' }
+    if (isPending) { return 'bg-warning animate-pulse' }
+    return 'bg-error'
+  }
+
+  const getTextColor = () => {
+    if (isSuccess) { return 'text-success' }
+    if (isPending) { return 'text-warning' }
+    return 'text-error'
+  }
+
   return (
     <div className="inline-flex items-center gap-2 rounded border px-3 py-1">
-      <div className={`h-2 w-2 rounded-full ${isSuccess ? 'bg-success' : 'bg-error'}`} />
-      <span className={`font-mono text-xs ${isSuccess ? 'text-success' : 'text-error'}`}>
+      <div className={`h-2 w-2 rounded-full ${getBgColor()}`} />
+      <span className={`font-mono text-xs ${getTextColor()}`}>
         {status.toUpperCase()}
       </span>
     </div>
@@ -94,7 +108,15 @@ export function TxInfoCard({ tx, status }: { tx: TransactionData; status: string
           <TableBody>
             <TableRow>
               <TableCell className="font-bold">Status</TableCell>
-              <TableCell className={status === 'Success' ? 'text-success' : 'text-error'}>
+              <TableCell
+                className={
+                  status === 'Success'
+                    ? 'text-success'
+                    : status === 'Pending'
+                      ? 'text-warning'
+                      : 'text-error'
+                }
+              >
                 {status}
               </TableCell>
             </TableRow>
@@ -160,7 +182,26 @@ export function TxInfoCard({ tx, status }: { tx: TransactionData; status: string
 // Gas & Fees Card
 // ============================================================
 
-export function TxGasCard({ tx }: { tx: TransactionData }) {
+interface ParsedReceipt {
+  gasUsed: string
+  gasUsedNumber: number
+  effectiveGasPrice: string
+  effectiveGasPriceBigInt: bigint
+  txCostWei: bigint
+  cumulativeGasUsed: string
+}
+
+export function TxGasCard({
+  tx,
+  receipt,
+}: {
+  tx: TransactionData
+  receipt?: ParsedReceipt | null
+}) {
+  // Use receipt from separate query if available, fallback to embedded receipt
+  const gasUsed = receipt?.gasUsed ?? tx.receipt?.gasUsed
+  const effectiveGasPrice = receipt?.effectiveGasPrice
+
   return (
     <Card className="mb-6">
       <CardHeader className="border-b border-bg-tertiary">
@@ -172,7 +213,7 @@ export function TxGasCard({ tx }: { tx: TransactionData }) {
             <TableRow>
               <TableCell className="font-bold">Gas Used</TableCell>
               <TableCell className="font-mono">
-                {tx.receipt?.gasUsed ? formatNumber(BigInt(tx.receipt.gasUsed)) : 'Pending'}
+                {gasUsed ? formatNumber(BigInt(gasUsed)) : 'Pending'}
               </TableCell>
             </TableRow>
             <TableRow>
@@ -183,6 +224,12 @@ export function TxGasCard({ tx }: { tx: TransactionData }) {
               <TableCell className="font-bold">Gas Price</TableCell>
               <TableCell className="font-mono">{formatGasPrice(tx.gasPrice)}</TableCell>
             </TableRow>
+            {effectiveGasPrice && (
+              <TableRow>
+                <TableCell className="font-bold">Effective Gas Price</TableCell>
+                <TableCell className="font-mono">{formatGasPrice(effectiveGasPrice)}</TableCell>
+              </TableRow>
+            )}
             {tx.maxFeePerGas && (
               <>
                 <TableRow>
@@ -196,6 +243,14 @@ export function TxGasCard({ tx }: { tx: TransactionData }) {
                   </TableCell>
                 </TableRow>
               </>
+            )}
+            {receipt?.txCostWei !== undefined && (
+              <TableRow>
+                <TableCell className="font-bold">Transaction Fee</TableCell>
+                <TableCell className="font-mono font-bold text-accent-orange">
+                  {formatCurrency(receipt.txCostWei, env.currencySymbol)}
+                </TableCell>
+              </TableRow>
             )}
           </TableBody>
         </Table>
@@ -328,6 +383,106 @@ export function TxFeeDelegationCard({
 }
 
 // ============================================================
+// Receipt Card
+// ============================================================
+
+interface FullReceipt extends ParsedReceipt {
+  transactionHash: string
+  blockNumber: string
+  blockHash: string
+  transactionIndex: number
+  status: number
+  contractAddress: string | null
+  isSuccess: boolean
+  isFailed: boolean
+  logsBloom?: string
+}
+
+export function TxReceiptCard({ receipt }: { receipt: FullReceipt }) {
+  return (
+    <Card className="mb-6">
+      <CardHeader className="border-b border-bg-tertiary">
+        <CardTitle>RECEIPT</CardTitle>
+      </CardHeader>
+      <CardContent className="p-0">
+        <Table>
+          <TableBody>
+            <TableRow>
+              <TableCell className="font-bold">Status</TableCell>
+              <TableCell>
+                <span
+                  className={`font-mono font-bold ${receipt.isSuccess ? 'text-success' : 'text-error'}`}
+                >
+                  {receipt.isSuccess ? 'Success (1)' : 'Failed (0)'}
+                </span>
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-bold">Block Number</TableCell>
+              <TableCell>
+                <Link
+                  href={`/block/${receipt.blockNumber}`}
+                  className="font-mono text-accent-blue hover:text-accent-cyan"
+                >
+                  #{formatNumber(BigInt(receipt.blockNumber))}
+                </Link>
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-bold">Transaction Index</TableCell>
+              <TableCell className="font-mono">{receipt.transactionIndex}</TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-bold">Gas Used</TableCell>
+              <TableCell className="font-mono">
+                {formatNumber(BigInt(receipt.gasUsed))}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-bold">Cumulative Gas Used</TableCell>
+              <TableCell className="font-mono">
+                {formatNumber(BigInt(receipt.cumulativeGasUsed))}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-bold">Effective Gas Price</TableCell>
+              <TableCell className="font-mono">
+                {formatGasPrice(receipt.effectiveGasPrice)}
+              </TableCell>
+            </TableRow>
+            <TableRow>
+              <TableCell className="font-bold">Transaction Fee</TableCell>
+              <TableCell className="font-mono font-bold text-accent-orange">
+                {formatCurrency(receipt.txCostWei, env.currencySymbol)}
+              </TableCell>
+            </TableRow>
+            {receipt.contractAddress && (
+              <TableRow>
+                <TableCell className="font-bold">Contract Created</TableCell>
+                <TableCell>
+                  <Link
+                    href={`/address/${receipt.contractAddress}`}
+                    className="font-mono text-accent-blue hover:text-accent-cyan"
+                  >
+                    {receipt.contractAddress}
+                  </Link>
+                </TableCell>
+              </TableRow>
+            )}
+            <TableRow>
+              <TableCell className="font-bold">Block Hash</TableCell>
+              <TableCell className="font-mono text-xs text-text-secondary break-all">
+                {receipt.blockHash}
+              </TableCell>
+            </TableRow>
+          </TableBody>
+        </Table>
+      </CardContent>
+    </Card>
+  )
+}
+
+// ============================================================
 // Logs Card
 // ============================================================
 
@@ -365,7 +520,7 @@ function LogEntry({ log }: { log: Log }) {
 }
 
 export function TxLogsCard({ logs }: { logs: Log[] }) {
-  if (!logs || logs.length === 0) return null
+  if (!logs || logs.length === 0) {return null}
 
   return (
     <Card className="mt-6">

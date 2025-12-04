@@ -103,7 +103,7 @@ export function usePagination(options: UsePaginationOptions): UsePaginationResul
     const urlPage = getPageFromURL()
     const urlLimit = getItemsPerPageFromURL()
 
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+     
     setCurrentPage(urlPage)
     setItemsPerPageState(urlLimit)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -155,7 +155,7 @@ export function usePagination(options: UsePaginationOptions): UsePaginationResul
   // This prevents resetting to page 1 while data is still loading
   useEffect(() => {
     if (totalCount > 0 && currentPage > totalPages) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
+       
       setCurrentPage(totalPages)
       updateURL(totalPages, itemsPerPage)
     }

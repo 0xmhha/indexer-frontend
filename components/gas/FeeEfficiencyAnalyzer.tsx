@@ -10,6 +10,7 @@ import {
 } from '@/lib/utils/gas'
 import { formatCurrency } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
+import { GAS, THRESHOLDS, BLOCKCHAIN } from '@/lib/config/constants'
 
 interface FeeEfficiencyAnalyzerProps {
   gasLimit?: number
@@ -38,12 +39,12 @@ interface TransactionScenario {
  * @param className - Additional CSS classes
  */
 export function FeeEfficiencyAnalyzer({
-  gasLimit = 21000,
-  baseFee = 25,
+  gasLimit = GAS.GAS_LIMIT_TRANSFER,
+  baseFee = GAS.BASE_FEE_MEDIUM,
   className,
 }: FeeEfficiencyAnalyzerProps) {
-  const [priorityFee, setPriorityFee] = useState<number>(2)
-  const [legacyGasPrice, setLegacyGasPrice] = useState<number>(30)
+  const [priorityFee, setPriorityFee] = useState<number>(GAS.DEFAULT_PRIORITY_FEE)
+  const [legacyGasPrice, setLegacyGasPrice] = useState<number>(GAS.DEFAULT_LEGACY_GAS_PRICE)
 
   // Calculate scenarios
   const scenarios = useMemo<TransactionScenario[]>(() => {
@@ -53,12 +54,12 @@ export function FeeEfficiencyAnalyzer({
     const gasLimitBigInt = BigInt(gasLimit)
 
     // EIP-1559 transaction (optimal)
-    const maxFeeWei = gweiToWei(baseFee + priorityFee + 5) // 5 Gwei buffer
+    const maxFeeWei = gweiToWei(baseFee + priorityFee + GAS.FEE_BUFFER_OPTIMAL)
     const eip1559EffectivePrice = calculateEffectiveGasPrice(baseFeeWei, maxFeeWei, priorityFeeWei)
     const eip1559Cost = calculateTxCost(gasLimitBigInt, eip1559EffectivePrice)
 
     // EIP-1559 transaction (conservative - higher buffer)
-    const maxFeeConservativeWei = gweiToWei(baseFee + priorityFee + 15) // 15 Gwei buffer
+    const maxFeeConservativeWei = gweiToWei(baseFee + priorityFee + GAS.FEE_BUFFER_CONSERVATIVE)
     const eip1559ConservativePrice = calculateEffectiveGasPrice(
       baseFeeWei,
       maxFeeConservativeWei,
@@ -86,7 +87,7 @@ export function FeeEfficiencyAnalyzer({
         description: 'Best balance of cost and confirmation speed',
         gasPrice: eip1559EffectivePrice,
         totalCost: eip1559Cost,
-        efficiency: 100,
+        efficiency: BLOCKCHAIN.PERCENTAGE_FULL,
         color: 'text-accent-green',
       },
       {
@@ -95,7 +96,7 @@ export function FeeEfficiencyAnalyzer({
         description: 'Higher buffer for volatile network conditions',
         gasPrice: eip1559ConservativePrice,
         totalCost: eip1559ConservativeCost,
-        efficiency: (minCost / Number(eip1559ConservativeCost)) * 100,
+        efficiency: (minCost / Number(eip1559ConservativeCost)) * BLOCKCHAIN.PERCENTAGE_MULTIPLIER,
         color: 'text-accent-blue',
       },
       {
@@ -104,7 +105,7 @@ export function FeeEfficiencyAnalyzer({
         description: 'Fixed gas price, no refunds',
         gasPrice: legacyGasPriceWei,
         totalCost: legacyCost,
-        efficiency: (minCost / Number(legacyCost)) * 100,
+        efficiency: (minCost / Number(legacyCost)) * BLOCKCHAIN.PERCENTAGE_MULTIPLIER,
         color: 'text-accent-orange',
       },
       {
@@ -113,7 +114,7 @@ export function FeeEfficiencyAnalyzer({
         description: 'Third party pays gas fees',
         gasPrice: eip1559EffectivePrice,
         totalCost: feeDelegatedCost,
-        efficiency: 100,
+        efficiency: BLOCKCHAIN.PERCENTAGE_FULL,
         color: 'text-accent-purple',
       },
     ]
@@ -132,7 +133,7 @@ export function FeeEfficiencyAnalyzer({
   const potentialSavings = Number(worstScenario.totalCost) - Number(bestScenario.totalCost)
   const savingsPercentage =
     Number(worstScenario.totalCost) > 0
-      ? (potentialSavings / Number(worstScenario.totalCost)) * 100
+      ? (potentialSavings / Number(worstScenario.totalCost)) * BLOCKCHAIN.PERCENTAGE_MULTIPLIER
       : 0
 
   return (
@@ -255,7 +256,7 @@ export function FeeEfficiencyAnalyzer({
               text="Consider Fee Delegation for sponsored transactions or gasless UX"
               type="info"
             />
-            {Number(worstScenario.totalCost) > Number(bestScenario.totalCost) * 1.2 && (
+            {Number(worstScenario.totalCost) > Number(bestScenario.totalCost) * GAS.COST_WARNING_THRESHOLD && (
               <Recommendation
                 icon="⚠"
                 text={`Avoid ${worstScenario.name} - costs ${savingsPercentage.toFixed(0)}% more than optimal`}
@@ -314,11 +315,11 @@ function ScenarioCard({ scenario, isBest, isWorst }: ScenarioCardProps) {
         <div className="h-2 overflow-hidden rounded-full bg-bg-primary">
           <div
             className={`h-full transition-all ${
-              scenario.efficiency >= 95
+              scenario.efficiency >= THRESHOLDS.GAS_EFFICIENCY_EXCELLENT
                 ? 'bg-accent-green'
-                : scenario.efficiency >= 85
+                : scenario.efficiency >= THRESHOLDS.GAS_EFFICIENCY_GOOD
                   ? 'bg-accent-blue'
-                  : scenario.efficiency >= 75
+                  : scenario.efficiency >= THRESHOLDS.GAS_EFFICIENCY_FAIR
                     ? 'bg-accent-cyan'
                     : 'bg-accent-orange'
             }`}

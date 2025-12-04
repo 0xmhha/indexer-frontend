@@ -57,6 +57,12 @@ export const REALTIME = {
 
   /** WebSocket maximum retry wait time (ms) */
   WS_RETRY_MAX_WAIT: 4_000,
+
+  /** WebSocket close code: Normal closure */
+  WS_CLOSE_NORMAL: 1000,
+
+  /** WebSocket close code: Going away (page closing, server shutdown) */
+  WS_CLOSE_GOING_AWAY: 1001,
 } as const
 
 // ============================================================================
@@ -173,6 +179,24 @@ export const CONSENSUS = {
 
   /** High priority errors do not auto-dismiss */
   ERROR_AUTO_DISMISS_HIGH: 0,
+
+  /** Health score calculation constants */
+  HEALTH_SCORE_INITIAL: 100,
+  MAX_PARTICIPATION_PENALTY: 40,
+  PARTICIPATION_PENALTY_MULTIPLIER: 0.8,
+  MAX_ROUND_CHANGE_PENALTY: 20,
+  ROUND_CHANGE_MULTIPLIER: 100,
+  MAX_ERROR_PENALTY: 40,
+
+  /** Error severity penalty weights */
+  ERROR_PENALTY_CRITICAL: 15,
+  ERROR_PENALTY_HIGH: 8,
+  ERROR_PENALTY_MEDIUM: 3,
+  ERROR_PENALTY_LOW: 1,
+
+  /** Default values */
+  DEFAULT_PARTICIPATION_RATE: 100,
+  MINIMUM_HEALTHY_SCORE: 60,
 } as const
 
 // ============================================================================
@@ -229,6 +253,436 @@ export const UI = {
 
   /** Default max items for viewers/dashboards */
   MAX_VIEWER_ITEMS: 50,
+
+  /** Maximum alerts to display at once */
+  MAX_VISIBLE_ALERTS: 3,
+
+  /** Maximum validators to display in preview */
+  MAX_PREVIEW_VALIDATORS: 5,
+
+  /** Maximum items to display in list preview */
+  MAX_LIST_PREVIEW: 5,
+
+  /** Number of validators to show in epoch preview */
+  EPOCH_PREVIEW_VALIDATORS: 8,
+
+  /** Recent transactions to show in realtime chart */
+  REALTIME_CHART_TX_COUNT: 20,
+
+  /** Recent blocks for sparkline chart */
+  SPARKLINE_BLOCKS: 20,
+
+  /** Chart Y-axis domain padding */
+  CHART_Y_AXIS_PADDING: 5,
+
+  /** Default governance proposals to fetch */
+  GOVERNANCE_PROPOSALS_LIMIT: 10,
+
+  /** Recent blocks to display in chart */
+  CHART_RECENT_BLOCKS: 20,
+
+  /** Maximum chart data points */
+  MAX_CHART_DATA_POINTS: 60,
+
+  /** Truncation length for addresses/hashes */
+  TRUNCATE_LENGTH: 8,
+
+  /** Clipboard copy timeout (ms) */
+  COPY_TIMEOUT: 2000,
+
+  /** Mobile breakpoint for responsive design (px) */
+  MOBILE_BREAKPOINT: 768,
+
+  /** Default page size options for pagination */
+  DEFAULT_PAGE_SIZE_OPTIONS: [10, 20, 50, 100] as const,
+} as const
+
+// ============================================================================
+// Thresholds & Percentages
+// ============================================================================
+
+export const THRESHOLDS = {
+  /** Excellent participation rate (%) */
+  PARTICIPATION_EXCELLENT: 95,
+
+  /** Good participation rate (%) */
+  PARTICIPATION_GOOD: 80,
+
+  /** Minimum participation rate (2/3 consensus) */
+  PARTICIPATION_MINIMUM: 67,
+
+  /** Excellent health score */
+  HEALTH_EXCELLENT: 90,
+
+  /** Good health score */
+  HEALTH_GOOD: 75,
+
+  /** Fair health score */
+  HEALTH_FAIR: 60,
+
+  /** Chart opacity for secondary elements */
+  CHART_OPACITY: 0.6,
+
+  /** Gas efficiency thresholds */
+  GAS_EFFICIENCY_EXCELLENT: 95,
+  GAS_EFFICIENCY_GOOD: 85,
+  GAS_EFFICIENCY_FAIR: 75,
+
+  /** Transaction success thresholds */
+  TX_SUCCESS_EXCELLENT: 90,
+  TX_SUCCESS_GOOD: 75,
+  TX_SUCCESS_FAIR: 60,
+
+  /** Proposal quorum percentage */
+  PROPOSAL_QUORUM: 66,
+
+  /** Adoption milestones */
+  ADOPTION_EARLY: 5,
+  ADOPTION_GROWING: 15,
+  ADOPTION_MAINSTREAM: 30,
+
+  /** Signing rate thresholds for validators */
+  SIGNING_EXCELLENT: 95,
+  SIGNING_GOOD: 80,
+  SIGNING_FAIR: 60,
+} as const
+
+// ============================================================================
+// Blockchain Constants
+// ============================================================================
+
+export const BLOCKCHAIN = {
+  /** Wei to Ether conversion factor */
+  WEI_PER_ETHER: 1e18,
+
+  /** Zero BigInt */
+  ZERO_BIGINT: 0n,
+
+  /** 100 BigInt (for percentage calculations) */
+  HUNDRED_BIGINT: 100n,
+
+  /** Percentage multiplier */
+  PERCENTAGE_MULTIPLIER: 100,
+
+  /** Percentage quarters for progress indicators */
+  PERCENTAGE_QUARTER: 25,
+  PERCENTAGE_HALF: 50,
+  PERCENTAGE_THREE_QUARTERS: 75,
+  PERCENTAGE_FULL: 100,
+
+  /** System contract type identifier */
+  SYSTEM_CONTRACT_TYPE: 0x16,
+
+  /** Seconds per minute */
+  SECONDS_PER_MINUTE: 60,
+
+  /** Minutes per hour */
+  MINUTES_PER_HOUR: 60,
+
+  /** Hours per day */
+  HOURS_PER_DAY: 24,
+} as const
+
+// ============================================================================
+// System Contracts
+// ============================================================================
+
+/**
+ * Known system contract addresses and their metadata
+ *
+ * These are pre-deployed contracts that are part of the blockchain network.
+ * Used for displaying fallback names when token metadata is not available.
+ */
+export const SYSTEM_CONTRACTS: Record<
+  string,
+  {
+    name: string
+    symbol: string
+    decimals: number
+    description: string
+    isNativeWrapper?: boolean
+  }
+> = {
+  // Native Coin Adapter (STABLEONE wrapper)
+  '0x0000000000000000000000000000000000001000': {
+    name: 'STABLEONE',
+    symbol: 'STONE',
+    decimals: 18,
+    description: 'Native coin ERC20 wrapper',
+    isNativeWrapper: true,
+  },
+  // Add more system contracts as needed
+  '0x0000000000000000000000000000000000001001': {
+    name: 'Staking Manager',
+    symbol: 'STKM',
+    decimals: 18,
+    description: 'Validator staking management contract',
+  },
+  '0x0000000000000000000000000000000000001002': {
+    name: 'Account Manager',
+    symbol: 'ACTM',
+    decimals: 0,
+    description: 'Account blacklist and management',
+  },
+  '0x0000000000000000000000000000000000001003': {
+    name: 'Governance',
+    symbol: 'GOV',
+    decimals: 0,
+    description: 'Network governance proposals',
+  },
+} as const
+
+/**
+ * Get system contract metadata by address
+ */
+export function getSystemContractInfo(address: string): {
+  name: string
+  symbol: string
+  decimals: number
+  description: string
+  isNativeWrapper?: boolean
+} | null {
+  const normalizedAddress = address.toLowerCase()
+  for (const [contractAddress, info] of Object.entries(SYSTEM_CONTRACTS)) {
+    if (contractAddress.toLowerCase() === normalizedAddress) {
+      return info
+    }
+  }
+  return null
+}
+
+/**
+ * Check if an address is a known system contract
+ */
+export function isSystemContract(address: string): boolean {
+  return getSystemContractInfo(address) !== null
+}
+
+// ============================================================================
+// Timeouts & Intervals
+// ============================================================================
+
+export const TIMEOUTS = {
+  /** Toast notification duration (ms) */
+  TOAST_DURATION: 5000,
+
+  /** Simulation delay (ms) */
+  SIMULATION_DELAY: 7000,
+
+  /** Default request timeout (ms) */
+  REQUEST_TIMEOUT: 10000,
+
+  /** Long request timeout (ms) */
+  REQUEST_TIMEOUT_LONG: 30000,
+
+  /** Toast durations */
+  TOAST_WARNING_DURATION: 7000,
+  TOAST_ERROR_DURATION: 10000,
+
+  /** Error batch delay (ms) */
+  ERROR_BATCH_DELAY: 5000,
+
+  /** WebSocket reconnect delay (ms) */
+  WS_RECONNECT_DELAY: 5000,
+
+  /** Import success notification duration (ms) */
+  IMPORT_SUCCESS_DURATION: 3000,
+
+  /** Import error notification duration (ms) */
+  IMPORT_ERROR_DURATION: 5000,
+} as const
+
+// ============================================================================
+// Error Logging Constants
+// ============================================================================
+
+export const ERROR_LOGGING = {
+  /** Maximum errors to keep in memory */
+  MAX_IN_MEMORY_LOGS: 100,
+
+  /** Maximum errors to store in localStorage */
+  MAX_STORED_ERRORS: 50,
+
+  /** Maximum errors per batch */
+  MAX_BATCH_SIZE: 10,
+
+  /** Default recent logs count */
+  DEFAULT_RECENT_COUNT: 10,
+} as const
+
+// ============================================================================
+// HTTP Status Codes
+// ============================================================================
+
+export const HTTP_STATUS = {
+  OK: 200,
+  BAD_REQUEST: 400,
+  NOT_FOUND: 404,
+  TIMEOUT: 408,
+  TOO_MANY_REQUESTS: 429,
+  SERVICE_UNAVAILABLE: 503,
+  NETWORK_ERROR: 0,
+} as const
+
+// ============================================================================
+// Gas & Transaction Simulation
+// ============================================================================
+
+export const GAS = {
+  /** Minimum gas price (gwei) */
+  MIN_GAS_PRICE: 25,
+
+  /** Maximum gas price (gwei) */
+  MAX_GAS_PRICE: 35,
+
+  /** Gas multiplier for estimation */
+  GAS_MULTIPLIER: 1.2,
+
+  /** Low priority gas percentage */
+  LOW_PRIORITY_PERCENT: 60,
+
+  /** Medium priority gas percentage */
+  MEDIUM_PRIORITY_PERCENT: 75,
+
+  /** High priority gas percentage */
+  HIGH_PRIORITY_PERCENT: 90,
+
+  /** Urgent priority gas percentage */
+  URGENT_PRIORITY_PERCENT: 98,
+
+  /** Gas buffer percentage */
+  GAS_BUFFER_PERCENT: 5,
+
+  /** Gas estimation variance range */
+  ESTIMATION_VARIANCE_MIN: 20,
+  ESTIMATION_VARIANCE_MAX: 50,
+
+  /** Gas limits by transaction type */
+  GAS_LIMIT_TRANSFER: 21000,
+  GAS_LIMIT_CONTRACT: 100000,
+  GAS_LIMIT_TOKEN: 65000,
+  GAS_LIMIT_NFT: 150000,
+
+  /** Network condition base fees (gwei) */
+  BASE_FEE_LOW: 15,
+  BASE_FEE_MEDIUM: 25,
+  BASE_FEE_HIGH: 50,
+  BASE_FEE_EXTREME: 100,
+
+  /** Default priority fee (gwei) */
+  DEFAULT_PRIORITY_FEE: 2,
+
+  /** Default legacy gas price (gwei) */
+  DEFAULT_LEGACY_GAS_PRICE: 30,
+
+  /** Fee buffer values (gwei) */
+  FEE_BUFFER_OPTIMAL: 5,
+  FEE_BUFFER_CONSERVATIVE: 15,
+
+  /** Cost comparison warning threshold (e.g., 1.2 = 20% more expensive) */
+  COST_WARNING_THRESHOLD: 1.2,
+
+  /** Priority fee thresholds (gwei) */
+  PRIORITY_FEE_LOW_THRESHOLD: 1,
+  PRIORITY_FEE_STANDARD_THRESHOLD: 2,
+  PRIORITY_FEE_HIGH_THRESHOLD: 5,
+
+  /** Success probability percentages */
+  SUCCESS_PROB_LOW_PRIORITY: 60,
+  SUCCESS_PROB_STANDARD_PRIORITY: 75,
+  SUCCESS_PROB_HIGH_PRIORITY: 90,
+  SUCCESS_PROB_VERY_HIGH_PRIORITY: 98,
+
+  /** Probability adjustment values */
+  PROB_ADJUSTMENT_EXTREME: 20,
+  PROB_ADJUSTMENT_HIGH: 10,
+  PROB_MIN_EXTREME: 50,
+  PROB_MIN_HIGH: 60,
+
+  /** Fee offset for max fee calculation */
+  MAX_FEE_OFFSET: 10,
+} as const
+
+// ============================================================================
+// Formatting Constants
+// ============================================================================
+
+export const FORMATTING = {
+  /** Address display - characters to show at start */
+  ADDRESS_START_CHARS: 6,
+  /** Address display - characters to show at end */
+  ADDRESS_END_CHARS: 4,
+
+  /** Hash display - characters to show at start */
+  HASH_START_CHARS: 10,
+  /** Hash display - characters to show at end */
+  HASH_END_CHARS: 8,
+
+  /** BLS key display - characters to show at start */
+  BLS_KEY_START_CHARS: 20,
+  /** BLS key display - characters to show at end */
+  BLS_KEY_END_CHARS: 8,
+  /** BLS key truncate preview length */
+  BLS_KEY_PREVIEW_LENGTH: 32,
+
+  /** Ethereum address length with 0x prefix */
+  ETH_ADDRESS_LENGTH: 42,
+
+  /** Hex conversion radix */
+  HEX_RADIX: 16,
+
+  /** Base36 radix for random ID generation */
+  BASE36_RADIX: 36,
+
+  /** Random ID substring length */
+  RANDOM_ID_LENGTH: 9,
+
+  /** Default token decimals (ETH/WEMIX) */
+  DEFAULT_DECIMALS: 18,
+  /** Gwei decimals */
+  GWEI_DECIMALS: 9,
+
+  /** Wei per Gwei (1e9) */
+  WEI_PER_GWEI: 1e9,
+
+  /** Decimal places for different display contexts */
+  DECIMAL_PLACES_STANDARD: 4,
+  DECIMAL_PLACES_PRECISE: 8,
+  DECIMAL_PLACES_PERCENTAGE: 2,
+
+  /** Default max length for hex truncation */
+  HEX_MAX_LENGTH: 20,
+
+  /** Hex preview length for call data (includes 0x prefix) */
+  HEX_PREVIEW_LENGTH: 66,
+
+  /** Topic address offset - EVM topics are 32 bytes, address is last 20 bytes */
+  TOPIC_ADDRESS_OFFSET: 26,
+
+  /** Bytes conversion factor */
+  BYTES_PER_KB: 1024,
+
+  /** Large number thresholds for K/M/B formatting */
+  BILLION: 1_000_000_000,
+  MILLION: 1_000_000,
+  THOUSAND: 1_000,
+
+  /** Time constants for formatTimeAgo */
+  SECONDS_PER_MINUTE: 60,
+  SECONDS_PER_HOUR: 3600,
+  SECONDS_PER_DAY: 86400,
+  SECONDS_PER_WEEK: 604800,
+  SECONDS_PER_MONTH: 2592000,
+
+  /** Milliseconds conversions */
+  MS_PER_SECOND: 1000,
+
+  /** Average block time (seconds) */
+  AVG_BLOCK_TIME: 12,
+
+  /** Days per time period */
+  DAYS_PER_WEEK: 7,
+  DAYS_PER_MONTH: 30,
 } as const
 
 // ============================================================================

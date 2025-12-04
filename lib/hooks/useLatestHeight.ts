@@ -1,31 +1,28 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useQuery, useSubscription } from '@apollo/client'
-import { GET_LATEST_HEIGHT, SUBSCRIBE_NEW_BLOCK } from '@/lib/apollo/queries'
-import { transformBlock } from '@/lib/utils/graphql-transforms'
-import type { RawBlock } from '@/types/graphql'
+import { useEffect, useState } from 'react'
+import { useQuery } from '@apollo/client'
+import { GET_LATEST_HEIGHT } from '@/lib/apollo/queries'
+import { useRealtimeStore, selectLatestHeight } from '@/stores/realtimeStore'
 
 /**
  * Hook to fetch latest indexed block height
- * Uses WebSocket subscription for real-time updates (no polling)
- * Uses previousData pattern to prevent flickering
+ * Uses centralized RealtimeStore for real-time updates (no direct subscription)
+ * Initial data from query, real-time updates from store
  */
 export function useLatestHeight() {
-  // Initial data from query (no polling)
+  // Initial data from query (no polling - real-time updates come from store)
   const { data, loading, error, refetch, previousData } = useQuery(GET_LATEST_HEIGHT, {
-    pollInterval: 0, // No polling - use subscription instead
+    pollInterval: 0,
   })
 
-  // Subscribe to new blocks for real-time updates (no cache to avoid conflicts)
-  const { data: subscriptionData } = useSubscription(SUBSCRIBE_NEW_BLOCK, {
-    fetchPolicy: 'no-cache',
-  })
+  // Get real-time height from centralized store
+  const realtimeHeight = useRealtimeStore(selectLatestHeight)
 
-  // State for latest height
+  // Local state for height
   const [latestHeight, setLatestHeight] = useState<bigint | null>(null)
 
-  // Initialize from query data (prevents flickering on mount)
+  // Initialize from query data
   useEffect(() => {
     const currentData = data || previousData
     if (currentData?.latestHeight) {
@@ -35,16 +32,14 @@ export function useLatestHeight() {
     }
   }, [data, previousData])
 
-  // Update from subscription (real-time)
+  // Update from realtime store (when new blocks arrive via WebSocket)
   useEffect(() => {
-    if (subscriptionData?.newBlock) {
-      const rawBlock = subscriptionData.newBlock as RawBlock
-      const transformedBlock = transformBlock(rawBlock)
-      // Legitimate use case: Synchronizing state from external GraphQL subscription
+    if (realtimeHeight !== null) {
+      // Legitimate use case: Synchronizing state from external Zustand store
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setLatestHeight(transformedBlock.number)
+      setLatestHeight(realtimeHeight)
     }
-  }, [subscriptionData])
+  }, [realtimeHeight])
 
   return {
     latestHeight,

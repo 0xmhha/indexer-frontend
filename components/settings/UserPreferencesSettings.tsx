@@ -4,6 +4,7 @@ import { useUserPreferences } from '@/lib/hooks/useUserPreferences'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { exportPreferences, importPreferences } from '@/lib/store/userPreferences'
 import { useState } from 'react'
+import { TIMEOUTS } from '@/lib/config/constants'
 
 export function UserPreferencesSettings() {
   const { preferences, updatePreference, resetPreferences, loading } = useUserPreferences()
@@ -29,7 +30,7 @@ export function UserPreferencesSettings() {
     input.accept = 'application/json'
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0]
-      if (!file) return
+      if (!file) {return}
 
       try {
         const text = await file.text()
@@ -37,15 +38,15 @@ export function UserPreferencesSettings() {
         if (success) {
           setImportSuccess(true)
           setImportError(null)
-          setTimeout(() => setImportSuccess(false), 3000)
+          setTimeout(() => setImportSuccess(false), TIMEOUTS.IMPORT_SUCCESS_DURATION)
           window.location.reload() // Reload to apply all changes
         } else {
           setImportError('Failed to import preferences. Invalid format.')
-          setTimeout(() => setImportError(null), 5000)
+          setTimeout(() => setImportError(null), TIMEOUTS.IMPORT_ERROR_DURATION)
         }
       } catch {
         setImportError('Failed to read file.')
-        setTimeout(() => setImportError(null), 5000)
+        setTimeout(() => setImportError(null), TIMEOUTS.IMPORT_ERROR_DURATION)
       }
     }
     input.click()

@@ -17,9 +17,9 @@ interface RoundIndicatorProps {
  */
 export function RoundIndicator({ round, size = 'md', showLabel = true }: RoundIndicatorProps) {
   const getStatus = () => {
-    if (round === 0) return { color: 'accent-green', bgColor: 'bg-accent-green/10', borderColor: 'border-accent-green', label: 'Success' }
-    if (round === 1) return { color: 'yellow-500', bgColor: 'bg-yellow-500/10', borderColor: 'border-yellow-500', label: 'Round Change' }
-    if (round === 2) return { color: 'orange-500', bgColor: 'bg-orange-500/10', borderColor: 'border-orange-500', label: 'Multiple Rounds' }
+    if (round === 0) {return { color: 'accent-green', bgColor: 'bg-accent-green/10', borderColor: 'border-accent-green', label: 'Success' }}
+    if (round === 1) {return { color: 'yellow-500', bgColor: 'bg-yellow-500/10', borderColor: 'border-yellow-500', label: 'Round Change' }}
+    if (round === 2) {return { color: 'orange-500', bgColor: 'bg-orange-500/10', borderColor: 'border-orange-500', label: 'Multiple Rounds' }}
     return { color: 'accent-red', bgColor: 'bg-accent-red/10', borderColor: 'border-accent-red', label: 'Significant Delay' }
   }
 

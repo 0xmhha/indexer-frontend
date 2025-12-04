@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useQuery } from '@apollo/client'
 import { GET_BLOCK_COUNT, GET_TRANSACTION_COUNT } from '@/lib/apollo/queries'
 import { useNewBlocks } from '@/lib/hooks/useSubscriptions'
+import { UI, FORMATTING } from '@/lib/config/constants'
 
 /**
  * Hook to get real-time network metrics using WebSocket subscriptions
@@ -25,7 +26,7 @@ export function useNetworkMetrics() {
   const error = blockError || txError
 
   // Use subscription for real-time updates
-  const { blocks: recentBlocks, latestBlock } = useNewBlocks(20)
+  const { blocks: recentBlocks, latestBlock } = useNewBlocks(UI.CHART_RECENT_BLOCKS)
 
   // State for calculated metrics
   const [metrics, setMetrics] = useState<{
@@ -77,8 +78,8 @@ export function useNetworkMetrics() {
       // Add timestamp for avg block time calculation
       blockTimestamps.current.push(latestBlock.timestamp)
 
-      // Keep only last 20 timestamps
-      if (blockTimestamps.current.length > 20) {
+      // Keep only last N timestamps
+      if (blockTimestamps.current.length > UI.CHART_RECENT_BLOCKS) {
         blockTimestamps.current.shift()
       }
 
@@ -92,7 +93,7 @@ export function useNetworkMetrics() {
           const previous = timestamps[i - 1]
           if (current && previous) {
             const diff = Number(current - previous)
-            if (diff > 0 && diff < 3600) {
+            if (diff > 0 && diff < FORMATTING.SECONDS_PER_HOUR) {
               // Ignore outliers (>1 hour)
               timeDiffs.push(diff)
             }
@@ -114,7 +115,7 @@ export function useNetworkMetrics() {
   useEffect(() => {
     if (recentBlocks.length > 0 && blockTimestamps.current.length === 0) {
       blockTimestamps.current = recentBlocks
-        .slice(0, 20)
+        .slice(0, UI.CHART_RECENT_BLOCKS)
         .map((block) => block.timestamp)
         .sort((a, b) => (a > b ? 1 : -1))
     }

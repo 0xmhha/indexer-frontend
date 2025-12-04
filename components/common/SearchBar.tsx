@@ -205,7 +205,7 @@ export function SearchBar() {
   // Keyboard navigation handler
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent) => {
-      if (!showSuggestions) return
+      if (!showSuggestions) {return}
 
       if (e.key === 'ArrowDown') {
         e.preventDefault()

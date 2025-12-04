@@ -3,7 +3,6 @@
 import { useMemo } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
-import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { PendingTxFilterForm } from './PendingTxFilterForm'
 import { PendingTxTable } from './PendingTxTable'
 import { usePendingTransactions } from '@/lib/hooks/useSubscriptions'
@@ -75,8 +74,8 @@ export function AdvancedPendingTransactionsPanel({
   maxTransactions = UI.MAX_VIEWER_ITEMS,
   className,
 }: AdvancedPendingTransactionsPanelProps) {
-  // Hooks
-  const { pendingTransactions, loading, error } = usePendingTransactions(maxTransactions * 2)
+  // Hooks - using centralized store for real-time data
+  const { pendingTransactions, loading } = usePendingTransactions(maxTransactions * 2)
   const {
     formState,
     activeFilter,
@@ -95,8 +94,8 @@ export function AdvancedPendingTransactionsPanel({
 
   const isFiltered = activeFilter !== undefined
   const showLoading = loading && filteredTransactions.length === 0
-  const showEmpty = !loading && !error && filteredTransactions.length === 0
-  const showTable = !loading && !error && filteredTransactions.length > 0
+  const showEmpty = !loading && filteredTransactions.length === 0
+  const showTable = !loading && filteredTransactions.length > 0
 
   return (
     <Card className={className}>
@@ -104,7 +103,7 @@ export function AdvancedPendingTransactionsPanel({
         <CardTitle className="flex items-center justify-between">
           <span>ADVANCED PENDING TRANSACTIONS</span>
           <div className="flex items-center gap-4">
-            {!loading && !error && (
+            {!loading && (
               <TransactionCount
                 filtered={filteredTransactions.length}
                 total={pendingTransactions.length}
@@ -128,13 +127,6 @@ export function AdvancedPendingTransactionsPanel({
           <div className="flex h-64 items-center justify-center">
             <LoadingSpinner />
           </div>
-        )}
-
-        {error && (
-          <ErrorDisplay
-            title="Failed to load pending transactions"
-            message={error.message || 'WebSocket connection error'}
-          />
         )}
 
         {showEmpty && <EmptyState hasFilter={isFiltered} />}

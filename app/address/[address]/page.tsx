@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense } from 'react'
+import { Suspense, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { useAddressPageData } from '@/lib/hooks/useAddressPageData'
 import { useTokenBalances } from '@/lib/hooks/useAddress'
@@ -9,6 +9,7 @@ import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { AddressDetailSkeleton } from '@/components/skeletons/AddressDetailSkeleton'
 import { ContractVerificationStatus } from '@/components/contract/ContractVerificationStatus'
 import { SourceCodeViewer } from '@/components/contract/SourceCodeViewer'
+import { ContractInteractionSection } from '@/components/contract/ContractInteractionSection'
 import { TokenBalancesTable } from '@/components/address/TokenBalancesTable'
 import { InternalTransactionsTable } from '@/components/address/InternalTransactionsTable'
 import { ERC20TransfersTable } from '@/components/address/ERC20TransfersTable'
@@ -107,6 +108,9 @@ function AddressPageContent() {
   const params = useParams()
   const address = params.address as string
 
+  // Controlled tab state to prevent auto-redirect on errors
+  const [activeTab, setActiveTab] = useState('transactions')
+
   // Use extracted data hook
   const {
     balance,
@@ -143,14 +147,20 @@ function AddressPageContent() {
   return (
     <div className="container mx-auto px-4 py-8">
       <AddressHeader address={address} />
-      <AddressOverviewCard balance={balance} error={balanceError} />
+      <AddressOverviewCard address={address} balance={balance} error={balanceError} />
       <ContractVerificationStatus address={address} isContract={true} />
       <SourceCodeViewer address={address} isVerified={address.toLowerCase().endsWith('0')} />
+      <ContractInteractionSection address={address} />
       <BalanceHistoryCard history={history} loading={historyLoading} error={historyError} />
       <ContractCreationInfo address={address} />
       <TokenBalancesCard balances={balances} loading={balancesLoading} />
 
-      <Tabs defaultValue="transactions" className="w-full">
+      <Tabs
+        defaultValue="transactions"
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="w-full"
+      >
         <TabsList className="mb-6">
           <TabsTrigger value="transactions">Regular Transactions</TabsTrigger>
           <TabsTrigger value="internal">Internal Transactions</TabsTrigger>

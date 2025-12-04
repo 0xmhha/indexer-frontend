@@ -51,10 +51,10 @@ export function createIssue(options: CreateIssueOptions): QualityIssue {
   }
 
   // Only add optional properties if they have values
-  if (line !== undefined) issue.line = line
-  if (column !== undefined) issue.column = column
-  if (suggestion !== undefined) issue.suggestion = suggestion
-  if (solidPrinciple !== undefined) issue.solidPrinciple = solidPrinciple
+  if (line !== undefined) {issue.line = line}
+  if (column !== undefined) {issue.column = column}
+  if (suggestion !== undefined) {issue.suggestion = suggestion}
+  if (solidPrinciple !== undefined) {issue.solidPrinciple = solidPrinciple}
 
   return issue
 }

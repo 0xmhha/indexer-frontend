@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useCallback, useState } from 'react'
+import { useEffect, useCallback, useState, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useWebSocket } from '@/lib/providers/WebSocketProvider'
 import {
@@ -46,6 +46,13 @@ export function useRealtimeTransactions(
   const queryClient = useQueryClient()
   const [latestTransaction, setLatestTransaction] = useState<TransformedTransaction | null>(null)
 
+  // Store callback in ref to prevent unnecessary effect re-runs
+  // This handles the case where parent doesn't memoize the callback
+  const onNewTransactionRef = useRef(onNewTransaction)
+  useEffect(() => {
+    onNewTransactionRef.current = onNewTransaction
+  }, [onNewTransaction])
+
   const subscribe = useCallback(() => {
     if (client) {
       client.subscribe('newTransaction')
@@ -85,15 +92,15 @@ export function useRealtimeTransactions(
         queryClient.invalidateQueries({ queryKey: ['transactions'] })
         queryClient.invalidateQueries({ queryKey: ['networkMetrics'] })
 
-        // Call user callback
-        if (onNewTransaction) {
-          onNewTransaction(transformedTransaction)
+        // Call user callback using ref to avoid dependency
+        if (onNewTransactionRef.current) {
+          onNewTransactionRef.current(transformedTransaction)
         }
       } catch (error) {
         console.error('[useRealtimeTransactions] Failed to transform transaction:', error)
       }
     }
-  }, [lastMessage, queryClient, onNewTransaction])
+  }, [lastMessage, queryClient])
 
   return {
     isConnected,

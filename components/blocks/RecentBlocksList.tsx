@@ -4,10 +4,11 @@ import { useNewBlocks } from '@/lib/hooks/useSubscriptions'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { BlockCard } from './BlockCard'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
+import { UI } from '@/lib/config/constants'
 
 export function RecentBlocksList() {
   // Use subscription for real-time updates (no polling)
-  const { blocks, loading } = useNewBlocks(5)
+  const { blocks, loading } = useNewBlocks(UI.MAX_LIST_PREVIEW)
 
   if (loading && blocks.length === 0) {
     return (
@@ -29,7 +30,7 @@ export function RecentBlocksList() {
       </CardHeader>
       <CardContent className="p-4">
         <div className="space-y-3">
-          {blocks.slice(0, 5).map((block) => (
+          {blocks.slice(0, UI.MAX_LIST_PREVIEW).map((block) => (
             <BlockCard key={block.hash} block={block} />
           ))}
         </div>

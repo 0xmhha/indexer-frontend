@@ -6,6 +6,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useTotalSupply, useActiveMinters, useMintEvents, useBurnEvents } from '@/lib/hooks/useSystemContracts'
 import { formatNumber, formatDateTime, formatTokenAmount, truncateAddress } from '@/lib/utils/format'
+import { FORMATTING, UI } from '@/lib/config/constants'
 
 /**
  * Token Supply Dashboard
@@ -24,8 +25,8 @@ export function TokenSupplyDashboard() {
 
   // Calculate 24-hour statistics
   const stats24h = useMemo(() => {
-    const now = Math.floor(Date.now() / 1000)
-    const oneDayAgo = now - 24 * 60 * 60
+    const now = Math.floor(Date.now() / FORMATTING.MS_PER_SECOND)
+    const oneDayAgo = now - FORMATTING.SECONDS_PER_DAY
 
     // Filter events from last 24 hours (timestamp is string, convert to number)
     const recentMints = mintEvents.filter((e) => parseInt(e.timestamp) >= oneDayAgo)
@@ -72,9 +73,9 @@ export function TokenSupplyDashboard() {
     )
   }
 
-  // Get 5 most recent events for display
-  const recentMints = mintEvents.slice(0, 5)
-  const recentBurns = burnEvents.slice(0, 5)
+  // Get most recent events for display
+  const recentMints = mintEvents.slice(0, UI.MAX_LIST_PREVIEW)
+  const recentBurns = burnEvents.slice(0, UI.MAX_LIST_PREVIEW)
 
   return (
     <div className="space-y-6">

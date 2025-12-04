@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { AreaChart } from '@/components/charts/AreaChart'
 import { formatCurrency, formatNumber } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
+import { BLOCKCHAIN } from '@/lib/config/constants'
 
 interface BalanceHistoryEntry {
   blockNumber: string
@@ -26,12 +27,12 @@ interface ChartDataPoint {
 export function BalanceHistoryChart({ history, currencySymbol = env.currencySymbol }: BalanceHistoryChartProps) {
   // Process history data for chart
   const chartData = useMemo<ChartDataPoint[]>(() => {
-    if (!history || history.length === 0) return []
+    if (!history || history.length === 0) {return []}
 
     return history
       .map((entry) => ({
         blockNumber: Number(entry.blockNumber),
-        balance: Number(BigInt(entry.balance)) / 1e18, // Convert wei to ether for display
+        balance: Number(BigInt(entry.balance)) / BLOCKCHAIN.WEI_PER_ETHER, // Convert wei to ether for display
         balanceRaw: BigInt(entry.balance),
       }))
       .sort((a, b) => a.blockNumber - b.blockNumber) // Sort by block number ascending

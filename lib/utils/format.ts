@@ -2,6 +2,8 @@
  * Formatting utilities for blockchain data
  */
 
+import { FORMATTING } from '@/lib/config/constants'
+
 /**
  * Format Ethereum address (0x prefixed, 40 hex characters)
  * @param address - Full address string
@@ -13,9 +15,9 @@ export function formatAddress(address: string, short = true): string {
     throw new Error('Invalid address format')
   }
 
-  if (!short) return address
+  if (!short) {return address}
 
-  return `${address.slice(0, 6)}...${address.slice(-4)}`
+  return `${address.slice(0, FORMATTING.ADDRESS_START_CHARS)}...${address.slice(-FORMATTING.ADDRESS_END_CHARS)}`
 }
 
 /**
@@ -29,9 +31,9 @@ export function formatHash(hash: string, short = true): string {
     throw new Error('Invalid hash format')
   }
 
-  if (!short) return hash
+  if (!short) {return hash}
 
-  return `${hash.slice(0, 10)}...${hash.slice(-8)}`
+  return `${hash.slice(0, FORMATTING.HASH_START_CHARS)}...${hash.slice(-FORMATTING.HASH_END_CHARS)}`
 }
 
 /**
@@ -40,7 +42,7 @@ export function formatHash(hash: string, short = true): string {
  * @param decimals - Number of decimals (default 18 for ETH)
  * @returns Formatted decimal string
  */
-export function formatValue(value: bigint | string, decimals = 18): string {
+export function formatValue(value: bigint | string, decimals: number = FORMATTING.DEFAULT_DECIMALS): string {
   const bigIntValue = typeof value === 'string' ? BigInt(value) : value
   const divisor = BigInt(10 ** decimals)
   const integerPart = bigIntValue / divisor
@@ -63,7 +65,7 @@ export function formatValue(value: bigint | string, decimals = 18): string {
  * @param decimals - Number of decimals
  * @returns Formatted value with symbol
  */
-export function formatCurrency(value: bigint | string, symbol = 'WEMIX', decimals = 18): string {
+export function formatCurrency(value: bigint | string, symbol = 'WEMIX', decimals: number = FORMATTING.DEFAULT_DECIMALS): string {
   const formatted = formatValue(value, decimals)
   return `${formatted} ${symbol}`
 }
@@ -74,24 +76,18 @@ export function formatCurrency(value: bigint | string, symbol = 'WEMIX', decimal
  * @returns Relative time string
  */
 export function formatTimeAgo(timestamp: bigint | number): string {
-  const now = BigInt(Math.floor(Date.now() / 1000))
+  const now = BigInt(Math.floor(Date.now() / FORMATTING.MS_PER_SECOND))
   const timestampBigInt = typeof timestamp === 'number' ? BigInt(timestamp) : timestamp
   const diff = Number(now - timestampBigInt)
 
-  const minute = 60
-  const hour = minute * 60
-  const day = hour * 24
-  const week = day * 7
-  const month = day * 30
+  if (diff < 0) {return 'in the future'}
+  if (diff < FORMATTING.SECONDS_PER_MINUTE) {return `${diff} seconds ago`}
+  if (diff < FORMATTING.SECONDS_PER_HOUR) {return `${Math.floor(diff / FORMATTING.SECONDS_PER_MINUTE)} minutes ago`}
+  if (diff < FORMATTING.SECONDS_PER_DAY) {return `${Math.floor(diff / FORMATTING.SECONDS_PER_HOUR)} hours ago`}
+  if (diff < FORMATTING.SECONDS_PER_WEEK) {return `${Math.floor(diff / FORMATTING.SECONDS_PER_DAY)} days ago`}
+  if (diff < FORMATTING.SECONDS_PER_MONTH) {return `${Math.floor(diff / FORMATTING.SECONDS_PER_WEEK)} weeks ago`}
 
-  if (diff < 0) return 'in the future'
-  if (diff < minute) return `${diff} seconds ago`
-  if (diff < hour) return `${Math.floor(diff / minute)} minutes ago`
-  if (diff < day) return `${Math.floor(diff / hour)} hours ago`
-  if (diff < week) return `${Math.floor(diff / day)} days ago`
-  if (diff < month) return `${Math.floor(diff / week)} weeks ago`
-
-  return `${Math.floor(diff / month)} months ago`
+  return `${Math.floor(diff / FORMATTING.SECONDS_PER_MONTH)} months ago`
 }
 
 /**
@@ -102,7 +98,7 @@ export function formatTimeAgo(timestamp: bigint | number): string {
  */
 export function formatDate(timestamp: bigint | number, includeTime = true): string {
   const timestampNum = typeof timestamp === 'bigint' ? Number(timestamp) : timestamp
-  const date = new Date(timestampNum * 1000)
+  const date = new Date(timestampNum * FORMATTING.MS_PER_SECOND)
 
   const dateStr = date.toLocaleDateString('en-US', {
     year: 'numeric',
@@ -110,7 +106,7 @@ export function formatDate(timestamp: bigint | number, includeTime = true): stri
     day: 'numeric',
   })
 
-  if (!includeTime) return dateStr
+  if (!includeTime) {return dateStr}
 
   const timeStr = date.toLocaleTimeString('en-US', {
     hour: '2-digit',
@@ -160,7 +156,7 @@ export function truncateAddress(address: string): string {
 export function formatNumber(num: number | bigint | string): string {
   if (typeof num === 'string') {
     const parsed = Number(num)
-    if (Number.isNaN(parsed)) return num
+    if (Number.isNaN(parsed)) {return num}
     return parsed.toLocaleString('en-US')
   }
   return num.toLocaleString('en-US')
@@ -172,7 +168,7 @@ export function formatNumber(num: number | bigint | string): string {
  * @returns Formatted gas price in Gwei
  */
 export function formatGasPrice(gasPrice: bigint | string): string {
-  const gwei = formatValue(gasPrice, 9)
+  const gwei = formatValue(gasPrice, FORMATTING.GWEI_DECIMALS)
   return `${gwei} Gwei`
 }
 
@@ -182,13 +178,13 @@ export function formatGasPrice(gasPrice: bigint | string): string {
  * @returns Formatted size string
  */
 export function formatBytes(bytes: number): string {
-  if (bytes === 0) return '0 Bytes'
+  if (bytes === 0) {return '0 Bytes'}
 
-  const k = 1024
+  const k = FORMATTING.BYTES_PER_KB
   const sizes = ['Bytes', 'KB', 'MB', 'GB']
   const i = Math.floor(Math.log(bytes) / Math.log(k))
 
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(FORMATTING.DECIMAL_PLACES_PERCENTAGE))} ${sizes[i]}`
 }
 
 /**
@@ -197,11 +193,12 @@ export function formatBytes(bytes: number): string {
  * @param maxLength - Maximum display length
  * @returns Shortened hex string
  */
-export function shortenHex(data: string, maxLength = 20): string {
-  if (data.length <= maxLength) return data
+export function shortenHex(data: string, maxLength: number = FORMATTING.HEX_MAX_LENGTH): string {
+  if (data.length <= maxLength) {return data}
 
+  const ellipsisLength = 3 // for "..."
   const prefixLength = Math.floor(maxLength / 2)
-  const suffixLength = maxLength - prefixLength - 3 // 3 for "..."
+  const suffixLength = maxLength - prefixLength - ellipsisLength
 
   return `${data.slice(0, prefixLength)}...${data.slice(-suffixLength)}`
 }
@@ -214,7 +211,7 @@ export function shortenHex(data: string, maxLength = 20): string {
  * @param symbol - Optional token symbol
  * @returns Formatted token amount string
  */
-export function formatTokenAmount(amount: string | bigint, decimals = 18, symbol?: string): string {
+export function formatTokenAmount(amount: string | bigint, decimals: number = FORMATTING.DEFAULT_DECIMALS, symbol?: string): string {
   // Handle negative values
   const amountStr = amount.toString()
   const isNegative = amountStr.startsWith('-')
@@ -238,18 +235,18 @@ export function formatTokenAmount(amount: string | bigint, decimals = 18, symbol
     let formatted: string
 
     // Use K/M/B suffixes for large amounts
-    if (fullValue >= 1_000_000_000) {
-      formatted = `${(fullValue / 1_000_000_000).toFixed(2)}B`
-    } else if (fullValue >= 1_000_000) {
-      formatted = `${(fullValue / 1_000_000).toFixed(2)}M`
-    } else if (fullValue >= 1_000) {
-      formatted = `${(fullValue / 1_000).toFixed(2)}K`
+    if (fullValue >= FORMATTING.BILLION) {
+      formatted = `${(fullValue / FORMATTING.BILLION).toFixed(FORMATTING.DECIMAL_PLACES_PERCENTAGE)}B`
+    } else if (fullValue >= FORMATTING.MILLION) {
+      formatted = `${(fullValue / FORMATTING.MILLION).toFixed(FORMATTING.DECIMAL_PLACES_PERCENTAGE)}M`
+    } else if (fullValue >= FORMATTING.THOUSAND) {
+      formatted = `${(fullValue / FORMATTING.THOUSAND).toFixed(FORMATTING.DECIMAL_PLACES_PERCENTAGE)}K`
     } else if (fullValue >= 1) {
       // Show up to 4 decimal places for amounts >= 1
-      formatted = fullValue.toFixed(4).replace(/\.?0+$/, '')
+      formatted = fullValue.toFixed(FORMATTING.DECIMAL_PLACES_STANDARD).replace(/\.?0+$/, '')
     } else if (fullValue > 0) {
       // Show up to 8 decimal places for small amounts
-      formatted = fullValue.toFixed(8).replace(/\.?0+$/, '')
+      formatted = fullValue.toFixed(FORMATTING.DECIMAL_PLACES_PRECISE).replace(/\.?0+$/, '')
     } else {
       formatted = '0'
     }

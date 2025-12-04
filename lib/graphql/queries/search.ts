@@ -103,7 +103,7 @@ export interface SearchResultMetadata {
  * Parse metadata JSON string to object
  */
 export function parseSearchMetadata(metadata: string | null): SearchResultMetadata | null {
-  if (!metadata) return null
+  if (!metadata) {return null}
   try {
     return JSON.parse(metadata) as SearchResultMetadata
   } catch {

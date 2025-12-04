@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
 import { formatHash, formatNumber } from '@/lib/utils/format'
+import { getSystemContractInfo } from '@/lib/config/constants'
 import type { TokenBalance } from '@/types/graphql'
 
 interface TokenBalancesTableProps {
@@ -55,41 +56,57 @@ export function TokenBalancesTable({ balances, loading }: TokenBalancesTableProp
         </TableRow>
       </TableHeader>
       <TableBody>
-        {balances.map((token) => (
-          <TableRow key={token.contractAddress}>
-            <TableCell>
-              <div className="flex flex-col">
-                {token.name ? (
-                  <>
-                    <span className="font-mono font-bold text-accent-blue">{token.name}</span>
-                    {token.symbol && (
-                      <span className="font-mono text-xs text-text-muted">{token.symbol}</span>
-                    )}
-                  </>
-                ) : (
-                  <span className="font-mono text-text-muted">Unknown Token</span>
-                )}
-              </div>
-            </TableCell>
-            <TableCell>
-              <Link
-                href={`/address/${token.contractAddress}`}
-                className="font-mono text-accent-blue hover:text-accent-cyan"
-              >
-                {formatHash(token.contractAddress)}
-              </Link>
-            </TableCell>
-            <TableCell>
-              <span className="rounded bg-bg-tertiary px-2 py-1 font-mono text-xs text-text-secondary">
-                {token.tokenType}
-              </span>
-            </TableCell>
-            <TableCell className="text-right font-mono">
-              {formatTokenBalance(token.balance, token.decimals)}
-              {token.symbol && <span className="ml-1 text-text-muted">{token.symbol}</span>}
-            </TableCell>
-          </TableRow>
-        ))}
+        {balances.map((token) => {
+          // Get fallback metadata from system contracts if token name is not available
+          const systemInfo = getSystemContractInfo(token.contractAddress)
+          const displayName = token.name || systemInfo?.name
+          const displaySymbol = token.symbol || systemInfo?.symbol
+          const displayDecimals = token.decimals ?? systemInfo?.decimals ?? null
+          const isSystemToken = !!systemInfo
+
+          return (
+            <TableRow key={token.contractAddress}>
+              <TableCell>
+                <div className="flex flex-col">
+                  {displayName ? (
+                    <>
+                      <span className="font-mono font-bold text-accent-blue">
+                        {displayName}
+                        {isSystemToken && !token.name && (
+                          <span className="ml-1 text-xs text-accent-cyan" title="System Contract">
+                            [SYS]
+                          </span>
+                        )}
+                      </span>
+                      {displaySymbol && (
+                        <span className="font-mono text-xs text-text-muted">{displaySymbol}</span>
+                      )}
+                    </>
+                  ) : (
+                    <span className="font-mono text-text-muted">Unknown Token</span>
+                  )}
+                </div>
+              </TableCell>
+              <TableCell>
+                <Link
+                  href={`/address/${token.contractAddress}`}
+                  className="font-mono text-accent-blue hover:text-accent-cyan"
+                >
+                  {formatHash(token.contractAddress)}
+                </Link>
+              </TableCell>
+              <TableCell>
+                <span className="rounded bg-bg-tertiary px-2 py-1 font-mono text-xs text-text-secondary">
+                  {token.tokenType}
+                </span>
+              </TableCell>
+              <TableCell className="text-right font-mono">
+                {formatTokenBalance(token.balance, displayDecimals)}
+                {displaySymbol && <span className="ml-1 text-text-muted">{displaySymbol}</span>}
+              </TableCell>
+            </TableRow>
+          )
+        })}
       </TableBody>
     </Table>
   )

@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback } from 'react'
 import { weiToGwei } from '@/lib/utils/gas'
 import type { Transaction } from '@/types/graphql'
+import { BLOCKCHAIN } from '@/lib/config/constants'
 
 export interface TransactionFilter {
   type?: number
@@ -43,29 +44,29 @@ function matchesType(tx: Transaction, filterType?: number): boolean {
 }
 
 function matchesFromAddress(tx: Transaction, filterAddr?: string): boolean {
-  if (!filterAddr) return true
+  if (!filterAddr) {return true}
   return tx.from.toLowerCase().includes(filterAddr.toLowerCase())
 }
 
 function matchesToAddress(tx: Transaction, filterAddr?: string): boolean {
-  if (!filterAddr) return true
+  if (!filterAddr) {return true}
   return tx.to ? tx.to.toLowerCase().includes(filterAddr.toLowerCase()) : false
 }
 
 function matchesGasPrice(tx: Transaction, min?: number, max?: number): boolean {
   const txGasPrice = tx.gasPrice || tx.maxFeePerGas
-  if (!txGasPrice) return true
+  if (!txGasPrice) {return true}
 
   const gasPriceGwei = weiToGwei(txGasPrice)
-  if (min !== undefined && gasPriceGwei < min) return false
-  if (max !== undefined && gasPriceGwei > max) return false
+  if (min !== undefined && gasPriceGwei < min) {return false}
+  if (max !== undefined && gasPriceGwei > max) {return false}
   return true
 }
 
 function matchesValue(tx: Transaction, min?: number, max?: number): boolean {
-  const valueEth = Number(tx.value) / 1e18
-  if (min !== undefined && valueEth < min) return false
-  if (max !== undefined && valueEth > max) return false
+  const valueEth = Number(tx.value) / BLOCKCHAIN.WEI_PER_ETHER
+  if (min !== undefined && valueEth < min) {return false}
+  if (max !== undefined && valueEth > max) {return false}
   return true
 }
 
@@ -154,7 +155,7 @@ export function usePendingTxFilters(): UsePendingTxFiltersResult {
 
   const filterTransactions = useCallback(
     (transactions: Transaction[]): Transaction[] => {
-      if (!activeFilter) return transactions
+      if (!activeFilter) {return transactions}
       return transactions.filter((tx) => applyFilter(tx, activeFilter))
     },
     [activeFilter]
