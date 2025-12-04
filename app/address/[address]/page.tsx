@@ -18,8 +18,10 @@ import { ContractCreationInfo } from '@/components/address/ContractCreationInfo'
 import { AddressOverviewCard } from '@/components/address/AddressOverviewCard'
 import { BalanceHistoryCard } from '@/components/address/BalanceHistoryCard'
 import { AddressTransactionsSection } from '@/components/address/AddressTransactionsSection'
+import { ContractLogsSection } from '@/components/address/ContractLogsSection'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { isValidAddress } from '@/lib/utils/validation'
+import { CopyButton } from '@/components/common/CopyButton'
 
 // ============================================================
 // Sub-Components
@@ -29,7 +31,10 @@ function AddressHeader({ address }: { address: string }) {
   return (
     <div className="mb-8">
       <div className="annotation mb-2">ADDRESS</div>
-      <h1 className="mb-4 break-all font-mono text-xl font-bold text-accent-blue">{address}</h1>
+      <div className="flex items-center gap-2">
+        <h1 className="break-all font-mono text-xl font-bold text-accent-blue">{address}</h1>
+        <CopyButton text={address} size="md" />
+      </div>
     </div>
   )
 }
@@ -147,7 +152,7 @@ function AddressPageContent() {
   return (
     <div className="container mx-auto px-4 py-8">
       <AddressHeader address={address} />
-      <AddressOverviewCard address={address} balance={balance} error={balanceError} />
+      <AddressOverviewCard address={address} balance={balance} loading={balanceLoading} error={balanceError} />
       <ContractVerificationStatus address={address} isContract={true} />
       <SourceCodeViewer address={address} isVerified={address.toLowerCase().endsWith('0')} />
       <ContractInteractionSection address={address} />
@@ -166,6 +171,7 @@ function AddressPageContent() {
           <TabsTrigger value="internal">Internal Transactions</TabsTrigger>
           <TabsTrigger value="erc20">ERC20 Transfers</TabsTrigger>
           <TabsTrigger value="erc721">ERC721 Transfers</TabsTrigger>
+          <TabsTrigger value="logs">Event Logs</TabsTrigger>
         </TabsList>
 
         <TabsContent value="transactions">
@@ -187,6 +193,10 @@ function AddressPageContent() {
         </TabsContent>
 
         <TransactionTabs address={address} />
+
+        <TabsContent value="logs">
+          <ContractLogsSection address={address} />
+        </TabsContent>
       </Tabs>
     </div>
   )

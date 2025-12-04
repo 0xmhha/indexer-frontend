@@ -16,6 +16,7 @@ import type { NameType, ValueType } from 'recharts/types/component/DefaultToolti
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { useConsensusStore } from '@/stores/consensusStore'
+import { useRealtimeStore } from '@/stores/realtimeStore'
 import { CONSENSUS, UI } from '@/lib/config/constants'
 
 /**
@@ -23,9 +24,11 @@ import { CONSENSUS, UI } from '@/lib/config/constants'
  *
  * Displays a real-time chart of validator participation rates
  * using data from the consensus store (WebSocket updates)
+ * Uses centralized WebSocket connection status from realtimeStore
  */
 export function ParticipationChart() {
-  const { recentBlocks, stats, isConnected } = useConsensusStore()
+  const { recentBlocks, stats } = useConsensusStore()
+  const isConnected = useRealtimeStore((s) => s.isConnected)
 
   // Transform block data for chart
   const chartData = useMemo(() => {

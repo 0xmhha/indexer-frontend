@@ -9,7 +9,7 @@ import { gql } from '@apollo/client'
  * Backend API Requirements: See docs/backend-api-requirements.md
  */
 export const GET_CONTRACT_VERIFICATION = gql`
-  query GetContractVerification($address: Address!) {
+  query GetContractVerification($address: String!) {
     contractVerification(address: $address) {
       address
       isVerified
@@ -34,7 +34,7 @@ export const GET_CONTRACT_VERIFICATION = gql`
  */
 export const VERIFY_CONTRACT = gql`
   mutation VerifyContract(
-    $address: Address!
+    $address: String!
     $sourceCode: String!
     $compilerVersion: String!
     $optimizationEnabled: Boolean!

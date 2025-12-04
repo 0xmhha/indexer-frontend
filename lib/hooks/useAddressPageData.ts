@@ -1,6 +1,8 @@
 'use client'
 
-import { useAddressBalance, useAddressTransactions, useBalanceHistory, useTokenBalances } from '@/lib/hooks/useAddress'
+import { useMemo } from 'react'
+import { useAddressTransactions, useBalanceHistory, useTokenBalances } from '@/lib/hooks/useAddress'
+import { useLiveBalance } from '@/lib/hooks/useLiveBalance'
 import { useFilteredTransactions, type FilteredTransactionsParams } from '@/lib/hooks/useFilteredTransactions'
 import { useLatestHeight } from '@/lib/hooks/useLatestHeight'
 import { usePagination } from '@/lib/hooks/usePagination'
@@ -12,10 +14,13 @@ import type { TransformedTransaction } from '@/lib/utils/graphql-transforms'
 // ============================================================
 
 export interface AddressPageDataResult {
-  // Balance data
-  balance: ReturnType<typeof useAddressBalance>['balance']
+  // Native balance data (via liveBalance API with fallback to indexed)
+  balance: bigint | null
   balanceLoading: boolean
   balanceError: Error | null
+  balanceBlockNumber: bigint | null
+  isLiveBalance: boolean
+  isFallbackBalance: boolean
 
   // History data
   history: ReturnType<typeof useBalanceHistory>['history']
@@ -52,13 +57,10 @@ export interface AddressPageDataResult {
 // ============================================================
 
 /**
- * Calculate block range for balance history
+ * Block range constant for balance history queries
+ * Using a fixed range size to prevent unnecessary re-queries
  */
-function calculateBlockRange(latestHeight: bigint | null) {
-  const toBlock = latestHeight ?? BigInt(0)
-  const fromBlock = toBlock > BigInt(1000) ? toBlock - BigInt(1000) : BigInt(0)
-  return { fromBlock, toBlock }
-}
+const BALANCE_HISTORY_BLOCK_RANGE = BigInt(1000)
 
 /**
  * Select transactions based on filter state
@@ -107,10 +109,25 @@ export function useAddressPageData(address: string): AddressPageDataResult {
 
   // Latest block height
   const { latestHeight } = useLatestHeight()
-  const { fromBlock, toBlock } = calculateBlockRange(latestHeight)
 
-  // Balance data
-  const { balance, loading: balanceLoading, error: balanceError } = useAddressBalance(address)
+  // Memoize block range to prevent unnecessary re-queries
+  // Only recalculate when latestHeight actually changes
+  const { fromBlock, toBlock } = useMemo(() => {
+    const to = latestHeight ?? BigInt(0)
+    const from = to > BALANCE_HISTORY_BLOCK_RANGE ? to - BALANCE_HISTORY_BLOCK_RANGE : BigInt(0)
+    return { fromBlock: from, toBlock: to }
+  }, [latestHeight])
+
+  // Native balance data via liveBalance API (real-time from chain RPC with 15s cache)
+  // Falls back to indexed addressBalance if liveBalance fails
+  const {
+    balance,
+    blockNumber: balanceBlockNumber,
+    loading: balanceLoading,
+    error: balanceError,
+    isLive: isLiveBalance,
+    isFallback: isFallbackBalance,
+  } = useLiveBalance(address)
 
   // Balance history
   const { history, loading: historyLoading, error: historyError } = useBalanceHistory(
@@ -179,10 +196,13 @@ export function useAddressPageData(address: string): AddressPageDataResult {
   }
 
   return {
-    // Balance data
+    // Native balance data (via liveBalance API with fallback to indexed)
     balance,
     balanceLoading,
     balanceError: balanceError ?? null,
+    balanceBlockNumber,
+    isLiveBalance,
+    isFallbackBalance,
 
     // History data
     history,

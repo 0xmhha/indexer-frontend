@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { useSubscription, useQuery } from '@apollo/client'
 import {
   SUBSCRIBE_LOGS,
@@ -154,9 +154,9 @@ export function useLogs(filter: LogFilter = {}, maxLogs: number = REALTIME.MAX_L
   /**
    * Clear all accumulated logs
    */
-  const clearLogs = () => {
+  const clearLogs = useCallback(() => {
     setLogs([])
-  }
+  }, [])
 
   return {
     logs,
@@ -275,10 +275,10 @@ export function useNewBlocks(maxBlocks: number = REALTIME.MAX_BLOCKS) {
     return blocks[0] ?? null
   }, [realtimeLatestBlock, blocks])
 
-  const clearBlocks = () => {
+  const clearBlocks = useCallback(() => {
     setInitialBlocks([])
     setInitialized(false)
-  }
+  }, [])
 
   return {
     blocks,
@@ -313,9 +313,9 @@ export function useNewTransactions(maxTransactions: number = REALTIME.MAX_TRANSA
       .map((tx) => transformTransaction(tx as RawTransaction))
   }, [realtimeTransactions, maxTransactions])
 
-  const clearTransactions = () => {
+  const clearTransactions = useCallback(() => {
     // No-op for now - store manages its own state
-  }
+  }, [])
 
   return {
     transactions,
@@ -365,10 +365,10 @@ export function useChainConfig(maxEvents: number = 50) {
   /**
    * Clear all accumulated config changes
    */
-  const clearConfigChanges = () => {
+  const clearConfigChanges = useCallback(() => {
     setConfigChanges([])
     setLatestChange(null)
-  }
+  }, [])
 
   return {
     configChanges,
@@ -419,10 +419,10 @@ export function useValidatorSet(maxEvents: number = 50) {
   /**
    * Clear all accumulated validator changes
    */
-  const clearValidatorChanges = () => {
+  const clearValidatorChanges = useCallback(() => {
     setValidatorChanges([])
     setLatestChange(null)
-  }
+  }, [])
 
   return {
     validatorChanges,
@@ -486,14 +486,14 @@ export function useFilteredNewTransactions(
     return filtered.slice(0, maxTransactions)
   }, [realtimeTransactions, filter.from, filter.to, maxTransactions])
 
-  const clearTransactions = () => {
+  const clearFilteredTransactions = useCallback(() => {
     // No-op for now - store manages its own state
-  }
+  }, [])
 
   return {
     transactions,
     loading: !isConnected && transactions.length === 0,
     error: null,
-    clearTransactions,
+    clearTransactions: clearFilteredTransactions,
   }
 }

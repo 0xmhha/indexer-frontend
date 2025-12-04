@@ -15,6 +15,8 @@ export type {
   TransformedChainConfigChange as ChainConfigChange,
   TransformedValidatorSetChange as ValidatorSetChange,
   ValidatorChangeType,
+  DecodedLog,
+  DecodedParam,
 } from '@/lib/utils/graphql-transforms'
 
 // Export raw types for cases where string-based data is needed
@@ -49,6 +51,69 @@ export interface MinerStats {
   address: string
   blockCount: number
   lastBlockNumber: bigint
+  percentage: number
+}
+
+// ============================================================================
+// Fee Delegation Types
+// ============================================================================
+
+/**
+ * Raw Fee Delegation stats from GraphQL (string-based BigInt values)
+ * All numeric values from backend are strings to preserve BigInt precision
+ */
+export interface RawFeeDelegationStats {
+  /** Total fee delegated transactions (BigInt as string) */
+  totalFeeDelegatedTxs: string
+  /** Total fees saved by users in wei (BigInt as string) */
+  totalFeesSaved: string
+  /** Adoption rate as percentage (0-100) */
+  adoptionRate: number
+  /** Average fee saved per transaction in wei (BigInt as string) */
+  avgFeeSaved: string
+}
+
+/**
+ * Raw Fee Payer stats from GraphQL (string-based BigInt values)
+ */
+export interface RawFeePayerStats {
+  /** Fee payer address */
+  address: string
+  /** Number of transactions sponsored (BigInt as string) */
+  txCount: string
+  /** Total fees paid in wei (BigInt as string) */
+  totalFeesPaid: string
+  /** Percentage of total fee delegation (0-100) */
+  percentage: number
+}
+
+/**
+ * Transformed Fee Delegation stats (with proper BigInt/number values)
+ */
+export interface FeeDelegationStats {
+  /** Total fee delegated transactions */
+  totalFeeDelegatedTxs: number
+  /** Total fees saved by users in wei */
+  totalFeesSaved: bigint
+  /** Adoption rate as percentage (0-100) */
+  adoptionRate: number
+  /** Average fee saved per transaction in wei */
+  avgFeeSaved: bigint
+  /** Top fee payers list */
+  topFeePayers: FeePayerStats[]
+}
+
+/**
+ * Transformed Fee Payer stats (with proper BigInt/number values)
+ */
+export interface FeePayerStats {
+  /** Fee payer address */
+  address: string
+  /** Number of transactions sponsored */
+  txCount: number
+  /** Total fees paid in wei */
+  totalFeesPaid: bigint
+  /** Percentage of total fee delegation (0-100) */
   percentage: number
 }
 

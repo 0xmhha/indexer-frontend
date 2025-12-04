@@ -42,39 +42,21 @@ export const GET_CONTRACTS_BY_CREATOR = gql`
 // Internal Transactions Queries
 // ============================================================================
 
-export const GET_INTERNAL_TRANSACTIONS = gql`
-  query GetInternalTransactions($filter: InternalTransactionFilter!, $pagination: PaginationInput) {
-    internalTransactions(filter: $filter, pagination: $pagination) {
-      nodes {
-        parentHash
-        type
-        from
-        to
-        value
-        input
-        output
-        error
-        blockNumber
-        timestamp
-      }
-      totalCount
-      pageInfo {
-        hasNextPage
-        hasPreviousPage
-      }
-    }
-  }
-`
-
+/**
+ * Get internal transactions by address
+ * @param address - The address to query (from or to)
+ * @param isFrom - true to get transactions FROM this address, false to get transactions TO this address
+ * @param pagination - Pagination options (limit, offset)
+ */
 export const GET_INTERNAL_TRANSACTIONS_BY_ADDRESS = gql`
   query GetInternalTransactionsByAddress(
     $address: String!
-    $filter: InternalTransactionFilter
+    $isFrom: Boolean!
     $pagination: PaginationInput
   ) {
-    internalTransactionsByAddress(address: $address, filter: $filter, pagination: $pagination) {
+    internalTransactionsByAddress(address: $address, isFrom: $isFrom, pagination: $pagination) {
       nodes {
-        parentHash
+        transactionHash
         type
         from
         to
@@ -83,7 +65,6 @@ export const GET_INTERNAL_TRANSACTIONS_BY_ADDRESS = gql`
         output
         error
         blockNumber
-        timestamp
       }
       totalCount
       pageInfo {
@@ -142,14 +123,14 @@ export const GET_ERC20_TRANSFERS_BY_TOKEN = gql`
 export const GET_ERC20_TRANSFERS_BY_ADDRESS = gql`
   query GetERC20TransfersByAddress(
     $address: String!
-    $filter: ERC20TransferFilter
+    $isFrom: Boolean!
     $pagination: PaginationInput
   ) {
-    erc20TransfersByAddress(address: $address, filter: $filter, pagination: $pagination) {
+    erc20TransfersByAddress(address: $address, isFrom: $isFrom, pagination: $pagination) {
       nodes {
         transactionHash
         logIndex
-        tokenAddress
+        contractAddress
         from
         to
         value
@@ -213,14 +194,14 @@ export const GET_ERC721_TRANSFERS_BY_TOKEN = gql`
 export const GET_ERC721_TRANSFERS_BY_ADDRESS = gql`
   query GetERC721TransfersByAddress(
     $address: String!
-    $filter: ERC721TransferFilter
+    $isFrom: Boolean!
     $pagination: PaginationInput
   ) {
-    erc721TransfersByAddress(address: $address, filter: $filter, pagination: $pagination) {
+    erc721TransfersByAddress(address: $address, isFrom: $isFrom, pagination: $pagination) {
       nodes {
         transactionHash
         logIndex
-        tokenAddress
+        contractAddress
         from
         to
         tokenId

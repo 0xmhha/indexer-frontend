@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
-import { useLazyTransactionTrace, type InternalCall } from '@/lib/hooks/useTransactionTrace'
+import { useInternalTransactionsRPCLazy, type InternalTransactionRPC } from '@/lib/hooks/useRpcProxy'
 import { formatHash, formatCurrency } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
 
@@ -15,6 +15,30 @@ import { env } from '@/lib/config/env'
 
 interface InternalCallsViewerProps {
   txHash: string
+}
+
+// Unified internal call type for display
+interface DisplayInternalCall {
+  type: string
+  from: string
+  to: string | null
+  value: bigint
+  error: string | null
+  depth: number
+}
+
+/**
+ * Transform InternalTransactionRPC to DisplayInternalCall
+ */
+function transformToDisplayCall(tx: InternalTransactionRPC): DisplayInternalCall {
+  return {
+    type: tx.type,
+    from: tx.from,
+    to: tx.to || null,
+    value: BigInt(tx.value || '0'),
+    error: tx.error || null,
+    depth: tx.depth,
+  }
 }
 
 // Indentation per nesting level (px)
@@ -43,12 +67,12 @@ function CallTypeTag({ type }: { type: string }) {
   )
 }
 
-function InternalCallRow({ call, currentAddress }: { call: InternalCall; currentAddress?: string }) {
+function InternalCallRow({ call, currentAddress }: { call: DisplayInternalCall; currentAddress?: string }) {
   const indent = call.depth * INDENT_PER_LEVEL
 
   return (
     <div
-      className={`flex items-center gap-4 border-b border-bg-tertiary px-4 py-3 ${
+      className={`flex items-center gap-6 border-b border-bg-tertiary px-4 py-3 ${
         call.error ? 'bg-error/5' : ''
       }`}
       style={{ paddingLeft: `${INDENT_PER_LEVEL + indent}px` }}
@@ -61,12 +85,12 @@ function InternalCallRow({ call, currentAddress }: { call: InternalCall; current
       )}
 
       {/* Call type */}
-      <div className="w-24 flex-shrink-0">
+      <div className="w-28 flex-shrink-0">
         <CallTypeTag type={call.type} />
       </div>
 
       {/* From */}
-      <div className="w-32 flex-shrink-0 font-mono text-xs">
+      <div className="w-36 flex-shrink-0 font-mono text-xs">
         {call.from === currentAddress ? (
           <span className="text-text-muted">[Current]</span>
         ) : (
@@ -80,10 +104,10 @@ function InternalCallRow({ call, currentAddress }: { call: InternalCall; current
       </div>
 
       {/* Arrow */}
-      <span className="text-text-muted">→</span>
+      <div className="w-6 flex-shrink-0 text-center text-text-muted">→</div>
 
       {/* To */}
-      <div className="w-32 flex-shrink-0 font-mono text-xs">
+      <div className="w-36 flex-shrink-0 font-mono text-xs">
         {call.to === null ? (
           <span className="text-accent-magenta">[Create]</span>
         ) : call.to === currentAddress ? (
@@ -99,7 +123,7 @@ function InternalCallRow({ call, currentAddress }: { call: InternalCall; current
       </div>
 
       {/* Value */}
-      <div className="w-28 flex-shrink-0 text-right font-mono text-xs">
+      <div className="w-32 flex-shrink-0 text-right font-mono text-xs">
         {call.value > BigInt(0) ? (
           <span className="text-accent-green">
             {formatCurrency(call.value, env.currencySymbol)}
@@ -131,7 +155,7 @@ function EmptyState() {
   )
 }
 
-function ErrorState({ error }: { error: Error }) {
+function ErrorState({ error }: { error: Error | { message: string } }) {
   return (
     <div className="py-8 text-center">
       <p className="mb-2 text-sm text-error">Failed to load internal calls</p>
@@ -146,7 +170,7 @@ function NotLoadedState({ onLoad, loading }: { onLoad: () => void; loading: bool
       <p className="mb-4 text-sm text-text-muted">
         Internal calls show all nested contract interactions within this transaction.
         <br />
-        This requires tracing the transaction via debug_traceTransaction.
+        This uses the RPC Proxy to trace the transaction execution.
       </p>
       <Button onClick={onLoad} disabled={loading}>
         {loading ? (
@@ -168,10 +192,19 @@ function NotLoadedState({ onLoad, loading }: { onLoad: () => void; loading: bool
 
 export function InternalCallsViewer({ txHash }: InternalCallsViewerProps) {
   const [expanded, setExpanded] = useState(false)
-  const { internalCalls, loading, error, hasBeenRequested, loadTrace } = useLazyTransactionTrace(txHash)
+  const [hasBeenRequested, setHasBeenRequested] = useState(false)
+  const { loadTrace: loadTraceRPC, internalTransactions, loading, error } = useInternalTransactionsRPCLazy()
+
+  // Transform RPC response to display format
+  const internalCalls: DisplayInternalCall[] = internalTransactions.map(transformToDisplayCall)
 
   const displayedCalls = expanded ? internalCalls : internalCalls.slice(0, 10)
   const hasMoreCalls = internalCalls.length > 10
+
+  const loadTrace = useCallback(async () => {
+    setHasBeenRequested(true)
+    await loadTraceRPC(txHash)
+  }, [txHash, loadTraceRPC])
 
   return (
     <Card>
@@ -186,7 +219,7 @@ export function InternalCallsViewer({ txHash }: InternalCallsViewerProps) {
             )}
           </div>
           <span className="text-xs font-normal text-text-muted">
-            via debug_traceTransaction
+            via RPC Proxy
           </span>
         </CardTitle>
       </CardHeader>
@@ -205,12 +238,12 @@ export function InternalCallsViewer({ txHash }: InternalCallsViewerProps) {
         ) : (
           <>
             {/* Header */}
-            <div className="flex items-center gap-4 border-b border-bg-tertiary bg-bg-secondary px-4 py-2 font-mono text-xs text-text-muted">
-              <div className="w-24 flex-shrink-0">TYPE</div>
-              <div className="w-32 flex-shrink-0">FROM</div>
-              <div className="w-4"></div>
-              <div className="w-32 flex-shrink-0">TO</div>
-              <div className="w-28 flex-shrink-0 text-right">VALUE</div>
+            <div className="flex items-center gap-6 border-b border-bg-tertiary bg-bg-secondary px-4 py-2 font-mono text-xs text-text-muted">
+              <div className="w-28 flex-shrink-0">TYPE</div>
+              <div className="w-36 flex-shrink-0">FROM</div>
+              <div className="w-6 flex-shrink-0 text-center"></div>
+              <div className="w-36 flex-shrink-0">TO</div>
+              <div className="w-32 flex-shrink-0 text-right">VALUE</div>
             </div>
 
             {/* Calls list */}

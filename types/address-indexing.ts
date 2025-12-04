@@ -35,7 +35,7 @@ export interface ContractCreationsResponse {
 // ============================================================================
 
 export interface InternalTransaction {
-  parentHash: string
+  transactionHash: string
   type: string
   from: string
   to: string | null
@@ -44,13 +44,6 @@ export interface InternalTransaction {
   output: string
   error: string | null
   blockNumber: bigint
-  timestamp: bigint
-}
-
-export interface InternalTransactionFilter {
-  address?: string
-  fromBlock?: bigint
-  toBlock?: bigint
 }
 
 export interface InternalTransactionsResponse {
@@ -66,7 +59,7 @@ export interface InternalTransactionsResponse {
 export interface ERC20Transfer {
   transactionHash: string
   logIndex: number
-  tokenAddress: string
+  contractAddress: string
   from: string
   to: string
   value: bigint
@@ -95,7 +88,7 @@ export interface ERC20TransfersResponse {
 export interface ERC721Transfer {
   transactionHash: string
   logIndex: number
-  tokenAddress: string
+  contractAddress: string
   from: string
   to: string
   tokenId: bigint
@@ -151,7 +144,7 @@ export interface RawContractCreation {
 }
 
 export interface RawInternalTransaction {
-  parentHash: string
+  transactionHash: string
   type: string
   from: string
   to: string | null
@@ -160,13 +153,12 @@ export interface RawInternalTransaction {
   output: string
   error: string | null
   blockNumber: string
-  timestamp: string
 }
 
 export interface RawERC20Transfer {
   transactionHash: string
   logIndex: number
-  tokenAddress: string
+  contractAddress: string
   from: string
   to: string
   value: string
@@ -177,7 +169,7 @@ export interface RawERC20Transfer {
 export interface RawERC721Transfer {
   transactionHash: string
   logIndex: number
-  tokenAddress: string
+  contractAddress: string
   from: string
   to: string
   tokenId: string

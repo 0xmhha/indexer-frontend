@@ -27,6 +27,8 @@ export interface AreaChartProps {
   stacked?: boolean
   xAxisLabel?: string
   yAxisLabel?: string
+  /** Control XAxis tick interval. 'preserveStartEnd' shows first/last, number for fixed interval */
+  xAxisInterval?: 'preserveStartEnd' | 'preserveStart' | 'preserveEnd' | number
 }
 
 export function AreaChart({
@@ -39,6 +41,7 @@ export function AreaChart({
   stacked = false,
   xAxisLabel,
   yAxisLabel,
+  xAxisInterval = 'preserveStartEnd',
 }: AreaChartProps) {
   return (
     <ResponsiveContainer width="100%" height={height}>
@@ -48,6 +51,8 @@ export function AreaChart({
           dataKey={xKey}
           stroke="rgba(255, 255, 255, 0.5)"
           tick={{ fill: 'rgba(255, 255, 255, 0.7)', fontSize: 12 }}
+          interval={xAxisInterval}
+          allowDuplicatedCategory={false}
           {...(xAxisLabel && { label: { value: xAxisLabel, position: 'insideBottom', offset: -5 } })}
         />
         <YAxis

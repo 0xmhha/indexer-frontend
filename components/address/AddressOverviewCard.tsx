@@ -1,21 +1,24 @@
 'use client'
 
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { CopyButton } from '@/components/common/CopyButton'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
-import { formatCurrency } from '@/lib/utils/format'
+import { formatCurrencyFull } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
 import { getSystemContractInfo } from '@/lib/config/constants'
 
 interface AddressOverviewCardProps {
   address?: string
   balance: bigint | null
+  loading?: boolean
   error: Error | null
 }
 
 /**
- * Address balance overview card (SRP: Only displays balance)
+ * Address balance overview card
+ * Displays the native coin balance from RPC eth_getBalance via backend RPC proxy
  */
-export function AddressOverviewCard({ address, balance, error }: AddressOverviewCardProps) {
+export function AddressOverviewCard({ address, balance, loading = false, error }: AddressOverviewCardProps) {
   // Check if this is a known system contract
   const systemInfo = address ? getSystemContractInfo(address) : null
 
@@ -35,13 +38,18 @@ export function AddressOverviewCard({ address, balance, error }: AddressOverview
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
-        {error ? (
+        {error && !balance ? (
           <ErrorDisplay title="Failed to load balance" message={error.message} />
         ) : (
           <div>
-            <div className="annotation mb-2">BALANCE</div>
-            <div className="font-mono text-3xl font-bold text-accent-blue">
-              {balance !== null ? formatCurrency(balance, env.currencySymbol) : 'Loading...'}
+            <div className="annotation mb-2">{env.currencySymbol} BALANCE</div>
+            <div className="flex items-center gap-2">
+              <div className="font-mono text-2xl font-bold text-accent-blue">
+                {loading ? 'Loading...' : balance !== null ? formatCurrencyFull(balance, env.currencySymbol) : '0.000000000000000000'}
+              </div>
+              {balance !== null && address && (
+                <CopyButton text={balance.toString()} size="sm" />
+              )}
             </div>
             {systemInfo?.isNativeWrapper && (
               <div className="mt-2 text-xs text-text-muted">

@@ -1,10 +1,10 @@
 'use client'
 
 import { useState } from 'react'
-import { ethers } from 'ethers'
+import { useLazyQuery } from '@apollo/client'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { env } from '@/lib/config/env'
+import { CONTRACT_CALL } from '@/lib/graphql/queries/rpcProxy'
 import type { ContractABI, AbiFunction } from '@/types/contract'
 
 interface ContractReaderProps {
@@ -20,8 +20,24 @@ interface FunctionCall {
   error: string | null
 }
 
+interface ContractCallResult {
+  result: string | null
+  rawResult: string
+  decoded: boolean
+}
+
+interface ContractCallResponse {
+  contractCall: ContractCallResult
+}
+
 export function ContractReader({ contractAddress, abi }: ContractReaderProps) {
   const [functionCalls, setFunctionCalls] = useState<Record<string, FunctionCall>>({})
+
+  // Use Apollo Client's lazy query for on-demand contract calls
+  const [executeCall] = useLazyQuery<ContractCallResponse>(CONTRACT_CALL, {
+    errorPolicy: 'all',
+    fetchPolicy: 'network-only', // Always fetch fresh data
+  })
 
   // Filter read-only functions from ABI
   const readFunctions = abi.filter(
@@ -52,34 +68,50 @@ export function ContractReader({ contractAddress, abi }: ContractReaderProps) {
         return inputElement?.value || ''
       })
 
-      // Create provider and contract instance
-      const provider = new ethers.JsonRpcProvider(env.jsonRpcEndpoint)
-      const contract = new ethers.Contract(contractAddress, abi, provider)
+      // Convert inputs to appropriate types based on ABI
+      const typedInputs = inputs.map((value, index) => {
+        const inputType = func.inputs[index]?.type || 'string'
+        return convertInputValue(value, inputType)
+      })
 
-      // Call the function
-      const contractFunction = contract[functionName]
-      if (typeof contractFunction !== 'function') {
-        throw new Error(`Function ${functionName} not found in contract`)
+      // Create minimal ABI for this function
+      const functionAbi = [func]
+
+      // Call the contract via backend RPC Proxy
+      const { data, error } = await executeCall({
+        variables: {
+          address: contractAddress,
+          method: functionName,
+          params: typedInputs.length > 0 ? JSON.stringify(typedInputs) : undefined,
+          abi: JSON.stringify(functionAbi),
+        },
+      })
+
+      if (error) {
+        throw new Error(error.message)
       }
-      const result = await contractFunction(...inputs)
 
-      // Format result based on output type
+      if (!data?.contractCall) {
+        throw new Error('No response from contract call')
+      }
+
+      const { result, rawResult, decoded } = data.contractCall
+
+      // Format result
       let formattedResult: string
-      if (func.outputs && func.outputs.length > 0) {
-        if (func.outputs.length === 1) {
-          const outputType = func.outputs[0]?.type ?? 'unknown'
-          formattedResult = formatOutput(result, outputType)
-        } else {
-          // Multiple outputs
-          formattedResult = func.outputs
-            .map((output, i) => {
-              const value = Array.isArray(result) ? result[i] : result[output.name ?? i]
-              return `${output.name || `output${i}`}: ${formatOutput(value, output.type)}`
-            })
-            .join('\n')
+      if (decoded && result) {
+        // Parse decoded result
+        try {
+          const parsedResult = JSON.parse(result)
+          formattedResult = formatDecodedResult(parsedResult, func.outputs)
+        } catch {
+          formattedResult = result
         }
+      } else if (rawResult) {
+        // Show raw hex result if not decoded
+        formattedResult = `(raw) ${rawResult}`
       } else {
-        formattedResult = String(result)
+        formattedResult = 'No result returned'
       }
 
       setFunctionCalls((prev) => ({
@@ -194,51 +226,104 @@ export function ContractReader({ contractAddress, abi }: ContractReaderProps) {
 }
 
 /**
- * Format output value based on type
+ * Convert input value based on ABI type
  */
-function formatOutput(value: unknown, type: string): string {
-  try {
-    // Handle BigInt types
-    if (type.includes('uint') || type.includes('int')) {
-      return typeof value === 'bigint' ? value.toString() : String(value)
-    }
+function convertInputValue(value: string, type: string): unknown {
+  if (!value) {return value}
 
-    // Handle address
-    if (type === 'address') {
-      return String(value)
-    }
+  // Boolean
+  if (type === 'bool') {
+    return value.toLowerCase() === 'true'
+  }
 
-    // Handle bool
-    if (type === 'bool' || type === 'boolean') {
-      return String(value)
+  // Arrays
+  if (type.includes('[]')) {
+    try {
+      return JSON.parse(value)
+    } catch {
+      // Try comma-separated values
+      return value.split(',').map((v) => v.trim())
     }
+  }
 
-    // Handle bytes
-    if (type.includes('bytes')) {
-      return String(value)
-    }
+  // Numbers - keep as string for BigInt compatibility
+  if (type.includes('uint') || type.includes('int')) {
+    return value
+  }
 
-    // Handle string
-    if (type === 'string') {
-      return String(value)
-    }
+  // Address - keep as string
+  if (type === 'address') {
+    return value
+  }
 
-    // Handle arrays
-    if (type.includes('[]')) {
-      if (Array.isArray(value)) {
-        return JSON.stringify(value, (_, v) =>
-          typeof v === 'bigint' ? v.toString() : v
-        )
-      }
-    }
+  // Bytes - keep as string
+  if (type.includes('bytes')) {
+    return value
+  }
 
-    // Default
+  return value
+}
+
+/**
+ * Format decoded result based on output types
+ */
+function formatDecodedResult(result: unknown, outputs?: AbiFunction['outputs']): string {
+  if (!outputs || outputs.length === 0) {
+    return formatValue(result)
+  }
+
+  // Single output
+  if (outputs.length === 1) {
+    return formatValue(result)
+  }
+
+  // Multiple outputs
+  if (Array.isArray(result)) {
+    return outputs
+      .map((output, i) => {
+        const name = output.name || `output${i}`
+        const value = result[i]
+        return `${name}: ${formatValue(value)}`
+      })
+      .join('\n')
+  }
+
+  return formatValue(result)
+}
+
+/**
+ * Format a single value for display
+ */
+function formatValue(value: unknown): string {
+  if (value === null || value === undefined) {
+    return 'null'
+  }
+
+  if (typeof value === 'boolean') {
+    return value.toString()
+  }
+
+  if (typeof value === 'string') {
+    return value
+  }
+
+  if (typeof value === 'number' || typeof value === 'bigint') {
+    return value.toString()
+  }
+
+  if (Array.isArray(value)) {
     return JSON.stringify(value, (_, v) =>
       typeof v === 'bigint' ? v.toString() : v
     )
-  } catch {
-    return String(value)
   }
+
+  if (typeof value === 'object') {
+    return JSON.stringify(value, (_, v) =>
+      typeof v === 'bigint' ? v.toString() : v
+    , 2)
+  }
+
+  return String(value)
 }
 
 /**

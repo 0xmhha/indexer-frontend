@@ -2,14 +2,17 @@
 
 import { useMemo } from 'react'
 import { useConsensusStore } from '@/stores/consensusStore'
+import { useRealtimeStore } from '@/stores/realtimeStore'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 
 /**
  * Network health status component
  * Displays overall network health based on consensus data
+ * Uses centralized WebSocket connection status from realtimeStore
  */
 export function NetworkHealthStatus() {
-  const { networkHealth, stats, isConnected } = useConsensusStore()
+  const { networkHealth, stats } = useConsensusStore()
+  const isConnected = useRealtimeStore((s) => s.isConnected)
 
   const healthColor = useMemo(() => {
     switch (networkHealth.status) {
@@ -154,9 +157,11 @@ export function NetworkHealthStatus() {
 
 /**
  * Compact network health indicator for headers/sidebars
+ * Uses centralized WebSocket connection status from realtimeStore
  */
 export function NetworkHealthIndicator() {
-  const { networkHealth, isConnected } = useConsensusStore()
+  const { networkHealth } = useConsensusStore()
+  const isConnected = useRealtimeStore((s) => s.isConnected)
 
   const statusColor = useMemo(() => {
     switch (networkHealth.status) {
@@ -188,9 +193,10 @@ export function NetworkHealthIndicator() {
 
 /**
  * Connection status badge
+ * Uses centralized WebSocket connection status from realtimeStore
  */
 export function ConnectionStatus() {
-  const { isConnected, connectionError } = useConsensusStore()
+  const isConnected = useRealtimeStore((s) => s.isConnected)
 
   return (
     <div
@@ -202,11 +208,7 @@ export function ConnectionStatus() {
         className={`h-2 w-2 rounded-full ${isConnected ? 'animate-pulse bg-green-500' : 'bg-red-500'}`}
       />
       <span className="font-mono text-xs">
-        {isConnected
-          ? 'Connected'
-          : connectionError
-            ? `Error: ${connectionError}`
-            : 'Disconnected'}
+        {isConnected ? 'Connected' : 'Disconnected'}
       </span>
     </div>
   )

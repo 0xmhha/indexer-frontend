@@ -12,7 +12,6 @@ import { useQuery, type ApolloError } from '@apollo/client'
 import {
   GET_CONTRACT_CREATION,
   GET_CONTRACTS_BY_CREATOR,
-  GET_INTERNAL_TRANSACTIONS,
   GET_INTERNAL_TRANSACTIONS_BY_ADDRESS,
   GET_ERC20_TRANSFER,
   GET_ERC20_TRANSFERS_BY_TOKEN,
@@ -25,7 +24,6 @@ import {
 import type {
   ContractCreation,
   InternalTransaction,
-  InternalTransactionFilter,
   ERC20Transfer,
   ERC20TransferFilter,
   ERC721Transfer,
@@ -80,7 +78,7 @@ function transformContractCreation(raw: RawContractCreation): ContractCreation {
 
 function transformInternalTransaction(raw: RawInternalTransaction): InternalTransaction {
   return {
-    parentHash: raw.parentHash,
+    transactionHash: raw.transactionHash,
     type: raw.type,
     from: raw.from,
     to: raw.to,
@@ -89,7 +87,6 @@ function transformInternalTransaction(raw: RawInternalTransaction): InternalTran
     output: raw.output,
     error: raw.error,
     blockNumber: BigInt(raw.blockNumber),
-    timestamp: BigInt(raw.timestamp),
   }
 }
 
@@ -97,7 +94,7 @@ function transformERC20Transfer(raw: RawERC20Transfer): ERC20Transfer {
   return {
     transactionHash: raw.transactionHash,
     logIndex: raw.logIndex,
-    tokenAddress: raw.tokenAddress,
+    contractAddress: raw.contractAddress,
     from: raw.from,
     to: raw.to,
     value: BigInt(raw.value),
@@ -110,7 +107,7 @@ function transformERC721Transfer(raw: RawERC721Transfer): ERC721Transfer {
   return {
     transactionHash: raw.transactionHash,
     logIndex: raw.logIndex,
-    tokenAddress: raw.tokenAddress,
+    contractAddress: raw.contractAddress,
     from: raw.from,
     to: raw.to,
     tokenId: BigInt(raw.tokenId),
@@ -208,53 +205,15 @@ export function useContractsByCreator(
 // Internal Transactions Hooks
 // ============================================================================
 
-export function useInternalTransactions(
-  filter: InternalTransactionFilter,
-  pagination?: PaginationInput
-) {
-  const { data, loading, error, refetch, fetchMore, previousData } = useQuery(
-    GET_INTERNAL_TRANSACTIONS,
-    {
-      variables: {
-        filter,
-        pagination,
-      },
-      returnPartialData: true,
-    }
-  )
-
-  const rawData = data?.internalTransactions || previousData?.internalTransactions
-  const internalTransactions = rawData?.nodes?.map(transformInternalTransaction) || []
-  const totalCount = rawData?.totalCount || 0
-  const pageInfo = rawData?.pageInfo || { hasNextPage: false, hasPreviousPage: false }
-
-  const loadMore = () => {
-    if (!pageInfo.hasNextPage) {return}
-
-    return fetchMore({
-      variables: {
-        pagination: {
-          limit: pagination?.limit || PAGINATION.DEFAULT_PAGE_SIZE,
-          offset: (pagination?.offset || 0) + (pagination?.limit || PAGINATION.DEFAULT_PAGE_SIZE),
-        },
-      },
-    })
-  }
-
-  return {
-    internalTransactions,
-    totalCount,
-    pageInfo,
-    loading,
-    error,
-    refetch,
-    loadMore,
-  }
-}
-
+/**
+ * Fetch internal transactions by address
+ * @param address - The address to query
+ * @param isFrom - true to get transactions FROM this address, false to get transactions TO this address
+ * @param pagination - Pagination options (limit, offset)
+ */
 export function useInternalTransactionsByAddress(
   address: string,
-  filter?: InternalTransactionFilter,
+  isFrom: boolean = true,
   pagination?: PaginationInput
 ) {
   const { data, loading, error, refetch, fetchMore, previousData } = useQuery(
@@ -262,7 +221,7 @@ export function useInternalTransactionsByAddress(
     {
       variables: {
         address,
-        filter,
+        isFrom,
         pagination,
       },
       skip: !address,
@@ -373,9 +332,15 @@ export function useERC20TransfersByToken(
   }
 }
 
+/**
+ * Fetch ERC20 transfers by address
+ * @param address - The address to query
+ * @param isFrom - true to get transfers FROM this address, false to get transfers TO this address
+ * @param pagination - Pagination options (limit, offset)
+ */
 export function useERC20TransfersByAddress(
   address: string,
-  filter?: ERC20TransferFilter,
+  isFrom: boolean = true,
   pagination?: PaginationInput
 ) {
   const { data, loading, error, refetch, fetchMore, previousData } = useQuery(
@@ -383,7 +348,7 @@ export function useERC20TransfersByAddress(
     {
       variables: {
         address,
-        filter,
+        isFrom,
         pagination,
       },
       skip: !address,
@@ -493,9 +458,15 @@ export function useERC721TransfersByToken(
   }
 }
 
+/**
+ * Fetch ERC721 transfers by address
+ * @param address - The address to query
+ * @param isFrom - true to get transfers FROM this address, false to get transfers TO this address
+ * @param pagination - Pagination options (limit, offset)
+ */
 export function useERC721TransfersByAddress(
   address: string,
-  filter?: ERC721TransferFilter,
+  isFrom: boolean = true,
   pagination?: PaginationInput
 ) {
   const { data, loading, error, refetch, fetchMore, previousData } = useQuery(
@@ -503,7 +474,7 @@ export function useERC721TransfersByAddress(
     {
       variables: {
         address,
-        filter,
+        isFrom,
         pagination,
       },
       skip: !address,

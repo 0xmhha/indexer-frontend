@@ -37,22 +37,24 @@ function shouldShowFeeDelegation(
  * Uses separate receipt query first, falls back to embedded receipt
  */
 function determineTransactionStatus(
-  receiptStatus: { isSuccess: boolean; isFailed: boolean; isPending: boolean },
+  receiptStatus: { isSuccess: boolean; isFailed: boolean; isPending: boolean; hasError?: boolean },
   embeddedReceiptStatus: number | undefined
 ): 'Success' | 'Failed' | 'Pending' {
-  // First priority: use status from separate receipt query
-  if (!receiptStatus.isPending) {
+  // First priority: use status from separate receipt query (if no error)
+  if (!receiptStatus.hasError && !receiptStatus.isPending) {
     if (receiptStatus.isSuccess) { return 'Success' }
     if (receiptStatus.isFailed) { return 'Failed' }
   }
 
-  // Fallback: use embedded receipt status from transaction query
+  // Second priority: use embedded receipt status from transaction query
+  // This is the fallback when receipt query fails or has errors
   if (embeddedReceiptStatus !== undefined) {
     if (embeddedReceiptStatus === 1) { return 'Success' }
     if (embeddedReceiptStatus === 0) { return 'Failed' }
   }
 
-  // No receipt available - transaction is pending
+  // Only return Pending if truly pending (no receipt AND no error)
+  // If there's an error but no embedded receipt, still show Pending
   return 'Pending'
 }
 
@@ -62,7 +64,7 @@ export default function TransactionPage() {
 
   const { transaction, loading: txLoading, error: txError } = useTransaction(hash)
   // Fetch receipt separately for more reliable status and detailed receipt info
-  const { receipt, loading: receiptLoading, isSuccess, isFailed, isPending } = useReceipt(hash)
+  const { receipt, loading: receiptLoading, isSuccess, isFailed, isPending, hasError } = useReceipt(hash)
 
   const loading = txLoading || receiptLoading
 
@@ -75,8 +77,9 @@ export default function TransactionPage() {
   }
 
   // Determine status using both receipt sources for reliability
+  // When receipt query fails (hasError), fall back to embedded receipt from transaction
   const status = determineTransactionStatus(
-    { isSuccess, isFailed, isPending },
+    { isSuccess, isFailed, isPending, hasError },
     transaction.receipt?.status
   )
   const showFeeDelegation = shouldShowFeeDelegation(

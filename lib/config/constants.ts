@@ -388,6 +388,17 @@ export const BLOCKCHAIN = {
 // ============================================================================
 
 /**
+ * System contract addresses as named constants
+ */
+export const SYSTEM_CONTRACT_ADDRESSES = {
+  NativeCoinAdapter: '0x0000000000000000000000000000000000001000',
+  GovValidator: '0x0000000000000000000000000000000000001001',
+  GovMasterMinter: '0x0000000000000000000000000000000000001002',
+  GovMinter: '0x0000000000000000000000000000000000001003',
+  GovCouncil: '0x0000000000000000000000000000000000001004',
+} as const
+
+/**
  * Known system contract addresses and their metadata
  *
  * These are pre-deployed contracts that are part of the blockchain network.

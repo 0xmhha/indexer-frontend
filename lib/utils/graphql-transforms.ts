@@ -180,6 +180,25 @@ export interface TransformedReceipt {
 }
 
 /**
+ * Decoded event parameter from backend
+ */
+export interface DecodedParam {
+  name: string
+  type: string
+  value: string
+  indexed: boolean
+}
+
+/**
+ * Decoded event log from backend
+ */
+export interface DecodedLog {
+  eventName: string
+  eventSignature: string
+  params: DecodedParam[]
+}
+
+/**
  * Raw log data from GraphQL
  */
 export interface RawLog {
@@ -192,6 +211,7 @@ export interface RawLog {
   transactionIndex?: number
   logIndex: number
   removed?: boolean
+  decoded?: DecodedLog | null  // Backend-decoded event data
 }
 
 /**
@@ -207,6 +227,7 @@ export interface TransformedLog {
   transactionIndex?: number | undefined
   logIndex: number
   removed?: boolean | undefined
+  decoded?: DecodedLog | null  // Backend-decoded event data
 }
 
 /**
@@ -324,6 +345,7 @@ export function transformLog(raw: RawLog): TransformedLog {
     transactionIndex: raw.transactionIndex,
     logIndex: raw.logIndex,
     removed: raw.removed,
+    decoded: raw.decoded ?? null,  // Pass through backend-decoded data, convert undefined to null
   }
 }
 

@@ -142,6 +142,13 @@ export function useReceipt(txHash: string) {
   const rawReceipt = effectiveData?.receipt ?? null
   const receipt = rawReceipt ? parseReceipt(rawReceipt) : null
 
+  // Distinguish between:
+  // - hasReceipt: receipt was successfully fetched
+  // - hasError: query failed (backend error, nil pointer, etc.)
+  // - isPending: no receipt AND no error (truly pending transaction)
+  const hasError = Boolean(error)
+  const hasReceipt = Boolean(rawReceipt)
+
   return {
     receipt,
     rawReceipt,
@@ -150,7 +157,11 @@ export function useReceipt(txHash: string) {
     refetch,
     isSuccess: receipt?.isSuccess ?? false,
     isFailed: receipt?.isFailed ?? false,
-    isPending: !loading && !rawReceipt,
+    // Only mark as pending if no receipt AND no error
+    // If there's an error, let the caller use fallback data
+    isPending: !loading && !rawReceipt && !hasError,
+    hasError,
+    hasReceipt,
   }
 }
 

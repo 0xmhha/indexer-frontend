@@ -26,8 +26,10 @@ interface ERC20TransfersTableProps {
 export function ERC20TransfersTable({ address, limit = PAGINATION.DEFAULT_PAGE_SIZE }: ERC20TransfersTableProps) {
   const [currentOffset, setCurrentOffset] = useState(0)
 
+  // Fetch both sent (isFrom=true) and received (isFrom=false) transfers
+  // For now, default to showing transfers FROM this address
   const { erc20Transfers, totalCount, pageInfo, loading, error, loadMore } =
-    useERC20TransfersByAddress(address, undefined, { limit, offset: currentOffset })
+    useERC20TransfersByAddress(address, true, { limit, offset: currentOffset })
 
   const handleLoadMore = () => {
     if (pageInfo.hasNextPage) {
@@ -88,11 +90,11 @@ export function ERC20TransfersTable({ address, limit = PAGINATION.DEFAULT_PAGE_S
                 </TableCell>
                 <TableCell>
                   <Link
-                    href={`/address/${transfer.tokenAddress}`}
+                    href={`/address/${transfer.contractAddress}`}
                     className="font-mono text-accent-blue hover:text-accent-cyan"
-                    title={transfer.tokenAddress}
+                    title={transfer.contractAddress}
                   >
-                    {formatHash(transfer.tokenAddress, true)}
+                    {formatHash(transfer.contractAddress, true)}
                   </Link>
                 </TableCell>
                 <TableCell>

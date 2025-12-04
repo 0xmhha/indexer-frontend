@@ -4,12 +4,7 @@ import { useState } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { UI, getSystemContractInfo } from '@/lib/config/constants'
-
-interface SourceFile {
-  name: string
-  content: string
-  isMain?: boolean
-}
+import { useContractVerification } from '@/lib/hooks/useContractVerification'
 
 interface SourceCodeViewerProps {
   address: string
@@ -17,189 +12,95 @@ interface SourceCodeViewerProps {
 }
 
 /**
- * Mock source code files for system contracts
- * TODO: Replace with actual API call when backend implements contract verification
+ * Parse source code into separate files if it contains multiple contracts
+ * The backend may return combined source with markers like:
+ * // === Abstract Contracts ===
+ * // --- GovBase.sol ---
+ * ...
+ * // === Main Contract: NativeCoinAdapter ===
  */
-const SYSTEM_CONTRACT_SOURCES: Record<string, SourceFile[]> = {
-  '0x0000000000000000000000000000000000001000': [
-    {
-      name: 'NativeCoinAdapter.sol',
-      isMain: true,
-      content: `// SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.14;
-
-import { SafeMath } from "@openzeppelin/contracts/utils/math/SafeMath.sol";
-import { AbstractFiatToken } from "../abstracts/AbstractFiatToken.sol";
-import { Mintable } from "../abstracts/Mintable.sol";
-import { EIP712Domain } from "../abstracts/eip/EIP712Domain.sol";
-import { EIP3009 } from "../abstracts/eip/EIP3009.sol";
-import { EIP2612 } from "../abstracts/eip/EIP2612.sol";
-
-/**
- * @title NativeCoinAdapter
- * @dev ERC20 Token backed by fiat reserves (Native Coin Wrapper)
- */
-contract NativeCoinAdapter is AbstractFiatToken, Mintable, EIP3009, EIP2612 {
-    using SafeMath for uint256;
-
-    address private __coinManager;
-    address private __accountManager;
-
-    string public name;
-    string public symbol;
-    uint8 public decimals;
-    string public currency;
-
-    mapping(address => mapping(address => uint256)) private __allowed;
-    uint256 private __totalSupply = 0;
-
-    function totalSupply() external view override returns (uint256) {
-        return __totalSupply;
-    }
-
-    function balanceOf(address account) external view override returns (uint256) {
-        return account.balance;
-    }
-
-    // ... (truncated for display)
-}`,
-    },
-    {
-      name: 'AbstractFiatToken.sol',
-      content: `// SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.14;
-
-/**
- * @title AbstractFiatToken
- * @dev Abstract base contract for fiat-backed tokens
- */
-abstract contract AbstractFiatToken {
-    event Transfer(address indexed from, address indexed to, uint256 value);
-    event Approval(address indexed owner, address indexed spender, uint256 value);
-    event Mint(address indexed minter, address indexed to, uint256 amount);
-    event Burn(address indexed burner, uint256 amount);
-
-    function totalSupply() external view virtual returns (uint256);
-    function balanceOf(address account) external view virtual returns (uint256);
-    function transfer(address to, uint256 value) external virtual returns (bool);
-    function transferFrom(address from, address to, uint256 value) external virtual returns (bool);
-    function approve(address spender, uint256 value) external virtual returns (bool);
-    function allowance(address owner, address spender) external view virtual returns (uint256);
-
-    function _transfer(address from, address to, uint256 value) internal virtual;
-    function _approve(address owner, address spender, uint256 value) internal virtual;
-}`,
-    },
-    {
-      name: 'Mintable.sol',
-      content: `// SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.14;
-
-/**
- * @title Mintable
- * @dev Minting functionality for tokens
- */
-abstract contract Mintable {
-    address public masterMinter;
-    mapping(address => bool) internal _minters;
-    mapping(address => uint256) internal _minterAllowed;
-
-    event MinterConfigured(address indexed minter, uint256 minterAllowedAmount);
-    event MinterRemoved(address indexed oldMinter);
-    event MasterMinterChanged(address indexed newMasterMinter);
-
-    modifier onlyMinters() {
-        require(_minters[msg.sender], "Mintable: caller is not a minter");
-        _;
-    }
-
-    modifier onlyMasterMinter() {
-        require(msg.sender == masterMinter, "Mintable: caller is not the masterMinter");
-        _;
-    }
-
-    function mint(address to, uint256 amount) external virtual returns (bool);
-    function burn(uint256 amount) external virtual;
-}`,
-    },
-    {
-      name: 'EIP712Domain.sol',
-      content: `// SPDX-License-Identifier: Apache-2.0
-pragma solidity ^0.8.14;
-
-/**
- * @title EIP712Domain
- * @dev EIP-712 Domain Separator implementation
- */
-abstract contract EIP712Domain {
-    bytes32 internal _DEPRECATED_CACHED_DOMAIN_SEPARATOR;
-
-    function DOMAIN_SEPARATOR() external view returns (bytes32) {
-        return _domainSeparator();
-    }
-
-    function _domainSeparator() internal view virtual returns (bytes32);
-}`,
-    },
-  ],
-}
-
-/**
- * Get contract source code files
- * Mock implementation - replace with actual API call when backend is ready
- */
-function getContractSourceCode(address: string, isVerified: boolean): {
-  files: SourceFile[]
-  loading: boolean
-  error: string | null
-  isSystemContract: boolean
-} {
-  if (!isVerified) {
-    return { files: [], loading: false, error: null, isSystemContract: false }
+function parseSourceCodeFiles(sourceCode: string, contractName: string | null): { name: string; content: string; isMain: boolean }[] {
+  if (!sourceCode) {
+    return []
   }
 
-  const normalizedAddress = address.toLowerCase()
+  // Check if the source code has our marker format
+  const hasAbstractMarker = sourceCode.includes('// === Abstract Contracts ===')
+  const hasMainMarker = sourceCode.includes('// === Main Contract:')
 
-  // Check if this is a known system contract
-  for (const [contractAddress, files] of Object.entries(SYSTEM_CONTRACT_SOURCES)) {
-    if (contractAddress.toLowerCase() === normalizedAddress) {
-      return {
-        files,
-        loading: false,
-        error: null,
-        isSystemContract: true,
+  if (!hasAbstractMarker && !hasMainMarker) {
+    // Single file, no parsing needed
+    return [{
+      name: contractName ? `${contractName}.sol` : 'Contract.sol',
+      content: sourceCode,
+      isMain: true,
+    }]
+  }
+
+  const files: { name: string; content: string; isMain: boolean }[] = []
+
+  // Split by main contract marker first
+  const mainContractMarkerRegex = /\/\/ === Main Contract: (\w+) ===/
+  const mainMatch = sourceCode.match(mainContractMarkerRegex)
+
+  if (mainMatch) {
+    const mainContractIndex = sourceCode.indexOf(mainMatch[0])
+    const abstractsSection = sourceCode.substring(0, mainContractIndex)
+    const mainSection = sourceCode.substring(mainContractIndex + mainMatch[0].length).trim()
+
+    // Parse main contract
+    const mainContractName = mainMatch[1]
+    files.push({
+      name: `${mainContractName}.sol`,
+      content: mainSection,
+      isMain: true,
+    })
+
+    // Parse abstract contracts section
+    const abstractFileRegex = /\/\/ --- ([\w/]+\.sol) ---\n([\s\S]*?)(?=\/\/ ---|\/\/ ===|$)/g
+    let match
+    while ((match = abstractFileRegex.exec(abstractsSection)) !== null) {
+      const fileName = match[1] ?? 'Unknown.sol'
+      const rawContent = match[2] ?? ''
+      const content = rawContent.trim()
+      if (content) {
+        files.push({
+          name: fileName,
+          content,
+          isMain: false,
+        })
       }
     }
+  } else {
+    // No main contract marker, treat as single file
+    files.push({
+      name: contractName ? `${contractName}.sol` : 'Contract.sol',
+      content: sourceCode,
+      isMain: true,
+    })
   }
 
-  // Default mock for other verified contracts
-  const defaultMockCode = `// SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
-
-/**
- * @title Contract
- * @dev Contract source code not available
- * @notice Backend API integration pending
- */
-contract UnverifiedContract {
-    // Source code will be available after backend API integration
-}`
-
-  return {
-    files: [{ name: 'Contract.sol', content: defaultMockCode, isMain: true }],
-    loading: false,
-    error: null,
-    isSystemContract: false,
-  }
+  // Sort: main contract first, then alphabetically
+  return files.sort((a, b) => {
+    if (a.isMain && !b.isMain) return -1
+    if (!a.isMain && b.isMain) return 1
+    return a.name.localeCompare(b.name)
+  })
 }
 
 export function SourceCodeViewer({ address, isVerified }: SourceCodeViewerProps) {
   const [selectedFile, setSelectedFile] = useState(0)
   const [copied, setCopied] = useState(false)
-  const { files, loading, error, isSystemContract } = getContractSourceCode(address, isVerified)
+  const { verification, loading, error, isSystemContract } = useContractVerification(address)
   const systemInfo = getSystemContractInfo(address)
 
-  if (!isVerified || files.length === 0) {
+  // Parse source code into files
+  const files = parseSourceCodeFiles(
+    verification?.sourceCode ?? '',
+    verification?.name ?? null
+  )
+
+  if (!isVerified || !verification?.isVerified) {
     return null
   }
 
@@ -226,7 +127,20 @@ export function SourceCodeViewer({ address, isVerified }: SourceCodeViewerProps)
           <CardTitle>SOURCE CODE</CardTitle>
         </CardHeader>
         <CardContent className="p-6">
-          <p className="text-sm text-error">Failed to load source code</p>
+          <p className="text-sm text-error">Failed to load source code: {error.message}</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  if (files.length === 0 || !verification?.sourceCode) {
+    return (
+      <Card className="mb-6">
+        <CardHeader className="border-b border-bg-tertiary">
+          <CardTitle>SOURCE CODE</CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <p className="text-sm text-text-muted">Source code not available</p>
         </CardContent>
       </Card>
     )
@@ -248,7 +162,18 @@ export function SourceCodeViewer({ address, isVerified }: SourceCodeViewerProps)
     }
   }
 
+  const handleCopyAll = async () => {
+    try {
+      await navigator.clipboard.writeText(verification?.sourceCode ?? '')
+      setCopied(true)
+      setTimeout(() => setCopied(false), UI.COPY_TIMEOUT)
+    } catch {
+      // Clipboard API not available
+    }
+  }
+
   const lineCount = currentFile.content.split('\n').length
+  const totalLines = verification?.sourceCode?.split('\n').length ?? 0
 
   return (
     <Card className="mb-6">
@@ -265,9 +190,22 @@ export function SourceCodeViewer({ address, isVerified }: SourceCodeViewerProps)
               </span>
             )}
           </div>
-          <span className="text-xs font-normal text-text-muted">
-            {files.length} file{files.length > 1 ? 's' : ''}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-normal text-text-muted">
+              {files.length} file{files.length > 1 ? 's' : ''} • {totalLines.toLocaleString()} lines total
+            </span>
+            {files.length > 1 && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleCopyAll}
+                aria-label="Copy all source code"
+                className="text-xs"
+              >
+                COPY ALL
+              </Button>
+            )}
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-0">
@@ -287,6 +225,7 @@ export function SourceCodeViewer({ address, isVerified }: SourceCodeViewerProps)
                 role="tab"
               >
                 {file.name}
+                {file.isMain && <span className="ml-1 text-accent-green">●</span>}
               </button>
             ))}
           </div>
@@ -295,7 +234,7 @@ export function SourceCodeViewer({ address, isVerified }: SourceCodeViewerProps)
         {/* Toolbar */}
         <div className="flex items-center justify-between border-b border-bg-tertiary bg-bg-secondary px-4 py-2">
           <span className="text-xs text-text-muted">
-            {currentFile.name} • {lineCount} lines
+            {currentFile.name} • {lineCount.toLocaleString()} lines
           </span>
           <Button
             variant="ghost"
@@ -307,16 +246,16 @@ export function SourceCodeViewer({ address, isVerified }: SourceCodeViewerProps)
           </Button>
         </div>
 
-        {/* Code Display */}
-        <div className="overflow-x-auto">
-          <pre className="p-4 text-sm leading-relaxed">
+        {/* Code Display - scrollable container (both vertical and horizontal) */}
+        <div className="max-h-[600px] overflow-auto">
+          <pre className="p-4 text-sm leading-relaxed min-w-max">
             <code className="font-mono text-text-primary">
               {currentFile.content.split('\n').map((line, index) => (
                 <div key={index} className="flex">
-                  <span className="mr-4 select-none text-right text-text-muted" style={{ minWidth: '3ch' }}>
+                  <span className="mr-4 select-none text-right text-text-muted shrink-0" style={{ minWidth: '4ch' }}>
                     {index + 1}
                   </span>
-                  <span className="flex-1 whitespace-pre">{line || ' '}</span>
+                  <span className="whitespace-pre">{line || ' '}</span>
                 </div>
               ))}
             </code>

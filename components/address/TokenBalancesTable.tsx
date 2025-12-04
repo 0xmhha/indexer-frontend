@@ -9,6 +9,10 @@ interface TokenBalancesTableProps {
   loading?: boolean
 }
 
+/**
+ * Format token balance with full decimal places (no trimming)
+ * Shows all decimal places with padding zeros
+ */
 function formatTokenBalance(balance: bigint, decimals: number | null): string {
   if (decimals === null || decimals === 0) {
     return formatNumber(balance)
@@ -18,14 +22,13 @@ function formatTokenBalance(balance: bigint, decimals: number | null): string {
   const integerPart = balance / divisor
   const fractionalPart = balance % divisor
 
-  if (fractionalPart === BigInt(0)) {
-    return formatNumber(integerPart)
-  }
-
+  // Pad fractional part with leading zeros to match decimal places
   const fractionalStr = fractionalPart.toString().padStart(decimals, '0')
-  const trimmedFractional = fractionalStr.replace(/0+$/, '')
 
-  return `${formatNumber(integerPart)}.${trimmedFractional}`
+  // Format integer part with thousand separators
+  const formattedInteger = formatNumber(integerPart)
+
+  return `${formattedInteger}.${fractionalStr}`
 }
 
 export function TokenBalancesTable({ balances, loading }: TokenBalancesTableProps) {

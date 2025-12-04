@@ -4,7 +4,7 @@ import { gql, useQuery } from '@apollo/client'
 import { transformTransactions, type TransformedTransaction } from '@/lib/utils/graphql-transforms'
 import { PAGINATION, POLLING_INTERVALS } from '@/lib/config/constants'
 
-// Query for transactions with pagination
+// Query for transactions with pagination and optional filter
 const GET_TRANSACTIONS = gql`
   query GetTransactions(
     $limit: Int
@@ -74,11 +74,12 @@ export function useTransactions(params: UseTransactionsParams = {}) {
     variables: {
       limit,
       offset,
-      blockNumberFrom,
-      blockNumberTo,
-      from,
-      to,
-      type,
+      // Pass undefined for empty filter values (backend should handle null/undefined)
+      blockNumberFrom: blockNumberFrom || undefined,
+      blockNumberTo: blockNumberTo || undefined,
+      from: from || undefined,
+      to: to || undefined,
+      type: type || undefined,
     },
     // Use previous data while loading to prevent flickering
     returnPartialData: true,

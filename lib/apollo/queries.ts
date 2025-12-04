@@ -111,6 +111,16 @@ export const GET_TRANSACTION = gql`
           topics
           data
           logIndex
+          decoded {
+            eventName
+            eventSignature
+            params {
+              name
+              type
+              value
+              indexed
+            }
+          }
         }
       }
     }
@@ -138,10 +148,21 @@ export const GET_TRANSACTIONS_BY_ADDRESS = gql`
   }
 `
 
-// Get address balance
+// Get address balance (from indexed data)
 export const GET_ADDRESS_BALANCE = gql`
   query GetAddressBalance($address: String!, $blockNumber: String) {
     addressBalance(address: $address, blockNumber: $blockNumber)
+  }
+`
+
+// Get live balance (real-time from chain RPC)
+export const GET_LIVE_BALANCE = gql`
+  query GetLiveBalance($address: String!, $blockNumber: String) {
+    liveBalance(address: $address, blockNumber: $blockNumber) {
+      address
+      balance
+      blockNumber
+    }
   }
 `
 
@@ -270,6 +291,16 @@ export const GET_RECEIPT = gql`
         logIndex
         blockNumber
         transactionHash
+        decoded {
+          eventName
+          eventSignature
+          params {
+            name
+            type
+            value
+            indexed
+          }
+        }
       }
       logsBloom
     }
@@ -297,6 +328,16 @@ export const GET_RECEIPTS_BY_BLOCK = gql`
         topics
         data
         logIndex
+        decoded {
+          eventName
+          eventSignature
+          params {
+            name
+            type
+            value
+            indexed
+          }
+        }
       }
     }
   }
@@ -551,6 +592,59 @@ export const SUBSCRIBE_CONSENSUS_ERROR = gql`
       consensusImpacted
       recoveryTime
       errorDetails
+    }
+  }
+`
+
+// ============================================================================
+// Fee Delegation Analytics Queries
+// ============================================================================
+// Note: BigInt values are passed as String type (consistent with other queries in this project)
+
+/**
+ * Get Fee Delegation statistics
+ * Returns overall metrics about fee delegation usage on the network
+ */
+export const GET_FEE_DELEGATION_STATS = gql`
+  query GetFeeDelegationStats($fromBlock: String, $toBlock: String) {
+    feeDelegationStats(fromBlock: $fromBlock, toBlock: $toBlock) {
+      totalFeeDelegatedTxs
+      totalFeesSaved
+      adoptionRate
+      avgFeeSaved
+    }
+  }
+`
+
+/**
+ * Get Top Fee Payers
+ * Returns the list of addresses that have paid the most fees for other users
+ */
+export const GET_TOP_FEE_PAYERS = gql`
+  query GetTopFeePayers($limit: Int, $fromBlock: String, $toBlock: String) {
+    topFeePayers(limit: $limit, fromBlock: $fromBlock, toBlock: $toBlock) {
+      nodes {
+        address
+        txCount
+        totalFeesPaid
+        percentage
+      }
+      totalCount
+    }
+  }
+`
+
+/**
+ * Get specific Fee Payer statistics
+ * Returns detailed statistics for a specific fee payer address
+ */
+export const GET_FEE_PAYER_STATS = gql`
+  query GetFeePayerStats($address: String!, $fromBlock: String, $toBlock: String) {
+    feePayerStats(address: $address, fromBlock: $fromBlock, toBlock: $toBlock) {
+      address
+      txCount
+      totalFeesPaid
+      percentage
     }
   }
 `

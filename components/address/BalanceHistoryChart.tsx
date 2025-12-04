@@ -1,8 +1,8 @@
 'use client'
 
-import { useMemo } from 'react'
+import { useMemo, memo } from 'react'
 import { AreaChart } from '@/components/charts/AreaChart'
-import { formatCurrency, formatNumber } from '@/lib/utils/format'
+import { formatCurrency } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
 import { BLOCKCHAIN } from '@/lib/config/constants'
 
@@ -18,40 +18,39 @@ interface BalanceHistoryChartProps {
   currencySymbol?: string
 }
 
-interface ChartDataPoint {
-  blockNumber: number
-  balance: number
-  balanceRaw: bigint
-}
-
-export function BalanceHistoryChart({ history, currencySymbol = env.currencySymbol }: BalanceHistoryChartProps) {
-  // Process history data for chart
-  const chartData = useMemo<ChartDataPoint[]>(() => {
+/**
+ * Balance history chart component
+ * Wrapped with React.memo to prevent unnecessary re-renders when props haven't changed
+ */
+function BalanceHistoryChartInner({ history, currencySymbol = env.currencySymbol }: BalanceHistoryChartProps) {
+  // Process history data for chart with memoization to prevent unnecessary re-renders
+  const formattedData = useMemo(() => {
     if (!history || history.length === 0) {return []}
 
     return history
-      .map((entry) => ({
-        blockNumber: Number(entry.blockNumber),
-        balance: Number(BigInt(entry.balance)) / BLOCKCHAIN.WEI_PER_ETHER, // Convert wei to ether for display
-        balanceRaw: BigInt(entry.balance),
-      }))
+      .map((entry) => {
+        const blockNumber = Number(entry.blockNumber)
+        const balanceRaw = BigInt(entry.balance)
+        return {
+          blockNumber,
+          balance: Number(balanceRaw) / BLOCKCHAIN.WEI_PER_ETHER, // Convert wei to ether for display
+          balanceRaw,
+          // Use short block number for X-axis to prevent identical labels
+          blockLabel: `#${blockNumber}`,
+          balanceLabel: formatCurrency(balanceRaw, currencySymbol),
+        }
+      })
       .sort((a, b) => a.blockNumber - b.blockNumber) // Sort by block number ascending
-  }, [history])
+  }, [history, currencySymbol])
 
-  if (chartData.length === 0) {
+  // Show empty state if no data
+  if (formattedData.length === 0) {
     return (
       <div className="flex h-64 items-center justify-center border border-bg-tertiary bg-bg-secondary">
         <p className="font-mono text-xs text-text-muted">No balance history data available</p>
       </div>
     )
   }
-
-  // Format data with readable labels
-  const formattedData = chartData.map((d) => ({
-    ...d,
-    blockLabel: formatNumber(BigInt(d.blockNumber)),
-    balanceLabel: formatCurrency(d.balanceRaw, currencySymbol),
-  }))
 
   return (
     <div className="h-64 w-full">
@@ -75,3 +74,49 @@ export function BalanceHistoryChart({ history, currencySymbol = env.currencySymb
     </div>
   )
 }
+
+/**
+ * Custom comparison function for React.memo
+ * Only re-render if the history content has actually changed
+ */
+function arePropsEqual(
+  prevProps: BalanceHistoryChartProps,
+  nextProps: BalanceHistoryChartProps
+): boolean {
+  // If currencySymbol changed, re-render
+  if (prevProps.currencySymbol !== nextProps.currencySymbol) {
+    return false
+  }
+
+  // If history reference is the same, don't re-render
+  if (prevProps.history === nextProps.history) {
+    return true
+  }
+
+  // Deep compare history arrays
+  const prev = prevProps.history
+  const next = nextProps.history
+
+  if (prev.length !== next.length) {
+    return false
+  }
+
+  for (let i = 0; i < prev.length; i++) {
+    const prevItem = prev[i]
+    const nextItem = next[i]
+    if (!prevItem || !nextItem) {return false}
+    if (
+      prevItem.blockNumber !== nextItem.blockNumber ||
+      prevItem.balance !== nextItem.balance ||
+      prevItem.delta !== nextItem.delta ||
+      prevItem.transactionHash !== nextItem.transactionHash
+    ) {
+      return false
+    }
+  }
+
+  return true
+}
+
+// Export memoized component to prevent unnecessary re-renders
+export const BalanceHistoryChart = memo(BalanceHistoryChartInner, arePropsEqual)

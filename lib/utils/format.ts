@@ -40,7 +40,7 @@ export function formatHash(hash: string, short = true): string {
  * Format BigInt value to decimal string with specified decimals
  * @param value - BigInt value (wei)
  * @param decimals - Number of decimals (default 18 for ETH)
- * @returns Formatted decimal string
+ * @returns Formatted decimal string (trailing zeros trimmed)
  */
 export function formatValue(value: bigint | string, decimals: number = FORMATTING.DEFAULT_DECIMALS): string {
   const bigIntValue = typeof value === 'string' ? BigInt(value) : value
@@ -56,6 +56,36 @@ export function formatValue(value: bigint | string, decimals: number = FORMATTIN
   }
 
   return `${integerPart}.${trimmed}`
+}
+
+/**
+ * Format BigInt value to decimal string with full decimal places (no trimming)
+ * Shows all 18 decimal places with padding zeros
+ * @param value - BigInt value (wei)
+ * @param decimals - Number of decimals (default 18 for ETH)
+ * @returns Formatted decimal string with all decimal places
+ */
+export function formatValueFull(value: bigint | string, decimals: number = FORMATTING.DEFAULT_DECIMALS): string {
+  const bigIntValue = typeof value === 'string' ? BigInt(value) : value
+  const divisor = BigInt(10 ** decimals)
+  const integerPart = bigIntValue / divisor
+  const fractionalPart = bigIntValue % divisor
+
+  const fractionalStr = fractionalPart.toString().padStart(decimals, '0')
+
+  return `${integerPart}.${fractionalStr}`
+}
+
+/**
+ * Format value with currency symbol (full decimal places)
+ * @param value - BigInt value
+ * @param symbol - Currency symbol (default WEMIX)
+ * @param decimals - Number of decimals
+ * @returns Formatted value with symbol and all decimal places
+ */
+export function formatCurrencyFull(value: bigint | string, symbol = 'WEMIX', decimals: number = FORMATTING.DEFAULT_DECIMALS): string {
+  const formatted = formatValueFull(value, decimals)
+  return `${formatted} ${symbol}`
 }
 
 /**

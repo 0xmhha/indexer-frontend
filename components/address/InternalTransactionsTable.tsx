@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
-import { formatCurrency, formatHash, formatNumber, formatDate } from '@/lib/utils/format'
+import { formatCurrency, formatHash, formatNumber } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
 import { PAGINATION } from '@/lib/config/constants'
 import type { InternalTransaction } from '@/types/address-indexing'
@@ -27,8 +27,9 @@ interface InternalTransactionsTableProps {
 export function InternalTransactionsTable({ address, limit = PAGINATION.DEFAULT_PAGE_SIZE }: InternalTransactionsTableProps) {
   const [currentOffset, setCurrentOffset] = useState(0)
 
+  // isFrom=true: get transactions FROM this address
   const { internalTransactions, totalCount, pageInfo, loading, error, loadMore } =
-    useInternalTransactionsByAddress(address, undefined, { limit, offset: currentOffset })
+    useInternalTransactionsByAddress(address, true, { limit, offset: currentOffset })
 
   const handleLoadMore = () => {
     if (pageInfo.hasNextPage) {
@@ -67,24 +68,23 @@ export function InternalTransactionsTable({ address, limit = PAGINATION.DEFAULT_
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>PARENT HASH</TableHead>
+              <TableHead>TX HASH</TableHead>
               <TableHead>TYPE</TableHead>
               <TableHead>FROM</TableHead>
               <TableHead>TO</TableHead>
               <TableHead className="text-right">VALUE</TableHead>
               <TableHead>BLOCK</TableHead>
-              <TableHead>TIME</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {internalTransactions.map((tx: InternalTransaction, index: number) => (
-              <TableRow key={`${tx.parentHash}-${index}`}>
+              <TableRow key={`${tx.transactionHash}-${index}`}>
                 <TableCell>
                   <Link
-                    href={`/tx/${tx.parentHash}`}
+                    href={`/tx/${tx.transactionHash}`}
                     className="font-mono text-accent-blue hover:text-accent-cyan"
                   >
-                    {formatHash(tx.parentHash)}
+                    {formatHash(tx.transactionHash)}
                   </Link>
                 </TableCell>
                 <TableCell>
@@ -126,9 +126,6 @@ export function InternalTransactionsTable({ address, limit = PAGINATION.DEFAULT_
                   >
                     {formatNumber(tx.blockNumber)}
                   </Link>
-                </TableCell>
-                <TableCell className="font-mono text-xs text-text-secondary">
-                  {formatDate(Number(tx.timestamp))}
                 </TableCell>
               </TableRow>
             ))}

@@ -30,7 +30,7 @@ interface FeeDelegationDashboardProps {
  * @param className - Additional CSS classes
  */
 export function FeeDelegationDashboard({ className }: FeeDelegationDashboardProps) {
-  const { stats, loading, error } = useFeeDelegationStats()
+  const { stats, loading, error, isMockData } = useFeeDelegationStats()
 
   if (loading) {
     return (
@@ -57,6 +57,18 @@ export function FeeDelegationDashboard({ className }: FeeDelegationDashboardProp
 
   return (
     <div className={`space-y-6 ${className}`}>
+      {/* Mock Data Notice */}
+      {isMockData && (
+        <div className="rounded border border-accent-orange/30 bg-accent-orange/5 p-3">
+          <div className="flex items-center gap-2">
+            <span className="text-accent-orange">⚠️</span>
+            <span className="font-mono text-xs text-accent-orange">
+              Demo Mode: Displaying sample data. Backend API not yet available.
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Statistics Overview */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
         <StatCard

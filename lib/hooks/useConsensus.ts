@@ -10,6 +10,7 @@ import {
   SUBSCRIBE_CONSENSUS_VALIDATOR_CHANGE,
 } from '@/lib/apollo/queries'
 import { useConsensusStore } from '@/stores/consensusStore'
+import { useRealtimeStore } from '@/stores/realtimeStore'
 import type {
   ConsensusBlockEvent,
   ConsensusErrorEvent,
@@ -953,11 +954,12 @@ export function useConsensusValidatorChangeSubscription() {
  * Combined hook for all consensus subscriptions
  * Use this for the main consensus dashboard
  * Uses Zustand selectors to prevent unnecessary re-renders
+ * Connection status comes from centralized realtimeStore (single WebSocket)
  */
 export function useConsensusMonitoring() {
-  // Use individual selectors instead of entire store to prevent cascading updates
-  const isConnected = useConsensusStore((state) => state.isConnected)
-  const connectionError = useConsensusStore((state) => state.connectionError)
+  // Use centralized WebSocket connection status from realtimeStore
+  // This is managed by RealtimeProvider which handles the single WebSocket connection
+  const isConnected = useRealtimeStore((state) => state.isConnected)
   const latestBlock = useConsensusStore((state) => state.latestBlock)
   const recentBlocks = useConsensusStore((state) => state.recentBlocks)
   const recentErrors = useConsensusStore((state) => state.recentErrors)
@@ -994,9 +996,8 @@ export function useConsensusMonitoring() {
   )
 
   return {
-    // Connection status
+    // Connection status (from centralized realtimeStore)
     isConnected,
-    connectionError,
 
     // Latest data
     latestBlock,
