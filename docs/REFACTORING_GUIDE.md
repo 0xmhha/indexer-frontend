@@ -1,0 +1,305 @@
+# Frontend Architecture Refactoring Guide
+
+> **Last Updated**: 2024-12-05
+> **Status**: In Progress
+> **Approach**: TDD, Incremental, No Magic Numbers
+
+---
+
+## 1. Overview
+
+### 1.1 Goals
+- 명확한 레이어 분리 (UI → Hook → Network → Schema → Parser)
+- 매직 넘버 제거 및 상수화
+- 백엔드 스키마와 프론트엔드 타입 통일
+- async 통신 패턴 표준화
+- 테스트 커버리지 확보
+
+### 1.2 Data Flow
+```
+UI/Component → Hook → Network (async) → Schema → Backend
+                                                    ↓
+UI ← State Update ← Hook ← Parser ← Response (async)
+```
+
+### 1.3 Principles
+- [ ] TDD: 테스트 먼저 작성 후 구현
+- [ ] 작은 단위로 작업 완료 후 테스트 검증
+- [ ] 매직 넘버 → constants.ts로 이동
+- [ ] Raw 타입 ↔ Domain 타입 명확히 분리
+
+---
+
+## 2. Target Directory Structure
+
+```
+src/
+├── components/
+│   ├── ui/                    # 기본 UI 컴포넌트
+│   └── features/              # 도메인별 컴포넌트
+│
+├── hooks/
+│   ├── queries/               # 데이터 조회 훅
+│   ├── mutations/             # 데이터 변경 훅
+│   ├── subscriptions/         # 실시간 구독 훅
+│   └── common/                # 공통 훅
+│
+├── network/
+│   ├── client/                # Apollo/WebSocket 설정
+│   ├── api/                   # API 함수 (async)
+│   └── schemas/               # GraphQL 스키마
+│
+├── parsers/                   # 응답 파싱 (Raw → Domain)
+│
+├── types/
+│   ├── raw/                   # 백엔드 응답 타입
+│   └── domain/                # 도메인 모델 타입
+│
+├── config/
+│   └── constants.ts           # 모든 상수 통합
+│
+├── state/                     # 상태 관리
+├── utils/                     # 유틸리티
+└── errors/                    # 에러 처리
+```
+
+---
+
+## 3. Work Phases
+
+### Phase 1: Foundation Setup
+상수 통합 및 기본 구조 생성
+
+| Task | Status | Test | Notes |
+|------|--------|------|-------|
+| 1.1 기존 테스트 확인 | ✅ Done | 300 pass | 11 파일, 300 테스트 통과 |
+| 1.2 constants.ts 매직넘버 통합 | ✅ Done | 300 pass | 24개 → 0개 경고 |
+| 1.3 디렉토리 구조 생성 | ⏳ Pending | - | 빈 폴더 생성 |
+
+### Phase 2: Types Layer
+타입 분리 및 정의
+
+| Task | Status | Test | Notes |
+|------|--------|------|-------|
+| 2.1 Raw 타입 정의 (types/raw/) | ⏳ Pending | - | 백엔드 응답 타입 |
+| 2.2 Domain 타입 정의 (types/domain/) | ⏳ Pending | - | 프론트엔드 도메인 타입 |
+| 2.3 기존 types/ 마이그레이션 | ⏳ Pending | - | 기존 타입 이동 |
+
+### Phase 3: Parser Layer
+Raw → Domain 변환 로직
+
+| Task | Status | Test | Notes |
+|------|--------|------|-------|
+| 3.1 Parser 테스트 작성 | ⏳ Pending | - | TDD |
+| 3.2 기존 transform 함수 이동 | ⏳ Pending | - | graphql-transforms.ts |
+| 3.3 Parser 함수 구현 | ⏳ Pending | - | 테스트 통과 확인 |
+
+### Phase 4: Network Layer
+API 클라이언트 및 스키마
+
+| Task | Status | Test | Notes |
+|------|--------|------|-------|
+| 4.1 Client 설정 이동 | ⏳ Pending | - | apollo.ts, websocket.ts |
+| 4.2 Schema 정의 이동 | ⏳ Pending | - | GraphQL 쿼리 |
+| 4.3 API 함수 생성 | ⏳ Pending | - | async 패턴 |
+
+### Phase 5: Hooks Layer
+Hook 분류 및 리팩토링
+
+| Task | Status | Test | Notes |
+|------|--------|------|-------|
+| 5.1 queries/ 훅 분류 | ⏳ Pending | - | 데이터 조회 |
+| 5.2 mutations/ 훅 분류 | ⏳ Pending | - | 데이터 변경 |
+| 5.3 subscriptions/ 훅 분류 | ⏳ Pending | - | 실시간 |
+| 5.4 common/ 훅 분류 | ⏳ Pending | - | 공통 |
+
+### Phase 6: Components Layer
+컴포넌트 정리
+
+| Task | Status | Test | Notes |
+|------|--------|------|-------|
+| 6.1 ui/ 컴포넌트 확인 | ⏳ Pending | - | 기본 UI |
+| 6.2 features/ 분류 | ⏳ Pending | - | 도메인별 |
+
+### Phase 7: Cleanup & Validation
+최종 검증
+
+| Task | Status | Test | Notes |
+|------|--------|------|-------|
+| 7.1 미사용 파일 제거 | ⏳ Pending | - | |
+| 7.2 전체 테스트 실행 | ⏳ Pending | - | |
+| 7.3 빌드 검증 | ⏳ Pending | - | |
+| 7.4 린트 검증 | ⏳ Pending | - | |
+
+---
+
+## 4. Magic Numbers to Extract
+
+### 4.1 Discovered Magic Numbers
+
+| File | Line | Value | Suggested Constant Name |
+|------|------|-------|------------------------|
+| ContractLogsSection.tsx | 74 | 20 | PAGINATION.LOGS_PER_PAGE |
+| ContractLogsSection.tsx | 95 | 50 | REALTIME.MAX_LOGS |
+| ContractLogsTable.tsx | 90 | 66 | UI.TRUNCATE_LENGTH |
+| CopyButton.tsx | 60 | 14, 16 | UI.ICON_SIZE |
+| eventDecoder.ts | 136 | -40 | ABI.ADDRESS_OFFSET |
+| eventDecoder.ts | 171 | 255 | ABI.UINT8_MAX |
+| ... | ... | ... | ... |
+
+### 4.2 Constants Structure
+```typescript
+// config/constants.ts
+export const CONSTANTS = {
+  PAGINATION: {
+    DEFAULT_PAGE_SIZE: 20,
+    LOGS_PER_PAGE: 20,
+    MAX_PAGE_SIZE: 100,
+  },
+  REALTIME: {
+    MAX_BLOCKS: 50,
+    MAX_TRANSACTIONS: 100,
+    MAX_LOGS: 50,
+    MAX_PENDING_TRANSACTIONS: 200,
+  },
+  UI: {
+    TRUNCATE_LENGTH: 66,
+    HASH_DISPLAY_LENGTH: 10,
+    ICON_SIZE_SM: 14,
+    ICON_SIZE_MD: 16,
+  },
+  NETWORK: {
+    REQUEST_TIMEOUT: 10000,
+    RETRY_COUNT: 3,
+    RETRY_DELAY: 1000,
+  },
+  ABI: {
+    ADDRESS_OFFSET: -40,
+    UINT8_MAX: 255,
+    UINT256_SIZE: 256,
+    WORD_SIZE: 64,
+  },
+} as const
+```
+
+---
+
+## 5. Current Progress
+
+### 5.1 Session Log
+
+| Date | Phase | Task | Status | Notes |
+|------|-------|------|--------|-------|
+| 2024-12-05 | - | 작업지시서 생성 | ✅ Done | 이 문서 |
+| 2024-12-05 | 1.1 | 테스트 상태 확인 | ✅ Done | 11 파일, 300 테스트 |
+| 2024-12-05 | 1.2 | 매직넘버 통합 | ✅ Done | ABI, UI 상수 추가 |
+
+### 5.2 Test Results
+
+```
+Last Run: 2024-12-05
+Pass: 300
+Fail: 0
+Files: 11
+```
+
+### 5.3 Build Status
+
+```
+Last Build: 2024-12-05
+Type Check: ✅ Pass
+Lint Errors: 1 (pre-existing)
+Magic Numbers: 0
+```
+
+---
+
+## 6. File Migration Map
+
+### 6.1 From → To
+
+| Current Location | New Location | Status |
+|-----------------|--------------|--------|
+| lib/apollo/ | network/client/ | ⏳ |
+| lib/graphql/queries/ | network/schemas/ | ⏳ |
+| lib/hooks/use*.ts (queries) | hooks/queries/ | ⏳ |
+| lib/hooks/use*.ts (mutations) | hooks/mutations/ | ⏳ |
+| lib/hooks/use*.ts (subscriptions) | hooks/subscriptions/ | ⏳ |
+| lib/hooks/use*.ts (common) | hooks/common/ | ⏳ |
+| lib/utils/graphql-transforms.ts | parsers/ | ⏳ |
+| lib/utils/eventDecoder.ts | parsers/event.ts | ⏳ |
+| types/graphql.ts | types/raw/api.ts | ⏳ |
+| types/address-indexing.ts | types/raw/ + types/domain/ | ⏳ |
+
+---
+
+## 7. Testing Strategy
+
+### 7.1 Test Locations
+```
+tests/
+├── unit/
+│   ├── parsers/           # Parser 단위 테스트
+│   ├── hooks/             # Hook 테스트
+│   └── utils/             # 유틸리티 테스트
+├── integration/
+│   └── network/           # API 통합 테스트
+└── e2e/                   # E2E 테스트
+```
+
+### 7.2 Test Commands
+```bash
+# 단위 테스트
+npm run test
+
+# 특정 파일 테스트
+npm run test -- --grep "parser"
+
+# 커버리지
+npm run test:coverage
+
+# 타입 체크
+npm run type-check
+
+# 린트
+npm run lint
+```
+
+---
+
+## 8. Rollback Strategy
+
+각 Phase 완료 후 커밋하여 롤백 포인트 생성
+
+```bash
+# Phase 1 완료 후
+git commit -m "refactor: phase 1 - foundation setup"
+
+# Phase 2 완료 후
+git commit -m "refactor: phase 2 - types layer"
+
+# ... 각 Phase별 커밋
+```
+
+---
+
+## 9. Notes
+
+### 9.1 Known Issues
+- (작업 중 발견되는 이슈 기록)
+
+### 9.2 Decisions Made
+- 2024-12-05: TDD 방식으로 진행
+- 2024-12-05: 매직 넘버 → constants.ts 통합
+- 2024-12-05: 작은 단위로 작업 후 테스트 검증
+
+### 9.3 Questions
+- (작업 중 발생하는 질문 기록)
+
+---
+
+## 10. References
+
+- [Project CLAUDE.md](../CLAUDE.md)
+- [Apollo Client Docs](https://www.apollographql.com/docs/react/)
+- [Next.js App Router](https://nextjs.org/docs/app)

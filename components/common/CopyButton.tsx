@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useCallback } from 'react'
-import { UI } from '@/lib/config/constants'
+import { UI, FORMATTING } from '@/lib/config/constants'
 
 interface CopyButtonProps {
   /** Text to copy to clipboard */
@@ -57,7 +57,7 @@ export function CopyButton({
     ? 'h-5 w-5 p-0.5'
     : 'h-6 w-6 p-1'
 
-  const iconSize = size === 'sm' ? 14 : 16
+  const iconSize = size === 'sm' ? UI.ICON_SIZE_SM : UI.ICON_SIZE_MD
 
   return (
     <button
@@ -129,7 +129,7 @@ export function AddressWithCopy({
   showFullOnHover = true,
 }: AddressWithCopyProps) {
   const displayAddress = truncate
-    ? `${address.slice(0, 6)}...${address.slice(-4)}`
+    ? `${address.slice(0, FORMATTING.ADDRESS_START_CHARS)}...${address.slice(-FORMATTING.ADDRESS_END_CHARS)}`
     : address
 
   const addressElement = (
@@ -181,7 +181,7 @@ export function HashWithCopy({
   label,
 }: HashWithCopyProps) {
   const displayHash = truncate
-    ? `${hash.slice(0, 10)}...${hash.slice(-8)}`
+    ? `${hash.slice(0, FORMATTING.HASH_START_CHARS)}...${hash.slice(-FORMATTING.HASH_END_CHARS)}`
     : hash
 
   const hashElement = (

@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/table'
 import { formatHash, formatNumber } from '@/lib/utils/format'
 import { decodeEventLog, type DecodedLog } from '@/lib/utils/eventDecoder'
+import { FORMATTING } from '@/lib/config/constants'
 import type { Log } from '@/types/graphql'
 
 interface ContractLogsTableProps {
@@ -87,7 +88,7 @@ function RawLogData({ log }: { log: Log }) {
         <div className="text-xs">
           <span className="text-text-muted">Data: </span>
           <span className="font-mono text-text-secondary">
-            {log.data.length > 66 ? `${log.data.slice(0, 66)}...` : log.data}
+            {log.data.length > FORMATTING.HEX_PREVIEW_LENGTH ? `${log.data.slice(0, FORMATTING.HEX_PREVIEW_LENGTH)}...` : log.data}
           </span>
         </div>
       )}

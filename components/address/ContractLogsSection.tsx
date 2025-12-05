@@ -10,6 +10,7 @@ import { ContractLogsTable } from './ContractLogsTable'
 import { useContractLogs } from '@/lib/hooks/useContractLogs'
 import { useLogs } from '@/lib/hooks/useSubscriptions'
 import { formatNumber } from '@/lib/utils/format'
+import { PAGINATION, REALTIME } from '@/lib/config/constants'
 import type { Log } from '@/types/graphql'
 
 interface ContractLogsSectionProps {
@@ -71,7 +72,7 @@ function formatExportData(logs: Log[]) {
  * Contract event logs section with pagination and real-time updates
  */
 export function ContractLogsSection({ address }: ContractLogsSectionProps) {
-  const [itemsPerPage, setItemsPerPageState] = useState(20)
+  const [itemsPerPage, setItemsPerPageState] = useState<number>(PAGINATION.DEFAULT_PAGE_SIZE)
   const [currentPage, setCurrentPage] = useState(1)
   const [isLiveEnabled, setIsLiveEnabled] = useState(true)
 
@@ -92,7 +93,7 @@ export function ContractLogsSection({ address }: ContractLogsSectionProps) {
   // Real-time logs subscription
   const { logs: realtimeLogs, clearLogs } = useLogs(
     isLiveEnabled ? { address: address.toLowerCase() } : {},
-    50
+    REALTIME.MAX_PENDING_TRANSACTIONS
   )
 
   // Calculate total pages

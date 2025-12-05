@@ -245,6 +245,18 @@ export const UI = {
   /** Number of rows to display in mobile tables */
   TABLE_MOBILE_ROWS: 10,
 
+  /** Icon sizes */
+  ICON_SIZE_XS: 12,
+  ICON_SIZE_SM: 14,
+  ICON_SIZE_MD: 16,
+  ICON_SIZE_LG: 20,
+  ICON_SIZE_XL: 24,
+
+  /** Tooltip offset positions */
+  TOOLTIP_OFFSET_X: 6,
+  TOOLTIP_OFFSET_Y: -4,
+  TOOLTIP_OFFSET_Y_BOTTOM: -8,
+
   /** Maximum visible page numbers in pagination (simple) */
   PAGINATION_MAX_VISIBLE_SIMPLE: 5,
 
@@ -694,6 +706,54 @@ export const FORMATTING = {
   /** Days per time period */
   DAYS_PER_WEEK: 7,
   DAYS_PER_MONTH: 30,
+} as const
+
+// ============================================================================
+// ABI Encoding/Decoding Constants
+// ============================================================================
+
+export const ABI = {
+  /** EVM word size in hex characters (32 bytes = 64 hex chars) */
+  WORD_SIZE: 64,
+
+  /** Half word size for certain operations */
+  HALF_WORD_SIZE: 32,
+
+  /** Address padding offset (last 40 chars of 64-char word) */
+  ADDRESS_OFFSET: -40,
+
+  /** Function selector length (4 bytes = 8 hex chars) */
+  SELECTOR_LENGTH: 4,
+
+  /** ERC721 event topics count (signature + 3 indexed params) */
+  ERC721_TOPICS_COUNT: 4,
+
+  /** ERC20 event topics count (signature + 2 indexed params) */
+  ERC20_TOPICS_COUNT: 3,
+
+  /** Bytes offset for dynamic data */
+  BYTES_OFFSET: 2,
+
+  /** Uint8 max value */
+  UINT8_MAX: 255,
+
+  /** Uint256 size */
+  UINT256_SIZE: 256,
+
+  /** Substring offset for byte extraction */
+  BYTE_EXTRACT_OFFSET: -2,
+
+  /** Default decimals display length */
+  DECIMALS_DISPLAY_LENGTH: 12,
+
+  /** Signed integer bounds offset */
+  SIGNED_BOUNDS_OFFSET: 6,
+
+  /** Negative signed offset */
+  SIGNED_NEGATIVE_OFFSET: -4,
+
+  /** Max numeric character length for boolean detection */
+  BOOL_NUMERIC_MAX_LENGTH: 15,
 } as const
 
 // ============================================================================

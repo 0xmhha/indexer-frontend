@@ -4,6 +4,8 @@
  * as a fallback when backend doesn't provide decoded logs
  */
 
+import { ABI, FORMATTING } from '@/lib/config/constants'
+
 // ============================================================================
 // Types
 // ============================================================================
@@ -133,7 +135,7 @@ const ERC721_APPROVAL: KnownEvent = {
 function decodeAddress(hex: string): string {
   const cleaned = hex.startsWith('0x') ? hex.slice(2) : hex
   // Take last 40 characters (20 bytes)
-  const addressHex = cleaned.slice(-40)
+  const addressHex = cleaned.slice(ABI.ADDRESS_OFFSET)
   return toChecksumAddress(`0x${addressHex}`)
 }
 
@@ -168,10 +170,10 @@ function decodeInt256(hex: string): string {
   const cleaned = hex.startsWith('0x') ? hex.slice(2) : hex
   const value = BigInt(`0x${cleaned}`)
   // Check if negative (first bit is 1)
-  const maxPositive = BigInt(2) ** BigInt(255) - BigInt(1)
+  const maxPositive = BigInt(2) ** BigInt(ABI.UINT8_MAX) - BigInt(1)
   if (value > maxPositive) {
     // Two's complement for negative numbers
-    return (value - BigInt(2) ** BigInt(256)).toString(10)
+    return (value - BigInt(2) ** BigInt(ABI.UINT256_SIZE)).toString(10)
   }
   return value.toString(10)
 }
@@ -181,7 +183,7 @@ function decodeInt256(hex: string): string {
  */
 function decodeBool(hex: string): string {
   const cleaned = hex.startsWith('0x') ? hex.slice(2) : hex
-  const lastByte = cleaned.slice(-2)
+  const lastByte = cleaned.slice(ABI.BYTE_EXTRACT_OFFSET)
   return lastByte === '01' ? 'true' : 'false'
 }
 
@@ -227,7 +229,7 @@ function getKnownEvent(topics: string[]): KnownEvent | null {
   // ERC721 has tokenId indexed, so 4 topics; ERC20 has 3 topics
   if (sigHash === '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef') {
     // Transfer event
-    if (topics.length === 4) {
+    if (topics.length === ABI.ERC721_TOPICS_COUNT) {
       return ERC721_TRANSFER
     }
     return event // ERC20 Transfer
@@ -235,7 +237,7 @@ function getKnownEvent(topics: string[]): KnownEvent | null {
 
   if (sigHash === '0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8c7c3b925') {
     // Approval event
-    if (topics.length === 4) {
+    if (topics.length === ABI.ERC721_TOPICS_COUNT) {
       return ERC721_APPROVAL
     }
     return event // ERC20 Approval
@@ -281,9 +283,9 @@ export function decodeEventLog(
     } else {
       // Non-indexed parameters are in data
       // Each parameter is 32 bytes (64 hex chars)
-      const chunk = cleanData.slice(dataOffset, dataOffset + 64)
+      const chunk = cleanData.slice(dataOffset, dataOffset + ABI.WORD_SIZE)
       value = chunk ? decodeValue(`0x${chunk}`, input.type) : '0'
-      dataOffset += 64
+      dataOffset += ABI.WORD_SIZE
     }
 
     params.push({
@@ -317,8 +319,8 @@ export function getEventName(sigHash: string): string | null {
 export function formatDecodedValue(value: string, type: string): string {
   if (type === 'address') {
     // Truncate address for display
-    if (value.length > 12) {
-      return `${value.slice(0, 6)}...${value.slice(-4)}`
+    if (value.length > ABI.DECIMALS_DISPLAY_LENGTH) {
+      return `${value.slice(0, FORMATTING.ADDRESS_START_CHARS)}...${value.slice(-FORMATTING.ADDRESS_END_CHARS)}`
     }
     return value
   }
@@ -344,7 +346,8 @@ export function isLikelyTokenAmount(value: string): boolean {
   try {
     const num = BigInt(value)
     // Check if divisible by 10^15 (likely has decimals)
-    return num >= BigInt(10) ** BigInt(15) && num % BigInt(10) ** BigInt(15) === BigInt(0)
+    const tokenThreshold = BigInt(10) ** BigInt(ABI.BOOL_NUMERIC_MAX_LENGTH)
+    return num >= tokenThreshold && num % tokenThreshold === BigInt(0)
   } catch {
     return false
   }
@@ -353,7 +356,7 @@ export function isLikelyTokenAmount(value: string): boolean {
 /**
  * Format token amount with decimals
  */
-export function formatTokenAmount(value: string, decimals: number = 18): string {
+export function formatTokenAmount(value: string, decimals: number = FORMATTING.DEFAULT_DECIMALS): string {
   try {
     const num = BigInt(value)
     const divisor = BigInt(10) ** BigInt(decimals)
@@ -365,7 +368,7 @@ export function formatTokenAmount(value: string, decimals: number = 18): string 
     }
 
     const fractionalStr = fractionalPart.toString().padStart(decimals, '0')
-    const trimmedFractional = fractionalStr.replace(/0+$/, '').slice(0, 6)
+    const trimmedFractional = fractionalStr.replace(/0+$/, '').slice(0, FORMATTING.ADDRESS_START_CHARS)
 
     return `${integerPart.toLocaleString()}.${trimmedFractional}`
   } catch {

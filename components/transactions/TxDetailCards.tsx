@@ -8,6 +8,7 @@ import { TransactionTypeBadge } from '@/components/transactions/TransactionTypeB
 import { CopyButton } from '@/components/common/CopyButton'
 import { formatNumber, formatCurrency, formatGasPrice } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
+import { FORMATTING } from '@/lib/config/constants'
 import { decodeEventLog, formatTokenAmount } from '@/lib/utils/eventDecoder'
 import type { Log, TransformedFeePayerSignature, DecodedLog } from '@/types/graphql'
 
@@ -581,7 +582,7 @@ function ParamValue({ param }: { param: { name: string; type: string; value: str
 
   // uint256 - check if it looks like a token amount
   if (type === 'uint256' && (name === 'value' || name === 'wad' || name === 'amount')) {
-    const formatted = formatTokenAmount(value, 18)
+    const formatted = formatTokenAmount(value, FORMATTING.DEFAULT_DECIMALS)
     return (
       <span className="flex items-center gap-2 text-text-primary">
         <span>{formatted}</span>
