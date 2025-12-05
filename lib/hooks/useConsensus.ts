@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo } from 'react'
 import { gql, useQuery, useSubscription } from '@apollo/client'
-import { PAGINATION, POLLING_INTERVALS, CONSENSUS } from '@/lib/config/constants'
+import { PAGINATION, POLLING_INTERVALS, CONSENSUS, REPLAY } from '@/lib/config/constants'
 import {
   SUBSCRIBE_CONSENSUS_BLOCK,
   SUBSCRIBE_CONSENSUS_ERROR,
@@ -727,10 +727,22 @@ export function useBlockSigners(blockNumber: string) {
 // ============================================================================
 
 /**
+ * Options for consensus subscription hooks
+ */
+export interface ConsensusSubscriptionOptions {
+  /** Number of recent events to replay on subscription (max 100) */
+  replayLast?: number
+}
+
+/**
  * Hook to subscribe to real-time consensus block events
  * Automatically updates the consensus store with new blocks
+ *
+ * @param options - Configuration options including replayLast
  */
-export function useConsensusBlockSubscription() {
+export function useConsensusBlockSubscription(options: ConsensusSubscriptionOptions = {}) {
+  const { replayLast = REPLAY.CONSENSUS_BLOCKS_DEFAULT } = options
+
   // Get only action functions (stable references) to avoid re-renders
   // Zustand store functions are guaranteed to be stable across renders
   const setLatestBlock = useConsensusStore((state) => state.setLatestBlock)
@@ -739,6 +751,9 @@ export function useConsensusBlockSubscription() {
   // Get reactive state separately
   const latestBlock = useConsensusStore((state) => state.latestBlock)
   const recentBlocks = useConsensusStore((state) => state.recentBlocks)
+
+  // Memoize variables to prevent re-subscription
+  const variables = useMemo(() => ({ replayLast }), [replayLast])
 
   // Stable callback for onData - Zustand actions are stable, so this won't change
   const onData = useCallback(
@@ -762,11 +777,12 @@ export function useConsensusBlockSubscription() {
   // Memoize subscription options to prevent re-subscription
   const subscriptionOptions = useMemo(
     () => ({
+      variables,
       fetchPolicy: 'no-cache' as const,
       onData,
       onError,
     }),
-    [onData, onError]
+    [variables, onData, onError]
   )
 
   const { data, loading, error } = useSubscription<{ consensusBlock: ConsensusBlockEvent }>(
@@ -785,8 +801,12 @@ export function useConsensusBlockSubscription() {
 /**
  * Hook to subscribe to consensus error events
  * Stores errors in the consensus store for alerting
+ *
+ * @param options - Configuration options including replayLast
  */
-export function useConsensusErrorSubscription() {
+export function useConsensusErrorSubscription(options: ConsensusSubscriptionOptions = {}) {
+  const { replayLast = REPLAY.CONSENSUS_ERRORS_DEFAULT } = options
+
   // Get only action functions (stable references) to avoid re-renders
   // Zustand store functions are guaranteed to be stable across renders
   const addError = useConsensusStore((state) => state.addError)
@@ -794,6 +814,9 @@ export function useConsensusErrorSubscription() {
   // Get reactive state separately
   const recentErrors = useConsensusStore((state) => state.recentErrors)
   const stats = useConsensusStore((state) => state.stats)
+
+  // Memoize variables to prevent re-subscription
+  const variables = useMemo(() => ({ replayLast }), [replayLast])
 
   // Stable callback for onData - Zustand actions are stable, so this won't change
   const onData = useCallback(
@@ -813,11 +836,12 @@ export function useConsensusErrorSubscription() {
   // Memoize subscription options to prevent re-subscription
   const subscriptionOptions = useMemo(
     () => ({
+      variables,
       fetchPolicy: 'no-cache' as const,
       onData,
       onError,
     }),
-    [onData, onError]
+    [variables, onData, onError]
   )
 
   const { data, loading, error } = useSubscription<{ consensusError: ConsensusErrorEvent }>(
@@ -838,8 +862,12 @@ export function useConsensusErrorSubscription() {
 /**
  * Hook to subscribe to consensus fork detection events
  * Monitors for chain splits
+ *
+ * @param options - Configuration options including replayLast
  */
-export function useConsensusForkSubscription() {
+export function useConsensusForkSubscription(options: ConsensusSubscriptionOptions = {}) {
+  const { replayLast = REPLAY.CONSENSUS_FORKS_DEFAULT } = options
+
   // Get only action functions (stable references) to avoid re-renders
   // Zustand store functions are guaranteed to be stable across renders
   const addFork = useConsensusStore((state) => state.addFork)
@@ -847,6 +875,9 @@ export function useConsensusForkSubscription() {
 
   // Get reactive state separately
   const recentForks = useConsensusStore((state) => state.recentForks)
+
+  // Memoize variables to prevent re-subscription
+  const variables = useMemo(() => ({ replayLast }), [replayLast])
 
   // Stable callback for onData - Zustand actions are stable, so this won't change
   const onData = useCallback(
@@ -871,11 +902,12 @@ export function useConsensusForkSubscription() {
   // Memoize subscription options to prevent re-subscription
   const subscriptionOptions = useMemo(
     () => ({
+      variables,
       fetchPolicy: 'no-cache' as const,
       onData,
       onError,
     }),
-    [onData, onError]
+    [variables, onData, onError]
   )
 
   const { data, loading, error } = useSubscription<{ consensusFork: ConsensusForkEvent }>(
@@ -900,14 +932,21 @@ export function useConsensusForkSubscription() {
 
 /**
  * Hook to subscribe to validator set changes at epoch boundaries
+ *
+ * @param options - Configuration options including replayLast
  */
-export function useConsensusValidatorChangeSubscription() {
+export function useConsensusValidatorChangeSubscription(options: ConsensusSubscriptionOptions = {}) {
+  const { replayLast = REPLAY.VALIDATOR_CHANGES_DEFAULT } = options
+
   // Get only action functions (stable references) to avoid re-renders
   // Zustand store functions are guaranteed to be stable across renders
   const addValidatorChange = useConsensusStore((state) => state.addValidatorChange)
 
   // Get reactive state separately
   const recentValidatorChanges = useConsensusStore((state) => state.recentValidatorChanges)
+
+  // Memoize variables to prevent re-subscription
+  const variables = useMemo(() => ({ replayLast }), [replayLast])
 
   // Stable callback for onData - Zustand actions are stable, so this won't change
   const onData = useCallback(
@@ -931,11 +970,12 @@ export function useConsensusValidatorChangeSubscription() {
   // Memoize subscription options to prevent re-subscription
   const subscriptionOptions = useMemo(
     () => ({
+      variables,
       fetchPolicy: 'no-cache' as const,
       onData,
       onError,
     }),
-    [onData, onError]
+    [variables, onData, onError]
   )
 
   const { data, loading, error } = useSubscription<{

@@ -26,7 +26,7 @@ import type {
   ValidatorSetChange,
 } from '@/types/graphql'
 import { env } from '@/lib/config/env'
-import { REALTIME } from '@/lib/config/constants'
+import { REALTIME, REPLAY } from '@/lib/config/constants'
 import {
   useRealtimeStore,
   selectRecentBlocks,
@@ -77,25 +77,36 @@ export function usePendingTransactions(maxTransactions: number = REALTIME.MAX_PE
 }
 
 /**
+ * Options for useLogs hook
+ */
+export interface UseLogsOptions {
+  /** Maximum number of logs to keep in memory (default: 100) */
+  maxLogs?: number
+  /** Number of recent logs to replay on subscription (default: REPLAY.LOGS_DEFAULT) */
+  replayLast?: number
+}
+
+/**
  * Hook to subscribe to logs with filtering
  *
  * @param filter - Filter for logs (address, topics, block range). All fields are optional but filter object is required.
- * @param maxLogs - Maximum number of logs to keep in memory (default: 100)
+ * @param options - Configuration options including maxLogs and replayLast
  * @returns Object containing logs array, loading state, and error
  *
  * @example
  * ```tsx
- * // Subscribe to all Transfer events from a specific contract
+ * // Subscribe to all Transfer events from a specific contract with replay
  * const { logs, loading, error } = useLogs({
  *   address: '0x...',
  *   topics: ['0xddf252ad...'] // Transfer event signature
- * })
+ * }, { replayLast: 20 })
  *
- * // Subscribe to all logs (empty filter)
+ * // Subscribe to all logs (empty filter) with default replay
  * const { logs, loading, error } = useLogs({})
  * ```
  */
-export function useLogs(filter: LogFilter = {}, maxLogs: number = REALTIME.MAX_LOGS) {
+export function useLogs(filter: LogFilter = {}, options: UseLogsOptions = {}) {
+  const { maxLogs = REALTIME.MAX_LOGS, replayLast = REPLAY.LOGS_DEFAULT } = options
   const [logs, setLogs] = useState<Log[]>([])
 
   // Memoize filter to prevent infinite re-subscription
@@ -111,6 +122,12 @@ export function useLogs(filter: LogFilter = {}, maxLogs: number = REALTIME.MAX_L
     [filter.address, filter.addresses, filter.topics, filter.fromBlock, filter.toBlock]
   )
 
+  // Memoize variables to prevent re-subscription
+  const variables = useMemo(
+    () => ({ filter: stableFilter, replayLast }),
+    [stableFilter, replayLast]
+  )
+
   // Store current filter in ref for use in effect (not during render)
   const filterRef = useRef(filter)
   useEffect(() => {
@@ -119,7 +136,7 @@ export function useLogs(filter: LogFilter = {}, maxLogs: number = REALTIME.MAX_L
 
   const { data, loading, error } = useSubscription(SUBSCRIBE_LOGS, {
     fetchPolicy: 'no-cache',
-    variables: { filter: stableFilter },
+    variables,
     onError: (error) => {
       console.error('[Logs Subscription Error]:', error)
     },
@@ -326,21 +343,36 @@ export function useNewTransactions(maxTransactions: number = REALTIME.MAX_TRANSA
 }
 
 /**
+ * Options for useChainConfig hook
+ */
+export interface UseChainConfigOptions {
+  /** Maximum number of events to keep in memory (default: 50) */
+  maxEvents?: number
+  /** Number of recent config changes to replay on subscription (default: REPLAY.CHAIN_CONFIG_DEFAULT) */
+  replayLast?: number
+}
+
+/**
  * Hook to subscribe to chain configuration changes in real-time
  *
- * @param maxEvents - Maximum number of events to keep in memory (default: 50)
+ * @param options - Configuration options including maxEvents and replayLast
  * @returns Object containing config changes array, latest change, loading state, and error
  *
  * @example
  * ```tsx
- * const { configChanges, latestChange, loading, error } = useChainConfig(100)
+ * const { configChanges, latestChange, loading, error } = useChainConfig({ maxEvents: 100, replayLast: 10 })
  * ```
  */
-export function useChainConfig(maxEvents: number = 50) {
+export function useChainConfig(options: UseChainConfigOptions = {}) {
+  const { maxEvents = 50, replayLast = REPLAY.CHAIN_CONFIG_DEFAULT } = options
   const [configChanges, setConfigChanges] = useState<ChainConfigChange[]>([])
   const [latestChange, setLatestChange] = useState<ChainConfigChange | null>(null)
 
+  // Memoize variables to prevent re-subscription
+  const variables = useMemo(() => ({ replayLast }), [replayLast])
+
   const { data, loading, error } = useSubscription(SUBSCRIBE_CHAIN_CONFIG, {
+    variables,
     fetchPolicy: 'no-cache',
     onError: (error) => {
       console.error('[Chain Config Subscription Error]:', error)
@@ -380,21 +412,36 @@ export function useChainConfig(maxEvents: number = 50) {
 }
 
 /**
+ * Options for useValidatorSet hook
+ */
+export interface UseValidatorSetOptions {
+  /** Maximum number of events to keep in memory (default: 50) */
+  maxEvents?: number
+  /** Number of recent validator changes to replay on subscription (default: REPLAY.VALIDATOR_SET_DEFAULT) */
+  replayLast?: number
+}
+
+/**
  * Hook to subscribe to validator set changes in real-time
  *
- * @param maxEvents - Maximum number of events to keep in memory (default: 50)
+ * @param options - Configuration options including maxEvents and replayLast
  * @returns Object containing validator changes array, latest change, loading state, and error
  *
  * @example
  * ```tsx
- * const { validatorChanges, latestChange, loading, error } = useValidatorSet(100)
+ * const { validatorChanges, latestChange, loading, error } = useValidatorSet({ maxEvents: 100, replayLast: 10 })
  * ```
  */
-export function useValidatorSet(maxEvents: number = 50) {
+export function useValidatorSet(options: UseValidatorSetOptions = {}) {
+  const { maxEvents = 50, replayLast = REPLAY.VALIDATOR_SET_DEFAULT } = options
   const [validatorChanges, setValidatorChanges] = useState<ValidatorSetChange[]>([])
   const [latestChange, setLatestChange] = useState<ValidatorSetChange | null>(null)
 
+  // Memoize variables to prevent re-subscription
+  const variables = useMemo(() => ({ replayLast }), [replayLast])
+
   const { data, loading, error } = useSubscription(SUBSCRIBE_VALIDATOR_SET, {
+    variables,
     fetchPolicy: 'no-cache',
     onError: (error) => {
       console.error('[Validator Set Subscription Error]:', error)

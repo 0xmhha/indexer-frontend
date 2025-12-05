@@ -135,7 +135,7 @@ export function ContractLogsSection({ address }: ContractLogsSectionProps) {
 
   const offset = (currentPage - 1) * itemsPerPage
   const { logs: historicalLogs, totalCount, loading, error, refetch } = useContractLogs(address, { limit: itemsPerPage, offset })
-  const { logs: realtimeLogs, clearLogs } = useLogs(isLiveEnabled ? { address: address.toLowerCase() } : {}, REALTIME.MAX_PENDING_TRANSACTIONS)
+  const { logs: realtimeLogs, clearLogs } = useLogs(isLiveEnabled ? { address: address.toLowerCase() } : {}, { maxLogs: REALTIME.MAX_PENDING_TRANSACTIONS })
 
   const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage))
   const mergedLogs = useMergedLogs({ historicalLogs, realtimeLogs, isLiveEnabled, currentPage, itemsPerPage })

@@ -66,6 +66,59 @@ export const REALTIME = {
 } as const
 
 // ============================================================================
+// Subscription Replay Settings
+// ============================================================================
+
+/**
+ * Subscription replay settings for instant data on connection
+ *
+ * The replayLast parameter allows receiving recent events immediately
+ * when subscribing, solving the "empty page" problem on initial load.
+ *
+ * @see Backend supports max 100 for replayLast
+ */
+export const REPLAY = {
+  /** Default replay count for blocks (dashboard/homepage) */
+  BLOCKS_DEFAULT: 10,
+
+  /** Default replay count for transactions */
+  TRANSACTIONS_DEFAULT: 10,
+
+  /** Default replay count for logs */
+  LOGS_DEFAULT: 20,
+
+  /** Default replay count for consensus blocks */
+  CONSENSUS_BLOCKS_DEFAULT: 10,
+
+  /** Default replay count for consensus errors */
+  CONSENSUS_ERRORS_DEFAULT: 5,
+
+  /** Default replay count for consensus forks */
+  CONSENSUS_FORKS_DEFAULT: 5,
+
+  /** Default replay count for validator changes */
+  VALIDATOR_CHANGES_DEFAULT: 10,
+
+  /** Default replay count for chain config changes */
+  CHAIN_CONFIG_DEFAULT: 5,
+
+  /** Default replay count for validator set changes */
+  VALIDATOR_SET_DEFAULT: 5,
+
+  /** Default replay count for system contract events */
+  SYSTEM_CONTRACT_EVENTS_DEFAULT: 15,
+
+  /** Default replay count for dynamic contract events */
+  DYNAMIC_CONTRACT_EVENTS_DEFAULT: 15,
+
+  /** Maximum replay count (backend limit) */
+  MAX_REPLAY: 100,
+
+  /** No replay (for pending transactions which don't support it) */
+  DISABLED: 0,
+} as const
+
+// ============================================================================
 // Polling Intervals (ms)
 // ============================================================================
 
