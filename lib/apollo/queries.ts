@@ -1,3 +1,5 @@
+/* eslint-disable max-lines */
+// Grouped GraphQL queries for maintainability - logical sections with clear markers
 import { gql } from '@apollo/client'
 
 /**

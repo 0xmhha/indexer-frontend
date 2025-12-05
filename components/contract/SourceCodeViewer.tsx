@@ -58,8 +58,8 @@ function parseSourceCodeFiles(sourceCode: string, contractName: string | null): 
 
     // Parse abstract contracts section
     const abstractFileRegex = /\/\/ --- ([\w/]+\.sol) ---\n([\s\S]*?)(?=\/\/ ---|\/\/ ===|$)/g
-    let match
-    while ((match = abstractFileRegex.exec(abstractsSection)) !== null) {
+    let match = abstractFileRegex.exec(abstractsSection)
+    while (match !== null) {
       const fileName = match[1] ?? 'Unknown.sol'
       const rawContent = match[2] ?? ''
       const content = rawContent.trim()
@@ -70,6 +70,7 @@ function parseSourceCodeFiles(sourceCode: string, contractName: string | null): 
           isMain: false,
         })
       }
+      match = abstractFileRegex.exec(abstractsSection)
     }
   } else {
     // No main contract marker, treat as single file
@@ -82,8 +83,8 @@ function parseSourceCodeFiles(sourceCode: string, contractName: string | null): 
 
   // Sort: main contract first, then alphabetically
   return files.sort((a, b) => {
-    if (a.isMain && !b.isMain) return -1
-    if (!a.isMain && b.isMain) return 1
+    if (a.isMain && !b.isMain) { return -1 }
+    if (!a.isMain && b.isMain) { return 1 }
     return a.name.localeCompare(b.name)
   })
 }

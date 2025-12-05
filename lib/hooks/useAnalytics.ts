@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useQuery } from '@apollo/client'
 import {
   GET_BLOCKS_BY_TIME_RANGE,
@@ -314,32 +314,41 @@ export function useFeeDelegationStats(options: FeeDelegationStatsOptions = {}) {
   }
 
   // Transform data or use mock
-  const stats: FeeDelegationStats | null = shouldUseMock
-    ? getMockFeeDelegationStats(topPayersLimit)
-    : effectiveStatsData?.feeDelegationStats && effectivePayersData?.topFeePayers
-      ? {
-          totalFeeDelegatedTxs: Number(effectiveStatsData.feeDelegationStats.totalFeeDelegatedTxs),
-          totalFeesSaved: toBigInt(effectiveStatsData.feeDelegationStats.totalFeesSaved),
-          adoptionRate: effectiveStatsData.feeDelegationStats.adoptionRate,
-          avgFeeSaved: toBigInt(effectiveStatsData.feeDelegationStats.avgFeeSaved),
-          topFeePayers: effectivePayersData.topFeePayers.nodes.map(transformFeePayerStats),
-        }
-      : null
+  const stats: FeeDelegationStats | null = useMemo(() => {
+    if (shouldUseMock) {
+      return getMockFeeDelegationStats(topPayersLimit)
+    }
+    if (!effectiveStatsData?.feeDelegationStats || !effectivePayersData?.topFeePayers) {
+      return null
+    }
+    return {
+      totalFeeDelegatedTxs: Number(effectiveStatsData.feeDelegationStats.totalFeeDelegatedTxs),
+      totalFeesSaved: toBigInt(effectiveStatsData.feeDelegationStats.totalFeesSaved),
+      adoptionRate: effectiveStatsData.feeDelegationStats.adoptionRate,
+      avgFeeSaved: toBigInt(effectiveStatsData.feeDelegationStats.avgFeeSaved),
+      topFeePayers: effectivePayersData.topFeePayers.nodes.map(transformFeePayerStats),
+    }
+  }, [shouldUseMock, topPayersLimit, effectiveStatsData, effectivePayersData])
+
+  // Calculate total fee payers
+  const totalFeePayers = useMemo(() => {
+    if (shouldUseMock) {
+      return getMockFeeDelegationStats(topPayersLimit).topFeePayers.length
+    }
+    const count = effectivePayersData?.topFeePayers?.totalCount
+    return count ? Number(count) : 0
+  }, [shouldUseMock, topPayersLimit, effectivePayersData])
 
   // Refetch function that updates both queries
-  const refetch = async () => {
+  const refetch = useCallback(async () => {
     if (!useMock) {
       await Promise.all([refetchStats(), refetchPayers()])
     }
-  }
+  }, [useMock, refetchStats, refetchPayers])
 
   return {
     stats,
-    totalFeePayers: shouldUseMock
-      ? getMockFeeDelegationStats(topPayersLimit).topFeePayers.length
-      : effectivePayersData?.topFeePayers?.totalCount
-        ? Number(effectivePayersData.topFeePayers.totalCount)
-        : 0,
+    totalFeePayers,
     loading: useMock ? false : statsLoading || payersLoading,
     error: null, // Hide error when using mock fallback
     isMockData: shouldUseMock,

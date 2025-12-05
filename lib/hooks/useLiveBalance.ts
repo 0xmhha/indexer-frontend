@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useQuery } from '@apollo/client'
 import { GET_LIVE_BALANCE, GET_ADDRESS_BALANCE } from '@/lib/apollo/queries'
 
@@ -26,89 +27,67 @@ interface IndexedBalanceData {
 const LIVE_BALANCE_POLL_INTERVAL = 15000
 
 /**
+ * Extract balance from live data
+ */
+function extractLiveBalance(data: LiveBalanceData | undefined): { balance: bigint; blockNumber: bigint } | null {
+  if (!data?.liveBalance) { return null }
+  return {
+    balance: BigInt(data.liveBalance.balance),
+    blockNumber: BigInt(data.liveBalance.blockNumber),
+  }
+}
+
+/**
+ * Extract balance from indexed data
+ */
+function extractIndexedBalance(data: IndexedBalanceData | undefined): bigint | null {
+  if (!data?.addressBalance) { return null }
+  return BigInt(data.addressBalance)
+}
+
+/**
  * Hook to fetch real-time balance from chain RPC with fallback to indexed data
- *
- * Features:
- * - Uses liveBalance API for real-time data from chain RPC
- * - Falls back to addressBalance (indexed data) if liveBalance fails
- * - Auto-refreshes every 15 seconds (matching backend cache TTL)
- *
- * @param address - The address to query balance for
- * @param blockNumber - Optional specific block number (omit for latest)
  */
 export function useLiveBalance(address: string | null, blockNumber?: string) {
-  // Query live balance from chain RPC
-  const {
-    data: liveData,
-    loading: liveLoading,
-    error: liveError,
-    previousData: livePreviousData,
-  } = useQuery<LiveBalanceData>(GET_LIVE_BALANCE, {
-    variables: {
-      address: address ?? '',
-      blockNumber: blockNumber ?? null,
-    },
-    skip: !address,
-    pollInterval: LIVE_BALANCE_POLL_INTERVAL,
-    notifyOnNetworkStatusChange: false,
-    returnPartialData: true,
-    // Don't fail silently - we need to know if RPC Proxy is disabled
-    errorPolicy: 'all',
+  const queryVars = { address: address ?? '', blockNumber: blockNumber ?? null }
+
+  const { data: liveData, loading: liveLoading, error: liveError, previousData: livePreviousData } = useQuery<LiveBalanceData>(GET_LIVE_BALANCE, {
+    variables: queryVars, skip: !address, pollInterval: LIVE_BALANCE_POLL_INTERVAL, notifyOnNetworkStatusChange: false, returnPartialData: true, errorPolicy: 'all',
   })
 
-  // Fallback to indexed balance if live balance fails
   const shouldUseFallback = !!liveError || (!liveLoading && !liveData?.liveBalance)
-  const {
-    data: indexedData,
-    loading: indexedLoading,
-    error: indexedError,
-    previousData: indexedPreviousData,
-  } = useQuery<IndexedBalanceData>(GET_ADDRESS_BALANCE, {
-    variables: {
-      address: address ?? '',
-      blockNumber: blockNumber ?? null,
-    },
-    skip: !address || !shouldUseFallback,
-    pollInterval: LIVE_BALANCE_POLL_INTERVAL,
-    notifyOnNetworkStatusChange: false,
-    returnPartialData: true,
+
+  const { data: indexedData, loading: indexedLoading, error: indexedError, previousData: indexedPreviousData } = useQuery<IndexedBalanceData>(GET_ADDRESS_BALANCE, {
+    variables: queryVars, skip: !address || !shouldUseFallback, pollInterval: LIVE_BALANCE_POLL_INTERVAL, notifyOnNetworkStatusChange: false, returnPartialData: true,
   })
 
-  // Use previous data to prevent flickering during polling
-  const effectiveLiveData = liveData ?? livePreviousData
-  const effectiveIndexedData = indexedData ?? indexedPreviousData
+  const result = useMemo(() => {
+    const effectiveLiveData = liveData ?? livePreviousData
+    const effectiveIndexedData = indexedData ?? indexedPreviousData
 
-  // Determine which data source to use (explicitly cast to boolean)
-  const isUsingLiveData = !shouldUseFallback && !!effectiveLiveData?.liveBalance
-  const isUsingIndexedData = shouldUseFallback && effectiveIndexedData?.addressBalance !== undefined
+    const liveResult = extractLiveBalance(effectiveLiveData)
+    const indexedResult = extractIndexedBalance(effectiveIndexedData)
 
-  // Extract balance value
-  let balance: bigint | null = null
-  let blockNumberResult: bigint | null = null
+    const isUsingLiveData = !shouldUseFallback && liveResult !== null
+    const isUsingIndexedData = shouldUseFallback && indexedResult !== null
 
-  if (isUsingLiveData && effectiveLiveData?.liveBalance) {
-    balance = BigInt(effectiveLiveData.liveBalance.balance)
-    blockNumberResult = BigInt(effectiveLiveData.liveBalance.blockNumber)
-  } else if (isUsingIndexedData && effectiveIndexedData?.addressBalance) {
-    balance = BigInt(effectiveIndexedData.addressBalance)
-    // Indexed data doesn't return block number
-    blockNumberResult = null
-  }
+    let balance: bigint | null = null
+    let blockNumber: bigint | null = null
 
-  // Combined loading state
-  const loading = liveLoading || (shouldUseFallback && indexedLoading)
+    if (isUsingLiveData && liveResult) {
+      balance = liveResult.balance
+      blockNumber = liveResult.blockNumber
+    } else if (isUsingIndexedData) {
+      balance = indexedResult
+    }
 
-  // Only surface error if both sources fail
-  const error = shouldUseFallback ? indexedError : undefined
+    return { balance, blockNumber, isLive: isUsingLiveData, isFallback: isUsingIndexedData }
+  }, [liveData, livePreviousData, indexedData, indexedPreviousData, shouldUseFallback])
 
   return {
-    balance,
-    blockNumber: blockNumberResult,
-    loading,
-    error,
-    // Additional metadata
-    isLive: isUsingLiveData,
-    isFallback: isUsingIndexedData,
+    ...result,
+    loading: liveLoading || (shouldUseFallback && indexedLoading),
+    error: shouldUseFallback ? indexedError : undefined,
     liveError: liveError ?? null,
   }
 }
