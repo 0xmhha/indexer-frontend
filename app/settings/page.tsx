@@ -1,10 +1,11 @@
 import type { Metadata } from 'next'
 import { NotificationSettings } from '@/components/settings/NotificationSettings'
 import { UserPreferencesSettings } from '@/components/settings/UserPreferencesSettings'
+import { NetworkSettings } from '@/components/settings/NetworkSettings'
 
 export const metadata: Metadata = {
   title: 'Settings',
-  description: 'Configure notification preferences and application settings',
+  description: 'Configure network connections, notification preferences, and application settings',
 }
 
 /**
@@ -20,11 +21,12 @@ export default function SettingsPage() {
           Settings
         </h1>
         <p className="font-mono text-sm text-text-secondary">
-          Configure your notification preferences and application settings
+          Configure network connections, notification preferences, and application settings
         </p>
       </div>
 
       <div className="max-w-4xl space-y-6">
+        <NetworkSettings />
         <UserPreferencesSettings />
         <NotificationSettings />
       </div>

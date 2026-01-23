@@ -1,10 +1,11 @@
-import { ApolloClient, InMemoryCache, HttpLink, from, ApolloLink, split } from '@apollo/client'
+import { ApolloClient, InMemoryCache, HttpLink, from, ApolloLink, split, NormalizedCacheObject } from '@apollo/client'
 import { GraphQLWsLink } from '@apollo/client/link/subscriptions'
 import { getMainDefinition } from '@apollo/client/utilities'
 import { onError } from '@apollo/client/link/error'
-import { createClient } from 'graphql-ws'
+import { createClient, Client as WsClient } from 'graphql-ws'
 import { env } from '@/lib/config/env'
 import { REALTIME } from '@/lib/config/constants'
+import type { NetworkEndpoints } from '@/lib/config/networks.types'
 
 /**
  * Known error messages that should be silently ignored
@@ -23,110 +24,58 @@ function shouldSuppressError(message: string): boolean {
 }
 
 /**
- * Error handling link for Apollo Client
- * Logs GraphQL and network errors (except known suppressed errors)
+ * Apollo Client instance with cleanup function
  */
-const errorLink = onError(({ graphQLErrors, networkError, operation }) => {
-  if (graphQLErrors) {
-    graphQLErrors.forEach(({ message, locations, path }) => {
-      // Skip logging for known suppressed errors
-      if (shouldSuppressError(message)) {
-        return
-      }
-      console.error(
-        `[GraphQL error]: Message: ${message}, Location: ${JSON.stringify(locations)}, Path: ${path}, Operation: ${operation.operationName}`
-      )
-    })
-  }
-
-  if (networkError) {
-    console.error(`[Network error]: ${networkError.message}, Operation: ${operation.operationName}`)
-  }
-})
+export interface ApolloClientInstance {
+  client: ApolloClient<NormalizedCacheObject>
+  wsClient: WsClient | null
+  dispose: () => void
+}
 
 /**
- * HTTP link for GraphQL endpoint
+ * Create error handling link for Apollo Client
  */
-const httpLink = new HttpLink({
-  uri: env.graphqlEndpoint,
-  credentials: 'same-origin',
-})
+function createErrorLink() {
+  return onError(({ graphQLErrors, networkError, operation }) => {
+    if (graphQLErrors) {
+      graphQLErrors.forEach(({ message, locations, path }) => {
+        // Skip logging for known suppressed errors
+        if (shouldSuppressError(message)) {
+          return
+        }
+        console.error(
+          `[GraphQL error]: Message: ${message}, Location: ${JSON.stringify(locations)}, Path: ${path}, Operation: ${operation.operationName}`
+        )
+      })
+    }
+
+    if (networkError) {
+      console.error(`[Network error]: ${networkError.message}, Operation: ${operation.operationName}`)
+    }
+  })
+}
 
 /**
- * WebSocket link for GraphQL subscriptions
- * Uses dedicated WebSocket endpoint (env.wsEndpoint)
+ * Create request logging link (development only)
  */
-const wsLink =
-  typeof window !== 'undefined'
-    ? new GraphQLWsLink(
-        createClient({
-          url: env.wsEndpoint,
-          connectionParams: {
-            // Add authentication headers if needed
-          },
-          lazy: true, // Connect only when subscriptions are needed
-          keepAlive: REALTIME.WS_KEEPALIVE_INTERVAL, // Send ping every 10 seconds to keep connection alive
-          retryAttempts: REALTIME.WS_RETRY_ATTEMPTS, // Reduce retry attempts to fail faster
-          retryWait: async (retries) => {
-            // Exponential backoff: 1s, 2s, 4s
-            await new Promise((resolve) =>
-              setTimeout(resolve, Math.min(1000 * 2 ** retries, REALTIME.WS_RETRY_MAX_WAIT))
-            )
-          },
-          shouldRetry: (errOrCloseEvent) => {
-            // Only retry on certain close codes (not on authentication failures)
-            if (errOrCloseEvent && typeof errOrCloseEvent === 'object' && 'code' in errOrCloseEvent) {
-              const code = (errOrCloseEvent as CloseEvent).code
-              // Don't retry on normal closure or going away
-              return code !== REALTIME.WS_CLOSE_NORMAL && code !== REALTIME.WS_CLOSE_GOING_AWAY
-            }
-            return true
-          },
-          on: {
-            error: (_error) => {
-              console.error('[WebSocket]: Connection failed')
-            },
-          },
-        })
-      )
-    : null
+function createLoggingLink() {
+  return new ApolloLink((operation, forward) => {
+    // Uncomment to enable verbose GraphQL request logging
+    // if (env.isDevelopment) {
+    //   const variables = operation.variables
+    //   const hasVariables = Object.keys(variables).length > 0
+    //   const variablesStr = hasVariables ? JSON.stringify(variables, null, 2) : '(no variables)'
+    //   console.log(`[GraphQL Request]: ${operation.operationName}`, variablesStr)
+    // }
+    return forward(operation)
+  })
+}
 
 /**
- * Split link: use WebSocket for subscriptions, HTTP for queries/mutations
+ * Create cache instance with type policies
  */
-const splitLink =
-  typeof window !== 'undefined' && wsLink
-    ? split(
-        ({ query }) => {
-          const definition = getMainDefinition(query)
-          return definition.kind === 'OperationDefinition' && definition.operation === 'subscription'
-        },
-        wsLink,
-        httpLink
-      )
-    : httpLink
-
-/**
- * Request logging link (development only)
- * Disabled by default to reduce console noise
- */
-const loggingLink = new ApolloLink((operation, forward) => {
-  // Uncomment to enable verbose GraphQL request logging
-  // if (env.isDevelopment) {
-  //   const variables = operation.variables
-  //   const hasVariables = Object.keys(variables).length > 0
-  //   const variablesStr = hasVariables ? JSON.stringify(variables, null, 2) : '(no variables)'
-  //   console.log(`[GraphQL Request]: ${operation.operationName}`, variablesStr)
-  // }
-  return forward(operation)
-})
-
-/**
- * Apollo Client instance with error handling, caching, and WebSocket support
- */
-export const apolloClient = new ApolloClient({
-  link: from([errorLink, loggingLink, splitLink]),
-  cache: new InMemoryCache({
+function createCache() {
+  return new InMemoryCache({
     typePolicies: {
       Query: {
         fields: {
@@ -164,23 +113,163 @@ export const apolloClient = new ApolloClient({
         fields: {},
       },
     },
-  }),
-  defaultOptions: {
+  })
+}
+
+/**
+ * Create Apollo Client default options
+ */
+function createDefaultOptions() {
+  return {
     watchQuery: {
       // Use cache-and-network to get fresh data while showing cached data immediately
       // This ensures pages stay up-to-date without manual refresh
-      fetchPolicy: 'cache-and-network',
+      fetchPolicy: 'cache-and-network' as const,
       // Enable network status notifications for better real-time updates
       notifyOnNetworkStatusChange: true,
-      errorPolicy: 'all',
+      errorPolicy: 'all' as const,
     },
     query: {
-      // @ts-expect-error - Apollo Client type mismatch between WatchQueryFetchPolicy and FetchPolicy
-      fetchPolicy: 'cache-and-network',
-      errorPolicy: 'all',
+      fetchPolicy: 'network-only' as const,
+      errorPolicy: 'all' as const,
     },
     mutate: {
-      errorPolicy: 'all',
+      errorPolicy: 'all' as const,
     },
-  },
-})
+  }
+}
+
+/**
+ * Create WebSocket client for subscriptions
+ */
+function createWsClient(wsEndpoint: string): WsClient | null {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  return createClient({
+    url: wsEndpoint,
+    connectionParams: {
+      // Add authentication headers if needed
+    },
+    lazy: true, // Connect only when subscriptions are needed
+    keepAlive: REALTIME.WS_KEEPALIVE_INTERVAL, // Send ping every 10 seconds to keep connection alive
+    retryAttempts: REALTIME.WS_RETRY_ATTEMPTS, // Reduce retry attempts to fail faster
+    retryWait: async (retries) => {
+      // Exponential backoff: 1s, 2s, 4s
+      await new Promise((resolve) =>
+        setTimeout(resolve, Math.min(1000 * 2 ** retries, REALTIME.WS_RETRY_MAX_WAIT))
+      )
+    },
+    shouldRetry: (errOrCloseEvent) => {
+      // Only retry on certain close codes (not on authentication failures)
+      if (errOrCloseEvent && typeof errOrCloseEvent === 'object' && 'code' in errOrCloseEvent) {
+        const code = (errOrCloseEvent as CloseEvent).code
+        // Don't retry on normal closure or going away
+        return code !== REALTIME.WS_CLOSE_NORMAL && code !== REALTIME.WS_CLOSE_GOING_AWAY
+      }
+      return true
+    },
+    on: {
+      error: (_error) => {
+        console.error('[WebSocket]: Connection failed')
+      },
+    },
+  })
+}
+
+/**
+ * Create Apollo Client instance with dynamic network endpoints
+ *
+ * Factory function that creates a new Apollo Client for a given network.
+ * Returns a dispose function to clean up WebSocket connections.
+ *
+ * @param endpoints - Network endpoints configuration
+ * @returns Apollo Client instance with cleanup function
+ */
+export function createApolloClient(endpoints: NetworkEndpoints): ApolloClientInstance {
+  const errorLink = createErrorLink()
+  const loggingLink = createLoggingLink()
+
+  // HTTP link for queries/mutations
+  const httpLink = new HttpLink({
+    uri: endpoints.graphqlEndpoint,
+    credentials: 'same-origin',
+  })
+
+  // WebSocket link for subscriptions (client-side only)
+  const wsClient = createWsClient(endpoints.wsEndpoint)
+  const wsLink = wsClient ? new GraphQLWsLink(wsClient) : null
+
+  // Split link: use WebSocket for subscriptions, HTTP for queries/mutations
+  const splitLink =
+    typeof window !== 'undefined' && wsLink
+      ? split(
+          ({ query }) => {
+            const definition = getMainDefinition(query)
+            return definition.kind === 'OperationDefinition' && definition.operation === 'subscription'
+          },
+          wsLink,
+          httpLink
+        )
+      : httpLink
+
+  // Create Apollo Client
+  const client = new ApolloClient({
+    link: from([errorLink, loggingLink, splitLink]),
+    cache: createCache(),
+    defaultOptions: createDefaultOptions(),
+  })
+
+  // Return client with dispose function
+  return {
+    client,
+    wsClient,
+    dispose: () => {
+      // Clean up WebSocket connection
+      if (wsClient) {
+        wsClient.dispose()
+      }
+      // Stop all active queries
+      client.stop()
+      // Clear cache
+      client.clearStore().catch(console.error)
+    },
+  }
+}
+
+// ============================================================================
+// Legacy Support - Singleton instance for backwards compatibility
+// ============================================================================
+
+/**
+ * Legacy singleton Apollo Client
+ *
+ * @deprecated Use createApolloClient() factory function instead for dynamic network support.
+ * This is maintained for backwards compatibility with existing code.
+ */
+let legacyInstance: ApolloClientInstance | null = null
+
+/**
+ * Get or create the legacy singleton Apollo Client
+ *
+ * @deprecated Use createApolloClient() instead
+ */
+function getLegacyApolloClient(): ApolloClient<NormalizedCacheObject> {
+  if (!legacyInstance) {
+    legacyInstance = createApolloClient({
+      graphqlEndpoint: env.graphqlEndpoint,
+      wsEndpoint: env.wsEndpoint,
+      jsonRpcEndpoint: env.jsonRpcEndpoint,
+    })
+  }
+  return legacyInstance.client
+}
+
+/**
+ * Apollo Client singleton instance
+ *
+ * @deprecated Use createApolloClient() for dynamic network support.
+ * Maintained for backwards compatibility.
+ */
+export const apolloClient = getLegacyApolloClient()

@@ -2,16 +2,18 @@
 
 import Link from 'next/link'
 import { useState, useRef, useEffect } from 'react'
-import { env } from '@/lib/config/env'
 import { UI } from '@/lib/config/constants'
 import { SearchBar } from '@/components/common/SearchBar'
 import { ThemeToggle } from '@/components/common/ThemeToggle'
+import { NetworkSelector } from '@/components/common/NetworkSelector'
+import { useNetworkStore, selectCurrentNetwork } from '@/stores/networkStore'
 
 export function Header() {
   const [showSearch, setShowSearch] = useState(false)
   const [showMoreMenu, setShowMoreMenu] = useState(false)
   const [showMobileMenu, setShowMobileMenu] = useState(false)
   const moreMenuRef = useRef<HTMLDivElement>(null)
+  const currentNetwork = useNetworkStore(selectCurrentNetwork)
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -50,7 +52,7 @@ export function Header() {
             </div>
             <div className="hidden sm:flex flex-col">
               <span className="font-mono text-sm font-bold text-accent-blue">
-                {env.chainName.toUpperCase()}
+                {(currentNetwork?.chain.name ?? 'STABLE-ONE').toUpperCase()}
               </span>
               <span className="annotation">EXPLORER</span>
             </div>
@@ -258,9 +260,9 @@ export function Header() {
               </svg>
             </button>
 
-            <div className="hidden items-center gap-2 md:flex" role="status" aria-live="polite">
-              <div className="h-2 w-2 animate-pulse rounded-full bg-success" aria-hidden="true"></div>
-              <span className="font-mono text-xs text-text-secondary">Chain ID: {env.chainId}</span>
+            {/* Network Selector */}
+            <div className="hidden md:flex">
+              <NetworkSelector />
             </div>
           </div>
         </div>
