@@ -3,62 +3,18 @@
 import { useState } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { useContractVerification } from '@/lib/hooks/useContractVerification'
+import { getSystemContractInfo } from '@/lib/config/constants'
 
 interface ContractVerificationStatusProps {
   address: string
   isContract: boolean
 }
 
-interface VerificationInfo {
-  verified: boolean
-  compilerVersion?: string
-  optimizationUsed?: boolean
-  runs?: number
-  evmVersion?: string
-  license?: string
-  verifiedAt?: string
-}
-
-// Mock verification check - replace with actual API call when backend is ready
-function useContractVerification(address: string): {
-  verification: VerificationInfo | null
-  loading: boolean
-  error: string | null
-} {
-  // TODO: Replace with actual API call
-  // const { data, loading, error } = useQuery(GET_CONTRACT_VERIFICATION, { variables: { address } })
-
-  // Mock data for demonstration
-  const mockVerified = address.toLowerCase().endsWith('0')
-
-  if (mockVerified) {
-    return {
-      verification: {
-        verified: true,
-        compilerVersion: 'v0.8.19+commit.7dd6d404',
-        optimizationUsed: true,
-        runs: 200,
-        evmVersion: 'paris',
-        license: 'MIT',
-        verifiedAt: '2024-01-15T10:30:00Z',
-      },
-      loading: false,
-      error: null,
-    }
-  }
-
-  return {
-    verification: {
-      verified: false,
-    },
-    loading: false,
-    error: null,
-  }
-}
-
 export function ContractVerificationStatus({ address, isContract }: ContractVerificationStatusProps) {
   const [showDetails, setShowDetails] = useState(false)
-  const { verification, loading, error } = useContractVerification(address)
+  const { verification, isVerified, loading, error, isSystemContract } = useContractVerification(address)
+  const systemInfo = getSystemContractInfo(address)
 
   if (!isContract) {
     return null
@@ -97,8 +53,18 @@ export function ContractVerificationStatus({ address, isContract }: ContractVeri
     <Card className="mb-6">
       <CardHeader className="border-b border-bg-tertiary">
         <CardTitle className="flex items-center justify-between">
-          <span>CONTRACT VERIFICATION</span>
-          {verification?.verified && (
+          <div className="flex items-center gap-2">
+            <span>CONTRACT VERIFICATION</span>
+            {isSystemContract && systemInfo && (
+              <span
+                className="rounded bg-accent-cyan/20 px-2 py-0.5 text-xs text-accent-cyan"
+                title={systemInfo.description}
+              >
+                System Contract
+              </span>
+            )}
+          </div>
+          {isVerified && (
             <span className="flex items-center gap-1 text-xs font-normal text-accent-green">
               <span className="h-2 w-2 rounded-full bg-accent-green" />
               VERIFIED
@@ -107,7 +73,7 @@ export function ContractVerificationStatus({ address, isContract }: ContractVeri
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
-        {verification?.verified ? (
+        {isVerified ? (
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <div className="flex h-8 w-8 items-center justify-center rounded-full bg-accent-green/20">
@@ -122,7 +88,9 @@ export function ContractVerificationStatus({ address, isContract }: ContractVeri
                 </svg>
               </div>
               <div>
-                <p className="text-sm font-medium text-text-primary">Contract Source Code Verified</p>
+                <p className="text-sm font-medium text-text-primary">
+                  {verification?.name || 'Contract'} Source Code Verified
+                </p>
                 <p className="text-xs text-text-muted">
                   Exact match with deployed bytecode
                 </p>
@@ -138,27 +106,35 @@ export function ContractVerificationStatus({ address, isContract }: ContractVeri
               {showDetails ? 'HIDE DETAILS' : 'SHOW DETAILS'}
             </Button>
 
-            {showDetails && (
+            {showDetails && verification && (
               <div className="mt-4 space-y-3 border-t border-bg-tertiary pt-4">
                 <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-xs text-text-muted">Compiler Version</p>
-                    <p className="font-mono text-text-primary">{verification.compilerVersion}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-text-muted">EVM Version</p>
-                    <p className="font-mono text-text-primary">{verification.evmVersion}</p>
-                  </div>
+                  {verification.compilerVersion && (
+                    <div>
+                      <p className="text-xs text-text-muted">Compiler Version</p>
+                      <p className="font-mono text-text-primary">{verification.compilerVersion}</p>
+                    </div>
+                  )}
+                  {verification.licenseType && (
+                    <div>
+                      <p className="text-xs text-text-muted">License</p>
+                      <p className="font-mono text-text-primary">{verification.licenseType}</p>
+                    </div>
+                  )}
                   <div>
                     <p className="text-xs text-text-muted">Optimization</p>
                     <p className="font-mono text-text-primary">
-                      {verification.optimizationUsed ? `Yes (${verification.runs} runs)` : 'No'}
+                      {verification.optimizationEnabled
+                        ? `Yes (${verification.optimizationRuns ?? 200} runs)`
+                        : 'No'}
                     </p>
                   </div>
-                  <div>
-                    <p className="text-xs text-text-muted">License</p>
-                    <p className="font-mono text-text-primary">{verification.license}</p>
-                  </div>
+                  {verification.name && (
+                    <div>
+                      <p className="text-xs text-text-muted">Contract Name</p>
+                      <p className="font-mono text-text-primary">{verification.name}</p>
+                    </div>
+                  )}
                 </div>
                 {verification.verifiedAt && (
                   <div className="text-xs text-text-muted">
@@ -191,8 +167,15 @@ export function ContractVerificationStatus({ address, isContract }: ContractVeri
             </div>
             <p className="text-xs text-text-secondary">
               Contract verification allows users to view and audit the source code.
-              If you are the contract owner, you can verify your contract to increase transparency.
+              If you are the contract owner, you can verify your contract using Forge:
             </p>
+            <pre className="rounded bg-bg-secondary p-3 text-xs font-mono text-text-muted overflow-x-auto">
+{`forge verify-contract \\
+  --verifier-url <INDEXER_URL>/api \\
+  --etherscan-api-key any \\
+  <CONTRACT_ADDRESS> \\
+  <CONTRACT_NAME>`}
+            </pre>
           </div>
         )}
       </CardContent>
