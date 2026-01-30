@@ -281,9 +281,33 @@ export type TokenBalance = {
   tokenType: Scalars['String']['output'];
 };
 
+/**
+ * EIP-7702 SetCode Authorization
+ * Used in SetCodeTxType (0x04) transactions
+ */
+export type SetCodeAuthorization = {
+  __typename?: 'SetCodeAuthorization';
+  /** Chain ID for the authorization */
+  chainId: Scalars['BigInt']['output'];
+  /** Target contract address to delegate code from */
+  address: Scalars['Address']['output'];
+  /** Nonce of the authorization */
+  nonce: Scalars['BigInt']['output'];
+  /** Y parity of the signature (0 or 1) */
+  yParity: Scalars['Int']['output'];
+  /** R component of the signature */
+  r: Scalars['Bytes']['output'];
+  /** S component of the signature */
+  s: Scalars['Bytes']['output'];
+  /** Derived authority address (signer of the authorization) */
+  authority?: Maybe<Scalars['Address']['output']>;
+};
+
 export type Transaction = {
   __typename?: 'Transaction';
   accessList?: Maybe<Array<AccessListEntry>>;
+  /** EIP-7702 authorization list for SetCode transactions (type 0x04) */
+  authorizationList?: Maybe<Array<SetCodeAuthorization>>;
   blockHash: Scalars['Hash']['output'];
   blockNumber: Scalars['BigInt']['output'];
   chainId?: Maybe<Scalars['BigInt']['output']>;

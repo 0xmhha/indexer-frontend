@@ -12,6 +12,7 @@ export type {
   TransformedLog as Log,
   TransformedBalanceSnapshot as BalanceSnapshot,
   TransformedFeePayerSignature,
+  TransformedSetCodeAuthorization,
   TransformedChainConfigChange as ChainConfigChange,
   TransformedValidatorSetChange as ValidatorSetChange,
   ValidatorChangeType,
@@ -26,6 +27,7 @@ export type {
   RawReceipt,
   RawLog,
   RawBalanceSnapshot,
+  RawSetCodeAuthorization,
   RawChainConfigChange,
   RawValidatorSetChange,
 } from '@/lib/utils/graphql-transforms'
@@ -39,6 +41,7 @@ export {
   transformReceipt,
   transformLog,
   transformBalanceSnapshot,
+  transformSetCodeAuthorization,
   transformChainConfigChange,
   transformValidatorSetChange,
   toBigInt,

@@ -29,6 +29,8 @@ const config: Config = {
           blue: '#00D4FF',
           cyan: '#4DD0E1',
           orange: '#FFA726',
+          purple: '#AB47BC',
+          green: '#66BB6A',
         },
         // Text colors - use CSS variables for theme support
         text: {

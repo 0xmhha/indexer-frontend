@@ -102,6 +102,15 @@ export const GET_TRANSACTION = gql`
         r
         s
       }
+      authorizationList {
+        chainId
+        address
+        nonce
+        yParity
+        r
+        s
+        authority
+      }
       receipt {
         status
         gasUsed

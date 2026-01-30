@@ -6,7 +6,8 @@
  * - EIP-2930 Access List (0x01)
  * - EIP-1559 Dynamic Fee (0x02)
  * - EIP-4844 Blob (0x03)
- * - Fee Delegated Dynamic Fee (0x16/22)
+ * - EIP-7702 SetCode (0x04)
+ * - Fee Delegated Dynamic Fee (0x16/22) - StableNet custom
  */
 
 /**
@@ -17,7 +18,8 @@ export const TX_TYPE = {
   ACCESS_LIST: 1,
   DYNAMIC_FEE: 2,
   BLOB: 3,
-  FEE_DELEGATED: 22, // 0x16
+  SET_CODE: 4, // 0x04 - EIP-7702
+  FEE_DELEGATED: 22, // 0x16 - StableNet custom
 } as const
 
 /**
@@ -28,6 +30,7 @@ export const TX_TYPE_NAMES: Record<number, string> = {
   [TX_TYPE.ACCESS_LIST]: 'Access List',
   [TX_TYPE.DYNAMIC_FEE]: 'EIP-1559',
   [TX_TYPE.BLOB]: 'Blob',
+  [TX_TYPE.SET_CODE]: 'SetCode',
   [TX_TYPE.FEE_DELEGATED]: 'Fee Delegated',
 }
 
@@ -39,6 +42,7 @@ export const TX_TYPE_DESCRIPTIONS: Record<number, string> = {
   [TX_TYPE.ACCESS_LIST]: 'EIP-2930 transaction with access list',
   [TX_TYPE.DYNAMIC_FEE]: 'EIP-1559 transaction with dynamic base fee',
   [TX_TYPE.BLOB]: 'EIP-4844 blob-carrying transaction',
+  [TX_TYPE.SET_CODE]: 'EIP-7702 transaction setting EOA code delegation',
   [TX_TYPE.FEE_DELEGATED]: 'Transaction with fee delegation (third-party pays gas)',
 }
 
@@ -50,6 +54,7 @@ export const TX_TYPE_COLORS: Record<number, string> = {
   [TX_TYPE.ACCESS_LIST]: 'bg-accent-blue/20 text-accent-blue',
   [TX_TYPE.DYNAMIC_FEE]: 'bg-accent-cyan/20 text-accent-cyan',
   [TX_TYPE.BLOB]: 'bg-accent-purple/20 text-accent-purple',
+  [TX_TYPE.SET_CODE]: 'bg-accent-orange/20 text-accent-orange',
   [TX_TYPE.FEE_DELEGATED]: 'bg-accent-green/20 text-accent-green',
 }
 
@@ -89,10 +94,22 @@ export function isFeeDelegated(type: number): boolean {
 }
 
 /**
+ * Check if transaction is SetCode (EIP-7702)
+ */
+export function isSetCode(type: number): boolean {
+  return type === TX_TYPE.SET_CODE
+}
+
+/**
  * Check if transaction supports EIP-1559
  */
 export function supportsEIP1559(type: number): boolean {
-  return type === TX_TYPE.DYNAMIC_FEE || type === TX_TYPE.BLOB || type === TX_TYPE.FEE_DELEGATED
+  return (
+    type === TX_TYPE.DYNAMIC_FEE ||
+    type === TX_TYPE.BLOB ||
+    type === TX_TYPE.SET_CODE ||
+    type === TX_TYPE.FEE_DELEGATED
+  )
 }
 
 /**
@@ -100,4 +117,11 @@ export function supportsEIP1559(type: number): boolean {
  */
 export function hasAccessList(type: number): boolean {
   return type === TX_TYPE.ACCESS_LIST || supportsEIP1559(type)
+}
+
+/**
+ * Check if transaction has authorization list (EIP-7702)
+ */
+export function hasAuthorizationList(type: number): boolean {
+  return type === TX_TYPE.SET_CODE
 }

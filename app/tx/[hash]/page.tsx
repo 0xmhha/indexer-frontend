@@ -13,7 +13,9 @@ import {
   TxFeeDelegationCard,
   TxLogsCard,
   TxReceiptCard,
+  TxAuthorizationListCard,
 } from '@/components/transactions/TxDetailCards'
+import { TX_TYPE } from '@/lib/constants/transactions'
 import { InternalCallsViewer } from '@/components/transactions/InternalCallsViewer'
 import type { Log } from '@/types/graphql'
 import { BLOCKCHAIN } from '@/lib/config/constants'
@@ -91,6 +93,12 @@ export default function TransactionPage() {
   // Use logs from receipt query, fallback to embedded receipt logs
   const logs = receipt?.logs ?? transaction.receipt?.logs
 
+  // Check if this is a SetCode transaction (EIP-7702)
+  const isSetCodeTx = Number(transaction.type) === TX_TYPE.SET_CODE
+  const hasAuthorizationList = Boolean(
+    transaction.authorizationList && transaction.authorizationList.length > 0
+  )
+
   return (
     <div className="container mx-auto px-4 py-8">
       <TxHeader
@@ -108,6 +116,11 @@ export default function TransactionPage() {
 
       {/* Internal Calls - via debug_traceTransaction RPC */}
       <InternalCallsViewer txHash={hash} />
+
+      {/* EIP-7702 Authorization List - for SetCode transactions */}
+      {(isSetCodeTx || hasAuthorizationList) && (
+        <TxAuthorizationListCard authorizationList={transaction.authorizationList} />
+      )}
 
       {showFeeDelegation && (
         <TxFeeDelegationCard

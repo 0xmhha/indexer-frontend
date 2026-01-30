@@ -100,6 +100,32 @@ export interface TransformedFeePayerSignature {
 }
 
 /**
+ * Raw EIP-7702 SetCode authorization from GraphQL
+ */
+export interface RawSetCodeAuthorization {
+  chainId: string
+  address: string
+  nonce: string
+  yParity: number
+  r: string
+  s: string
+  authority?: string | null
+}
+
+/**
+ * Transformed EIP-7702 SetCode authorization
+ */
+export interface TransformedSetCodeAuthorization {
+  chainId: bigint
+  address: string
+  nonce: bigint
+  yParity: number
+  r: string
+  s: string
+  authority: string | null
+}
+
+/**
  * Raw transaction data from GraphQL (all strings)
  */
 export interface RawTransaction {
@@ -125,6 +151,8 @@ export interface RawTransaction {
   // Fee Delegation fields (type 0x16)
   feePayer?: string | null
   feePayerSignatures?: RawFeePayerSignature[] | null
+  // EIP-7702 SetCode fields (type 0x04)
+  authorizationList?: RawSetCodeAuthorization[] | null
 }
 
 /**
@@ -153,6 +181,8 @@ export interface TransformedTransaction {
   // Fee Delegation fields (type 0x16)
   feePayer: string | null
   feePayerSignatures: TransformedFeePayerSignature[] | null
+  // EIP-7702 SetCode fields (type 0x04)
+  authorizationList: TransformedSetCodeAuthorization[] | null
 }
 
 /**
@@ -288,6 +318,21 @@ export function transformFeePayerSignature(raw: RawFeePayerSignature): Transform
 }
 
 /**
+ * Transform raw EIP-7702 SetCode authorization to typed authorization
+ */
+export function transformSetCodeAuthorization(raw: RawSetCodeAuthorization): TransformedSetCodeAuthorization {
+  return {
+    chainId: toBigInt(raw.chainId),
+    address: raw.address,
+    nonce: toBigInt(raw.nonce),
+    yParity: raw.yParity,
+    r: raw.r,
+    s: raw.s,
+    authority: raw.authority ?? null,
+  }
+}
+
+/**
  * Transform raw transaction to typed transaction
  */
 export function transformTransaction(raw: RawTransaction): TransformedTransaction {
@@ -314,6 +359,8 @@ export function transformTransaction(raw: RawTransaction): TransformedTransactio
     // Fee Delegation fields (type 0x16)
     feePayer: raw.feePayer ?? null,
     feePayerSignatures: raw.feePayerSignatures?.map(transformFeePayerSignature) ?? null,
+    // EIP-7702 SetCode fields (type 0x04)
+    authorizationList: raw.authorizationList?.map(transformSetCodeAuthorization) ?? null,
   }
 }
 
