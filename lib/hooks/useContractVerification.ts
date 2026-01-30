@@ -1,7 +1,6 @@
 'use client'
 
-import { useQuery } from '@apollo/client'
-import { GET_CONTRACT_VERIFICATION } from '@/lib/graphql/queries/contractVerification'
+import { useState, useEffect, useCallback } from 'react'
 import { getSystemContractInfo } from '@/lib/config/constants'
 import type { ContractABI, AbiFunction } from '@/types/contract'
 
@@ -23,20 +22,30 @@ export interface ContractVerification {
   licenseType: string | null
 }
 
-interface ContractVerificationResponse {
-  contractVerification: {
-    address: string
-    isVerified: boolean
-    name: string | null
-    compilerVersion: string | null
-    optimizationEnabled: boolean
-    optimizationRuns: number | null
-    sourceCode: string | null
-    abi: string | null // JSON string
-    constructorArguments: string | null
-    verifiedAt: string | null
-    licenseType: string | null
-  } | null
+/**
+ * Etherscan-compatible API response format
+ * Used by backend's /api?module=contract&action=getsourcecode endpoint
+ */
+interface EtherscanApiResponse {
+  status: '1' | '0'
+  message: string
+  result: EtherscanContractResult[] | string // string when error (e.g., "Contract source code not verified")
+}
+
+interface EtherscanContractResult {
+  SourceCode: string
+  ABI: string
+  ContractName: string
+  CompilerVersion: string
+  OptimizationUsed: string // "0" or "1"
+  Runs: string
+  ConstructorArguments: string
+  EVMVersion: string
+  Library: string
+  LicenseType: string
+  Proxy: string
+  Implementation: string
+  SwarmSource: string
 }
 
 // ============================================================================
@@ -241,30 +250,6 @@ function isKnownSystemContract(address: string): boolean {
 }
 
 /**
- * Build verification object from backend data
- */
-function buildBackendVerification(
-  backendData: NonNullable<ContractVerificationResponse['contractVerification']>,
-  backendAbi: ContractABI | null,
-  systemContractAbi: ContractABI | null,
-  systemInfo: ReturnType<typeof getSystemContractInfo>
-): ContractVerification {
-  return {
-    address: backendData.address,
-    isVerified: backendData.isVerified,
-    name: backendData.name ?? systemInfo?.name ?? null,
-    compilerVersion: backendData.compilerVersion,
-    optimizationEnabled: backendData.optimizationEnabled,
-    optimizationRuns: backendData.optimizationRuns,
-    sourceCode: backendData.sourceCode,
-    abi: backendAbi ?? systemContractAbi,
-    constructorArguments: backendData.constructorArguments,
-    verifiedAt: backendData.verifiedAt,
-    licenseType: backendData.licenseType,
-  }
-}
-
-/**
  * Build verification object for system contracts without backend data
  */
 function buildSystemContractVerification(
@@ -288,50 +273,136 @@ function buildSystemContractVerification(
 }
 
 // ============================================================================
+// API Functions
+// ============================================================================
+
+/**
+ * Get the backend API base URL from environment
+ * Uses the GraphQL endpoint but strips /graphql to get the base URL
+ */
+function getApiBaseUrl(): string {
+  const graphqlEndpoint = process.env.NEXT_PUBLIC_GRAPHQL_ENDPOINT || 'http://localhost:8080/graphql'
+  // Remove /graphql to get base URL (e.g., http://localhost:8080)
+  return graphqlEndpoint.replace(/\/graphql$/, '')
+}
+
+/**
+ * Fetch contract verification data from Etherscan-compatible REST API
+ */
+async function fetchContractVerification(address: string): Promise<EtherscanApiResponse> {
+  const baseUrl = getApiBaseUrl()
+  const url = `${baseUrl}/api?module=contract&action=getsourcecode&address=${address}`
+
+  const response = await fetch(url)
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`)
+  }
+
+  return response.json()
+}
+
+/**
+ * Parse Etherscan API response to ContractVerification
+ */
+function parseEtherscanResponse(
+  address: string,
+  response: EtherscanApiResponse,
+  systemContractAbi: ContractABI | null,
+  systemInfo: ReturnType<typeof getSystemContractInfo>
+): ContractVerification | null {
+  // Check if result is an array (verified contract) or string (error message)
+  if (response.status !== '1' || !Array.isArray(response.result) || response.result.length === 0) {
+    return null
+  }
+
+  const result = response.result[0]
+  if (!result) {
+    return null
+  }
+
+  // Check if ABI is valid (not "Contract source code not verified")
+  const isVerified = result.ABI !== 'Contract source code not verified' && result.ABI !== ''
+
+  if (!isVerified) {
+    return null
+  }
+
+  const abi = parseAbi(result.ABI)
+
+  return {
+    address,
+    isVerified: true,
+    name: result.ContractName || systemInfo?.name || null,
+    compilerVersion: result.CompilerVersion || null,
+    optimizationEnabled: result.OptimizationUsed === '1',
+    optimizationRuns: result.Runs ? parseInt(result.Runs, 10) : null,
+    sourceCode: result.SourceCode || null,
+    abi: abi ?? systemContractAbi,
+    constructorArguments: result.ConstructorArguments || null,
+    verifiedAt: null, // Etherscan API doesn't return verification timestamp
+    licenseType: result.LicenseType || null,
+  }
+}
+
+// ============================================================================
 // Hook
 // ============================================================================
 
 /**
  * Hook to fetch contract verification data including ABI
+ * Uses Etherscan-compatible REST API (/api?module=contract&action=getsourcecode)
  * Falls back to system contract ABIs for known system contracts
  */
 export function useContractVerification(address: string) {
+  const [verification, setVerification] = useState<ContractVerification | null>(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<Error | undefined>(undefined)
+
   // Check if this is a system contract first
   const isSystemContract = isKnownSystemContract(address)
   const systemContractAbi = getSystemContractAbi(address)
   const systemInfo = getSystemContractInfo(address)
 
-  const { data, loading, error, refetch } = useQuery<ContractVerificationResponse>(
-    GET_CONTRACT_VERIFICATION,
-    {
-      variables: { address },
-      skip: !address,
-      errorPolicy: 'all',
-      fetchPolicy: 'cache-first',
+  const fetchData = useCallback(async () => {
+    if (!address) {
+      setLoading(false)
+      return
     }
-  )
 
-  // Parse the response
-  const backendData = data?.contractVerification
-  const backendAbi = parseAbi(backendData?.abi ?? null)
+    setLoading(true)
+    setError(undefined)
 
-  // Build verification object with fallbacks for system contracts
-  let verification: ContractVerification | null = null
-  if (backendData) {
-    verification = buildBackendVerification(backendData, backendAbi, systemContractAbi, systemInfo)
-  } else if (isSystemContract) {
-    verification = buildSystemContractVerification(address, systemContractAbi, systemInfo)
-  }
+    try {
+      const response = await fetchContractVerification(address)
+      const parsed = parseEtherscanResponse(address, response, systemContractAbi, systemInfo)
+
+      if (parsed) {
+        setVerification(parsed)
+      } else if (isSystemContract) {
+        // Fallback to system contract verification
+        setVerification(buildSystemContractVerification(address, systemContractAbi, systemInfo))
+      } else {
+        setVerification(null)
+      }
+    } catch (err) {
+      console.error('Failed to fetch contract verification:', err)
+      setError(err instanceof Error ? err : new Error('Unknown error'))
+
+      // Still provide system contract data on error
+      if (isSystemContract) {
+        setVerification(buildSystemContractVerification(address, systemContractAbi, systemInfo))
+      }
+    } finally {
+      setLoading(false)
+    }
+  }, [address, isSystemContract, systemContractAbi, systemInfo])
+
+  useEffect(() => {
+    fetchData()
+  }, [fetchData])
 
   // Determine if we have a usable ABI
   const hasAbi = (verification?.abi?.length ?? 0) > 0
-
-  // Filter errors for unsupported query
-  const filteredError =
-    error?.message?.includes('Cannot query field') ||
-    error?.message?.includes('Unknown field')
-      ? undefined
-      : error
 
   return {
     verification,
@@ -340,7 +411,7 @@ export function useContractVerification(address: string) {
     hasAbi,
     isSystemContract,
     loading: loading && !isSystemContract,
-    error: filteredError,
-    refetch,
+    error,
+    refetch: fetchData,
   }
 }
