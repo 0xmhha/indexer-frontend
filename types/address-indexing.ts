@@ -11,10 +11,12 @@
 
 export interface ContractCreation {
   contractAddress: string
+  name: string | null
   creator: string
   transactionHash: string
   blockNumber: bigint
   timestamp: bigint
+  bytecodeSize: number
 }
 
 export interface ContractCreationFilter {
@@ -137,10 +139,12 @@ export interface PageInfo {
 
 export interface RawContractCreation {
   contractAddress: string
+  name: string | null
   creator: string
   transactionHash: string
   blockNumber: string
   timestamp: string
+  bytecodeSize: number
 }
 
 export interface RawInternalTransaction {

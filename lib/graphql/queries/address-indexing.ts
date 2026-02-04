@@ -8,10 +8,12 @@ export const GET_CONTRACT_CREATION = gql`
   query GetContractCreation($address: String!) {
     contractCreation(address: $address) {
       contractAddress
+      name
       creator
       transactionHash
       blockNumber
       timestamp
+      bytecodeSize
     }
   }
 `
@@ -24,10 +26,37 @@ export const GET_CONTRACTS_BY_CREATOR = gql`
     contractsByCreator(creator: $creator, pagination: $pagination) {
       nodes {
         contractAddress
+        name
         creator
         transactionHash
         blockNumber
         timestamp
+        bytecodeSize
+      }
+      totalCount
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+      }
+    }
+  }
+`
+
+// ============================================================================
+// Contracts List Query (전체 배포된 컨트랙트 목록)
+// ============================================================================
+
+export const GET_CONTRACTS = gql`
+  query GetContracts($pagination: PaginationInput) {
+    contracts(pagination: $pagination) {
+      nodes {
+        contractAddress
+        name
+        creator
+        transactionHash
+        blockNumber
+        timestamp
+        bytecodeSize
       }
       totalCount
       pageInfo {

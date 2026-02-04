@@ -69,10 +69,12 @@ function filterAddressIndexingError(error: ApolloError | undefined): ApolloError
 function transformContractCreation(raw: RawContractCreation): ContractCreation {
   return {
     contractAddress: raw.contractAddress,
+    name: raw.name,
     creator: raw.creator,
     transactionHash: raw.transactionHash,
     blockNumber: BigInt(raw.blockNumber),
     timestamp: BigInt(raw.timestamp),
+    bytecodeSize: raw.bytecodeSize,
   }
 }
 
