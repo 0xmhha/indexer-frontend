@@ -47,3 +47,4 @@ next-env.d.ts
 # TypeScript
 *.tsbuildinfo
 CLAUDE.md
+.playwright-mcp/
