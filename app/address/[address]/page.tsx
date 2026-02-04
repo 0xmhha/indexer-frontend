@@ -15,6 +15,7 @@ import { InternalTransactionsTable } from '@/components/address/InternalTransact
 import { ERC20TransfersTable } from '@/components/address/ERC20TransfersTable'
 import { ERC721TransfersTable } from '@/components/address/ERC721TransfersTable'
 import { ContractCreationInfo } from '@/components/address/ContractCreationInfo'
+import { SetCodeDelegationInfo } from '@/components/address/SetCodeDelegationInfo'
 import { AddressOverviewCard } from '@/components/address/AddressOverviewCard'
 import { BalanceHistoryCard } from '@/components/address/BalanceHistoryCard'
 import { AddressTransactionsSection } from '@/components/address/AddressTransactionsSection'
@@ -121,6 +122,8 @@ function AddressPageContent() {
     balance,
     balanceLoading,
     balanceError,
+    isContract,
+    isContractLoading,
     history,
     historyLoading,
     historyError,
@@ -153,9 +156,21 @@ function AddressPageContent() {
     <div className="container mx-auto px-4 py-8">
       <AddressHeader address={address} />
       <AddressOverviewCard address={address} balance={balance} loading={balanceLoading} error={balanceError} />
-      <ContractVerificationStatus address={address} isContract={true} />
-      <SourceCodeViewer address={address} isVerified={address.toLowerCase().endsWith('0')} />
-      <ContractInteractionSection address={address} />
+
+      {/* Only show contract-related modules for contract addresses */}
+      {!isContractLoading && isContract && (
+        <>
+          <ContractVerificationStatus address={address} isContract={isContract} />
+          <SourceCodeViewer address={address} />
+          <ContractInteractionSection address={address} />
+        </>
+      )}
+
+      {/* Show SetCode delegation info for EOA addresses */}
+      {!isContractLoading && !isContract && (
+        <SetCodeDelegationInfo address={address} />
+      )}
+
       <BalanceHistoryCard history={history} loading={historyLoading} error={historyError} />
       <ContractCreationInfo address={address} />
       <TokenBalancesCard balances={balances} loading={balancesLoading} />
