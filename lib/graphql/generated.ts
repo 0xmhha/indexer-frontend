@@ -276,9 +276,13 @@ export type Receipt = {
 export type TokenBalance = {
   __typename?: 'TokenBalance';
   balance: Scalars['BigInt']['output'];
-  contractAddress: Scalars['Address']['output'];
+  address: Scalars['Address']['output'];
   tokenId?: Maybe<Scalars['BigInt']['output']>;
   tokenType: Scalars['String']['output'];
+  name?: Maybe<Scalars['String']['output']>;
+  symbol?: Maybe<Scalars['String']['output']>;
+  decimals?: Maybe<Scalars['Int']['output']>;
+  metadata?: Maybe<Scalars['String']['output']>;
 };
 
 /**

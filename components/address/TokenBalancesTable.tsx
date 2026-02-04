@@ -61,14 +61,14 @@ export function TokenBalancesTable({ balances, loading }: TokenBalancesTableProp
       <TableBody>
         {balances.map((token) => {
           // Get fallback metadata from system contracts if token name is not available
-          const systemInfo = getSystemContractInfo(token.contractAddress)
+          const systemInfo = getSystemContractInfo(token.address)
           const displayName = token.name || systemInfo?.name
           const displaySymbol = token.symbol || systemInfo?.symbol
           const displayDecimals = token.decimals ?? systemInfo?.decimals ?? null
           const isSystemToken = !!systemInfo
 
           return (
-            <TableRow key={token.contractAddress}>
+            <TableRow key={token.address}>
               <TableCell>
                 <div className="flex flex-col">
                   {displayName ? (
@@ -92,10 +92,10 @@ export function TokenBalancesTable({ balances, loading }: TokenBalancesTableProp
               </TableCell>
               <TableCell>
                 <Link
-                  href={`/address/${token.contractAddress}`}
+                  href={`/address/${token.address}`}
                   className="font-mono text-accent-blue hover:text-accent-cyan"
                 >
-                  {formatHash(token.contractAddress)}
+                  {formatHash(token.address)}
                 </Link>
               </TableCell>
               <TableCell>

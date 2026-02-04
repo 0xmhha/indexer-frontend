@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { useAddressTransactions, useBalanceHistory, useTokenBalances } from '@/lib/hooks/useAddress'
+import { useAddressTransactions, useBalanceHistory, useTokenBalances, useAddressOverview } from '@/lib/hooks/useAddress'
 import { useLiveBalance } from '@/lib/hooks/useLiveBalance'
 import { useFilteredTransactions, type FilteredTransactionsParams } from '@/lib/hooks/useFilteredTransactions'
 import { useLatestHeight } from '@/lib/hooks/useLatestHeight'
@@ -21,6 +21,10 @@ export interface AddressPageDataResult {
   balanceBlockNumber: bigint | null
   isLiveBalance: boolean
   isFallbackBalance: boolean
+
+  // Address type detection
+  isContract: boolean
+  isContractLoading: boolean
 
   // History data
   history: ReturnType<typeof useBalanceHistory>['history']
@@ -140,6 +144,11 @@ export function useAddressPageData(address: string): AddressPageDataResult {
   // Token balances
   const { balances, loading: balancesLoading } = useTokenBalances(address)
 
+  // Contract detection via addressOverview (more reliable than contractCreation)
+  // addressOverview.isContract checks actual bytecode on chain
+  const { isContract, loading: overviewLoading } = useAddressOverview(address)
+  const isContractLoading = overviewLoading
+
   // Unfiltered transactions
   const unfilteredResult = useAddressTransactions(address, itemsPerPage, offset)
 
@@ -203,6 +212,10 @@ export function useAddressPageData(address: string): AddressPageDataResult {
     balanceBlockNumber,
     isLiveBalance,
     isFallbackBalance,
+
+    // Address type detection
+    isContract,
+    isContractLoading,
 
     // History data
     history,

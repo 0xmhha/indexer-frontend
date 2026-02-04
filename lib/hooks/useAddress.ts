@@ -2,7 +2,7 @@
 
 import { useRef } from 'react'
 import { useQuery } from '@apollo/client'
-import { GET_ADDRESS_BALANCE, GET_TRANSACTIONS_BY_ADDRESS, GET_BALANCE_HISTORY, GET_TOKEN_BALANCES } from '@/lib/apollo/queries'
+import { GET_ADDRESS_BALANCE, GET_ADDRESS_OVERVIEW, GET_TRANSACTIONS_BY_ADDRESS, GET_BALANCE_HISTORY, GET_TOKEN_BALANCES, GET_SETCODE_TRANSACTIONS } from '@/lib/apollo/queries'
 import type { TokenBalance } from '@/types/graphql'
 import { PAGINATION, POLLING_INTERVALS } from '@/lib/config/constants'
 
@@ -94,6 +94,79 @@ export function useAddressBalance(address: string | null, blockNumber?: string) 
 
   return {
     balance: effectiveData?.addressBalance !== null && effectiveData?.addressBalance !== undefined ? BigInt(effectiveData.addressBalance) : null,
+    loading,
+    error,
+  }
+}
+
+// ============================================================================
+// Address Overview Types
+// ============================================================================
+
+interface RawAddressOverview {
+  address: string
+  isContract: boolean
+  balance: string
+  transactionCount: number
+  sentCount: number
+  receivedCount: number
+  internalTxCount: number
+  erc20TokenCount: number
+  erc721TokenCount: number
+  firstSeen: string | null
+  lastSeen: string | null
+}
+
+export interface AddressOverview {
+  address: string
+  isContract: boolean
+  balance: bigint
+  transactionCount: number
+  sentCount: number
+  receivedCount: number
+  internalTxCount: number
+  erc20TokenCount: number
+  erc721TokenCount: number
+  firstSeen: bigint | null
+  lastSeen: bigint | null
+}
+
+/**
+ * Hook to fetch comprehensive address overview including isContract flag
+ * This is the most reliable way to determine if an address is a contract
+ */
+export function useAddressOverview(address: string | null) {
+  const { data, loading, error, previousData } = useQuery(GET_ADDRESS_OVERVIEW, {
+    variables: {
+      address: address ?? '',
+    },
+    skip: !address,
+    returnPartialData: true,
+    // Enable polling for real-time updates (30 seconds - slower since this is overview data)
+    pollInterval: POLLING_INTERVALS.SLOW,
+    notifyOnNetworkStatusChange: false,
+  })
+
+  const effectiveData = data ?? previousData
+  const rawOverview: RawAddressOverview | null = effectiveData?.addressOverview ?? null
+
+  const overview: AddressOverview | null = rawOverview ? {
+    address: rawOverview.address,
+    isContract: rawOverview.isContract,
+    balance: BigInt(rawOverview.balance),
+    transactionCount: rawOverview.transactionCount,
+    sentCount: rawOverview.sentCount,
+    receivedCount: rawOverview.receivedCount,
+    internalTxCount: rawOverview.internalTxCount,
+    erc20TokenCount: rawOverview.erc20TokenCount,
+    erc721TokenCount: rawOverview.erc721TokenCount,
+    firstSeen: rawOverview.firstSeen ? BigInt(rawOverview.firstSeen) : null,
+    lastSeen: rawOverview.lastSeen ? BigInt(rawOverview.lastSeen) : null,
+  } : null
+
+  return {
+    overview,
+    isContract: overview?.isContract ?? false,
     loading,
     error,
   }
@@ -212,7 +285,7 @@ export function useBalanceHistory(
  * Raw token balance data from GraphQL (before transformation)
  */
 interface RawTokenBalance {
-  contractAddress: string
+  address: string // Token contract address (field name from schema)
   tokenType: string
   balance: string // String from GraphQL, needs to be converted to bigint
   tokenId: string | null
@@ -256,5 +329,89 @@ export function useTokenBalances(address: string | null, tokenType?: string) {
     balances,
     loading,
     error,
+  }
+}
+
+// ============================================================================
+// EIP-7702 SetCode Types and Hook
+// ============================================================================
+
+/**
+ * SetCode Authorization data
+ */
+export interface SetCodeAuthorization {
+  chainId: string
+  address: string // Target contract to delegate code from
+  nonce: string
+  yParity: number
+  r: string
+  s: string
+  authority: string | null // EOA that authorized
+}
+
+/**
+ * Transaction with SetCode type (EIP-7702)
+ * Note: authorizationList is only available via GET_TRANSACTION (single tx query)
+ */
+interface SetCodeTransaction {
+  hash: string
+  blockNumber: string
+  from: string
+  to: string | null
+  type: number
+}
+
+/**
+ * Transaction type for SetCode (EIP-7702)
+ */
+const SETCODE_TX_TYPE = 4
+
+/**
+ * Hook to fetch SetCode (EIP-7702) delegation information for an address
+ * Returns the most recent SetCode transaction where the address is involved.
+ *
+ * Note: Due to GraphQL schema limitations, authorizationList is not available
+ * in transactionsByAddress query. For full authorization details, fetch
+ * individual transactions using GET_TRANSACTION.
+ *
+ * @param address - The EOA address to check for SetCode delegation
+ */
+export function useSetCodeDelegation(address: string | null) {
+  const { data, loading, error, previousData } = useQuery(GET_SETCODE_TRANSACTIONS, {
+    variables: {
+      address: address ?? '',
+      limit: 50, // Check recent 50 transactions for SetCode
+      offset: 0,
+    },
+    skip: !address,
+    returnPartialData: true,
+    // Enable polling for updates (30 seconds)
+    pollInterval: POLLING_INTERVALS.SLOW,
+    notifyOnNetworkStatusChange: false,
+  })
+
+  const effectiveData = data ?? previousData
+
+  const transactions: SetCodeTransaction[] = effectiveData?.transactionsByAddress?.nodes ?? []
+
+  // Find SetCode (type 4) transactions
+  const setCodeTransactions = transactions.filter(
+    (tx) => tx.type === SETCODE_TX_TYPE
+  )
+
+  // Get the most recent SetCode transaction
+  const latestSetCodeTx = setCodeTransactions.length > 0 ? setCodeTransactions[0] : null
+
+  return {
+    // Note: delegation details require fetching individual tx with GET_TRANSACTION
+    delegation: null as SetCodeAuthorization | null,
+    delegationTxHash: latestSetCodeTx?.hash ?? null,
+    delegationBlockNumber: latestSetCodeTx?.blockNumber ?? null,
+    loading,
+    error,
+    // Indicate if any SetCode transaction exists
+    hasDelegation: setCodeTransactions.length > 0,
+    // Expose SetCode transactions for potential detailed fetching
+    setCodeTransactions,
   }
 }

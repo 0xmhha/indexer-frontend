@@ -121,7 +121,7 @@ export interface FeePayerStats {
 }
 
 export interface TokenBalance {
-  contractAddress: string
+  address: string // Token contract address (field name from schema)
   tokenType: string
   balance: bigint
   tokenId: string | null // Token ID for NFTs (ERC-721, ERC-1155), null for ERC-20

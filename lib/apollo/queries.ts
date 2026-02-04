@@ -166,6 +166,25 @@ export const GET_ADDRESS_BALANCE = gql`
   }
 `
 
+// Get comprehensive address overview (includes isContract flag)
+export const GET_ADDRESS_OVERVIEW = gql`
+  query GetAddressOverview($address: String!) {
+    addressOverview(address: $address) {
+      address
+      isContract
+      balance
+      transactionCount
+      sentCount
+      receivedCount
+      internalTxCount
+      erc20TokenCount
+      erc721TokenCount
+      firstSeen
+      lastSeen
+    }
+  }
+`
+
 // Get live balance (real-time from chain RPC)
 export const GET_LIVE_BALANCE = gql`
   query GetLiveBalance($address: String!, $blockNumber: String) {
@@ -497,7 +516,7 @@ export const SUBSCRIBE_VALIDATOR_SET = gql`
 export const GET_TOKEN_BALANCES = gql`
   query GetTokenBalances($address: String!, $tokenType: String) {
     tokenBalances(address: $address, tokenType: $tokenType) {
-      contractAddress
+      address
       tokenType
       balance
       tokenId
@@ -680,6 +699,31 @@ export const GET_FEE_PAYER_STATS = gql`
       txCount
       totalFeesPaid
       percentage
+    }
+  }
+`
+
+// ============================================================================
+// EIP-7702 SetCode Queries
+// ============================================================================
+
+/**
+ * Get SetCode (type 4) transactions for an address
+ * Used to find EIP-7702 SetCode transactions where the address is involved.
+ * Note: authorizationList is not available in transactionsByAddress query.
+ * For full authorization details, use GET_TRANSACTION with individual tx hash.
+ */
+export const GET_SETCODE_TRANSACTIONS = gql`
+  query GetSetCodeTransactions($address: String!, $limit: Int, $offset: Int) {
+    transactionsByAddress(address: $address, pagination: { limit: $limit, offset: $offset }) {
+      nodes {
+        hash
+        blockNumber
+        from
+        to
+        type
+      }
+      totalCount
     }
   }
 `
