@@ -21,6 +21,15 @@ export function isValidHash(hash: string): boolean {
 }
 
 /**
+ * Alias for isValidHash - validates transaction hash
+ * @param hash - Transaction hash to validate
+ * @returns True if valid transaction hash
+ */
+export function isValidTxHash(hash: string): boolean {
+  return isValidHash(hash)
+}
+
+/**
  * Check if string is valid block number
  * @param blockNumber - Block number to validate
  * @returns True if valid block number

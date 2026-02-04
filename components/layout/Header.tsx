@@ -126,6 +126,13 @@ export function Header() {
                     >
                       Contract
                     </Link>
+                    <Link
+                      href="/contracts"
+                      onClick={() => setShowMoreMenu(false)}
+                      className="block px-4 py-2 font-mono text-xs text-text-secondary transition-colors hover:bg-bg-secondary hover:text-accent-blue"
+                    >
+                      Contracts List
+                    </Link>
                   </div>
 
                   {/* Blockchain Section */}
@@ -312,6 +319,13 @@ export function Header() {
                   className="block px-4 py-2 font-mono text-sm text-text-secondary transition-colors hover:bg-bg-secondary hover:text-accent-blue"
                 >
                   Contract
+                </Link>
+                <Link
+                  href="/contracts"
+                  onClick={() => setShowMobileMenu(false)}
+                  className="block px-4 py-2 font-mono text-sm text-text-secondary transition-colors hover:bg-bg-secondary hover:text-accent-blue"
+                >
+                  Contracts List
                 </Link>
               </div>
 
