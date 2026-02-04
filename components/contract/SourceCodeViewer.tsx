@@ -8,28 +8,123 @@ import { useContractVerification } from '@/lib/hooks/useContractVerification'
 
 interface SourceCodeViewerProps {
   address: string
-  isVerified: boolean
+}
+
+/**
+ * Standard JSON Input format from solc
+ * Used by forge verify-contract --verifier custom
+ */
+interface StandardJsonInput {
+  language: string
+  sources: Record<string, { content: string }>
+  settings?: unknown
+}
+
+/**
+ * Check if source code is in Standard JSON Input format
+ */
+function isStandardJsonInput(sourceCode: string): boolean {
+  const trimmed = sourceCode.trim()
+  if (!trimmed.startsWith('{')) {
+    return false
+  }
+  return trimmed.includes('"language"') && trimmed.includes('"sources"')
+}
+
+/**
+ * Parse Standard JSON Input format into separate files
+ */
+function parseStandardJsonInput(sourceCode: string, contractName: string | null): { name: string; content: string; isMain: boolean }[] {
+  try {
+    const json = JSON.parse(sourceCode) as StandardJsonInput
+
+    if (!json.sources || typeof json.sources !== 'object') {
+      return []
+    }
+
+    const files: { name: string; content: string; isMain: boolean }[] = []
+
+    for (const [filePath, source] of Object.entries(json.sources)) {
+      if (!source.content) {
+        continue
+      }
+
+      // Extract filename from path (e.g., "src/Contract.sol" -> "Contract.sol")
+      const fileName = filePath.split('/').pop() ?? filePath
+
+      // Determine if this is the main contract file
+      // Match by contract name in the file path
+      const isMain = contractName
+        ? filePath.toLowerCase().includes(contractName.toLowerCase()) ||
+          fileName.toLowerCase().replace('.sol', '') === contractName.toLowerCase()
+        : false
+
+      files.push({
+        name: filePath, // Keep full path for display
+        content: source.content,
+        isMain,
+      })
+    }
+
+    // If no main contract was identified, mark the first file as main
+    if (files.length > 0 && !files.some(f => f.isMain)) {
+      // Try to find a file that looks like the main contract
+      const mainIndex = files.findIndex(f =>
+        !f.name.includes('lib/') &&
+        !f.name.includes('node_modules/') &&
+        !f.name.toLowerCase().includes('interface') &&
+        !f.name.toLowerCase().includes('abstract')
+      )
+      if (mainIndex >= 0 && files[mainIndex]) {
+        files[mainIndex].isMain = true
+      } else if (files[0]) {
+        files[0].isMain = true
+      }
+    }
+
+    // Sort: main contract first, then by path
+    return files.sort((a, b) => {
+      if (a.isMain && !b.isMain) { return -1 }
+      if (!a.isMain && b.isMain) { return 1 }
+      return a.name.localeCompare(b.name)
+    })
+  } catch {
+    // JSON parse failed, return empty
+    return []
+  }
 }
 
 /**
  * Parse source code into separate files if it contains multiple contracts
- * The backend may return combined source with markers like:
- * // === Abstract Contracts ===
- * // --- GovBase.sol ---
- * ...
- * // === Main Contract: NativeCoinAdapter ===
+ * Supports:
+ * 1. Standard JSON Input format (from forge verify-contract)
+ * 2. Custom marker format (system contracts):
+ *    // === Abstract Contracts ===
+ *    // --- GovBase.sol ---
+ *    ...
+ *    // === Main Contract: NativeCoinAdapter ===
+ * 3. Plain Solidity source code
  */
 function parseSourceCodeFiles(sourceCode: string, contractName: string | null): { name: string; content: string; isMain: boolean }[] {
   if (!sourceCode) {
     return []
   }
 
-  // Check if the source code has our marker format
+  // 1. Check for Standard JSON Input format (from forge)
+  if (isStandardJsonInput(sourceCode)) {
+    const files = parseStandardJsonInput(sourceCode, contractName)
+    if (files.length > 0) {
+      return files
+    }
+    // If parsing failed, fall through to other methods
+  }
+
+  // 2. Check for custom marker format (system contracts)
   const hasAbstractMarker = sourceCode.includes('// === Abstract Contracts ===')
   const hasMainMarker = sourceCode.includes('// === Main Contract:')
 
   if (!hasAbstractMarker && !hasMainMarker) {
-    // Single file, no parsing needed
+    // 3. Plain Solidity source code - single file
     return [{
       name: contractName ? `${contractName}.sol` : 'Contract.sol',
       content: sourceCode,
@@ -89,10 +184,10 @@ function parseSourceCodeFiles(sourceCode: string, contractName: string | null): 
   })
 }
 
-export function SourceCodeViewer({ address, isVerified }: SourceCodeViewerProps) {
+export function SourceCodeViewer({ address }: SourceCodeViewerProps) {
   const [selectedFile, setSelectedFile] = useState(0)
   const [copied, setCopied] = useState(false)
-  const { verification, loading, error, isSystemContract } = useContractVerification(address)
+  const { verification, isVerified, loading, error, isSystemContract } = useContractVerification(address)
   const systemInfo = getSystemContractInfo(address)
 
   // Parse source code into files
@@ -101,7 +196,7 @@ export function SourceCodeViewer({ address, isVerified }: SourceCodeViewerProps)
     verification?.name ?? null
   )
 
-  if (!isVerified || !verification?.isVerified) {
+  if (!isVerified) {
     return null
   }
 
@@ -165,7 +260,11 @@ export function SourceCodeViewer({ address, isVerified }: SourceCodeViewerProps)
 
   const handleCopyAll = async () => {
     try {
-      await navigator.clipboard.writeText(verification?.sourceCode ?? '')
+      // Combine all files with headers for easy identification
+      const allContent = files
+        .map(file => `// ===== ${file.name} =====\n\n${file.content}`)
+        .join('\n\n')
+      await navigator.clipboard.writeText(allContent)
       setCopied(true)
       setTimeout(() => setCopied(false), UI.COPY_TIMEOUT)
     } catch {
@@ -174,7 +273,8 @@ export function SourceCodeViewer({ address, isVerified }: SourceCodeViewerProps)
   }
 
   const lineCount = currentFile.content.split('\n').length
-  const totalLines = verification?.sourceCode?.split('\n').length ?? 0
+  // Calculate total lines from all parsed files (not raw JSON)
+  const totalLines = files.reduce((sum, file) => sum + file.content.split('\n').length, 0)
 
   return (
     <Card className="mb-6">
@@ -213,29 +313,34 @@ export function SourceCodeViewer({ address, isVerified }: SourceCodeViewerProps)
         {/* File Tabs */}
         {files.length > 1 && (
           <div className="flex flex-wrap border-b border-bg-tertiary bg-bg-secondary">
-            {files.map((file, index) => (
-              <button
-                key={file.name}
-                onClick={() => setSelectedFile(index)}
-                className={`px-4 py-2 text-xs font-mono transition-colors ${
-                  index === selectedFile
-                    ? 'bg-bg-primary text-accent-blue border-b-2 border-accent-blue'
-                    : 'text-text-secondary hover:text-text-primary'
-                } ${file.isMain ? 'font-bold' : ''}`}
-                aria-selected={index === selectedFile}
-                role="tab"
-              >
-                {file.name}
-                {file.isMain && <span className="ml-1 text-accent-green">●</span>}
-              </button>
-            ))}
+            {files.map((file, index) => {
+              // Extract filename from path (e.g., "src/Contract.sol" -> "Contract.sol")
+              const fileName = file.name.split('/').pop() ?? file.name
+              return (
+                <button
+                  key={file.name}
+                  onClick={() => setSelectedFile(index)}
+                  className={`px-4 py-2 text-xs font-mono transition-colors ${
+                    index === selectedFile
+                      ? 'bg-bg-primary text-accent-blue border-b-2 border-accent-blue'
+                      : 'text-text-secondary hover:text-text-primary'
+                  } ${file.isMain ? 'font-bold' : ''}`}
+                  aria-selected={index === selectedFile}
+                  role="tab"
+                  title={file.name}
+                >
+                  {fileName}
+                  {file.isMain && <span className="ml-1 text-accent-green">●</span>}
+                </button>
+              )
+            })}
           </div>
         )}
 
         {/* Toolbar */}
         <div className="flex items-center justify-between border-b border-bg-tertiary bg-bg-secondary px-4 py-2">
-          <span className="text-xs text-text-muted">
-            {currentFile.name} • {lineCount.toLocaleString()} lines
+          <span className="text-xs text-text-muted" title={currentFile.name}>
+            {currentFile.name.split('/').pop() ?? currentFile.name} • {lineCount.toLocaleString()} lines
           </span>
           <Button
             variant="ghost"
