@@ -3,7 +3,7 @@ import type { CodegenConfig } from '@graphql-codegen/cli'
 const config: CodegenConfig = {
   overwrite: true,
   // Use local schema file instead of remote endpoint
-  schema: '../indexer-go/api/graphql/schema.graphql',
+  schema: '../indexer-go/pkg/api/graphql/schema.graphql',
   documents: ['lib/**/*.{ts,tsx}', 'components/**/*.{ts,tsx}', 'app/**/*.{ts,tsx}'],
   // Skip document validation since backend serializes custom scalars as strings
   ignoreNoDocuments: true,
@@ -23,6 +23,8 @@ const config: CodegenConfig = {
           Hash: 'string',
           Address: 'string',
           Bytes: 'string',
+          DateTime: 'string',
+          JSON: 'string',
         },
       },
     },
