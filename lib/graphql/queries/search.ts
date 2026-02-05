@@ -94,6 +94,7 @@ export interface SearchResultMetadata {
   from?: string
   to?: string
   blockNumber?: string
+  contractAddress?: string
   // Address metadata
   balance?: string
   isContract?: boolean

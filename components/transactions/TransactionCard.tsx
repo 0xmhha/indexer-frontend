@@ -9,6 +9,7 @@ interface Transaction {
   to: string | null
   value: string
   blockNumber?: string
+  contractAddress?: string | null
 }
 
 interface TransactionCardProps {
@@ -53,6 +54,16 @@ export function TransactionCard({ transaction }: TransactionCardProps) {
                   >
                     {transaction.to.slice(0, 10)}...
                   </Link>
+                ) : transaction.contractAddress ? (
+                  <span className="inline-flex items-center gap-1">
+                    <span className="text-accent-orange">[Created]</span>
+                    <Link
+                      href={`/address/${transaction.contractAddress}`}
+                      className="font-mono text-accent-blue hover:text-accent-cyan"
+                    >
+                      {transaction.contractAddress.slice(0, 10)}...
+                    </Link>
+                  </span>
                 ) : (
                   <span className="font-mono text-text-muted">[Contract Creation]</span>
                 )}

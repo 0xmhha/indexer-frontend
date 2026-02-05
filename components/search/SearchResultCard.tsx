@@ -110,6 +110,13 @@ function TransactionResultCard({ result }: { result: SearchResult }) {
           <div className="font-mono text-xs text-text-secondary">
             To: {formatHash(metadata.to)}
           </div>
+        ) : metadata?.contractAddress ? (
+          <div className="font-mono text-xs text-text-secondary">
+            To: <span className="text-accent-orange">[Created]</span>{' '}
+            <Link href={`/address/${metadata.contractAddress}`} className="text-accent-blue hover:text-accent-cyan">
+              {formatHash(metadata.contractAddress)}
+            </Link>
+          </div>
         ) : metadata?.from ? (
           <div className="font-mono text-xs text-text-secondary">
             To: <span className="text-accent-orange">Contract Creation</span>

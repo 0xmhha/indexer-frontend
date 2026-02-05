@@ -178,6 +178,17 @@ export function TxInfoCard({ tx, status }: { tx: TransactionData; status: string
                     </Link>
                     <CopyButton text={tx.to} />
                   </span>
+                ) : tx.receipt?.contractAddress ? (
+                  <span className="inline-flex items-center gap-1">
+                    <span className="text-accent-orange">[Contract Creation]</span>
+                    <Link
+                      href={`/address/${tx.receipt.contractAddress}`}
+                      className="font-mono text-accent-blue hover:text-accent-cyan"
+                    >
+                      {tx.receipt.contractAddress}
+                    </Link>
+                    <CopyButton text={tx.receipt.contractAddress} />
+                  </span>
                 ) : (
                   <span className="font-mono text-text-muted">[Contract Creation]</span>
                 )}
