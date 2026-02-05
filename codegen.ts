@@ -4,7 +4,12 @@ const config: CodegenConfig = {
   overwrite: true,
   // Use local schema file instead of remote endpoint
   schema: '../indexer-go/pkg/api/graphql/schema.graphql',
-  documents: ['lib/**/*.{ts,tsx}', 'components/**/*.{ts,tsx}', 'app/**/*.{ts,tsx}'],
+  documents: [
+    'lib/**/*.{ts,tsx}',
+    'components/**/*.{ts,tsx}',
+    'app/**/*.{ts,tsx}',
+    '!lib/graphql/generated.ts', // Exclude generated file to prevent circular issues
+  ],
   // Skip document validation since backend serializes custom scalars as strings
   ignoreNoDocuments: true,
   generates: {

@@ -1,128 +1,15 @@
 'use client'
 
-import { gql, useQuery } from '@apollo/client'
+import { useQuery } from '@apollo/client'
 import { PAGINATION, POLLING_INTERVALS } from '@/lib/config/constants'
-
-// Query for WBFT block metadata (backend: wbftBlockExtra)
-const GET_WBFT_BLOCK = gql`
-  query GetWBFTBlockExtra($blockNumber: String!) {
-    wbftBlockExtra(blockNumber: $blockNumber) {
-      blockNumber
-      blockHash
-      randaoReveal
-      prevRound
-      round
-      preparedSeal {
-        sealers
-        signature
-      }
-      committedSeal {
-        sealers
-        signature
-      }
-      gasTip
-      epochInfo {
-        epochNumber
-        blockNumber
-        candidates {
-          address
-          diligence
-        }
-        validators
-        blsPublicKeys
-      }
-      timestamp
-    }
-  }
-`
-
-// Query for latest epoch information (backend: latestEpochInfo)
-const GET_LATEST_EPOCH = gql`
-  query GetLatestEpochInfo {
-    latestEpochInfo {
-      epochNumber
-      blockNumber
-      candidates {
-        address
-        diligence
-      }
-      validators
-      blsPublicKeys
-    }
-  }
-`
-
-// Query for specific epoch by number (backend: epochInfo)
-const GET_EPOCH_BY_NUMBER = gql`
-  query GetEpochInfo($epochNumber: String!) {
-    epochInfo(epochNumber: $epochNumber) {
-      epochNumber
-      blockNumber
-      candidates {
-        address
-        diligence
-      }
-      validators
-      blsPublicKeys
-    }
-  }
-`
-
-// Query for all validators signing statistics
-// Backend requires fromBlock/toBlock (non-nullable), returns paginated results
-const GET_ALL_VALIDATORS_SIGNING_STATS = gql`
-  query GetAllValidatorsSigningStats(
-    $fromBlock: String!
-    $toBlock: String!
-    $limit: Int
-    $offset: Int
-  ) {
-    allValidatorsSigningStats(
-      fromBlock: $fromBlock
-      toBlock: $toBlock
-      pagination: { limit: $limit, offset: $offset }
-    ) {
-      nodes {
-        validatorAddress
-        validatorIndex
-        fromBlock
-        toBlock
-        signingRate
-        prepareSignCount
-        prepareMissCount
-        commitSignCount
-        commitMissCount
-      }
-      totalCount
-      pageInfo {
-        hasNextPage
-        hasPreviousPage
-      }
-    }
-  }
-`
-
-// Query for block signers (backend returns preparers and committers)
-const GET_BLOCK_SIGNERS = gql`
-  query GetBlockSigners($blockNumber: String!) {
-    blockSigners(blockNumber: $blockNumber) {
-      blockNumber
-      preparers
-      committers
-    }
-  }
-`
-
-// Query for active validators list
-// Backend returns direct list, no pagination support
-const GET_ACTIVE_VALIDATORS = gql`
-  query GetActiveValidators {
-    activeValidators {
-      address
-      isActive
-    }
-  }
-`
+import {
+  GET_WBFT_BLOCK_EXTRA,
+  GET_LATEST_EPOCH_INFO,
+  GET_EPOCH_INFO,
+  GET_ALL_VALIDATORS_SIGNING_STATS,
+  GET_BLOCK_SIGNERS,
+} from '@/lib/graphql/queries/consensus'
+import { GET_ACTIVE_VALIDATORS } from '@/lib/graphql/queries/system-contracts'
 
 // Types - aligned with backend schema
 
@@ -213,7 +100,7 @@ export interface Validator {
  * Hook to fetch WBFT block metadata (uses wbftBlockExtra query)
  */
 export function useWBFTBlock(blockNumber: string) {
-  const { data, loading, error, refetch, previousData } = useQuery(GET_WBFT_BLOCK, {
+  const { data, loading, error, refetch, previousData } = useQuery(GET_WBFT_BLOCK_EXTRA, {
     variables: { blockNumber },
     returnPartialData: true,
     skip: !blockNumber,
@@ -241,7 +128,7 @@ export function useWBFTBlock(blockNumber: string) {
  * Note: This query may not be supported on all backends (requires consensus storage)
  */
 export function useCurrentEpoch() {
-  const { data, loading, error, refetch, previousData } = useQuery(GET_LATEST_EPOCH, {
+  const { data, loading, error, refetch, previousData } = useQuery(GET_LATEST_EPOCH_INFO, {
     pollInterval: POLLING_INTERVALS.FAST, // 10초마다 자동 업데이트
     fetchPolicy: 'network-only', // 항상 네트워크에서 최신 데이터 가져오기
     nextFetchPolicy: 'network-only', // 폴링 시에도 네트워크 우선
@@ -281,7 +168,7 @@ export function useCurrentEpoch() {
  * Hook to fetch epoch by number (uses epochInfo query)
  */
 export function useEpochByNumber(epochNumber: string) {
-  const { data, loading, error, refetch, previousData } = useQuery(GET_EPOCH_BY_NUMBER, {
+  const { data, loading, error, refetch, previousData } = useQuery(GET_EPOCH_INFO, {
     variables: { epochNumber },
     returnPartialData: true,
     skip: !epochNumber,

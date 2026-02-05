@@ -1,7 +1,14 @@
 'use client'
 
-import { gql, useQuery } from '@apollo/client'
+import { useQuery } from '@apollo/client'
 import { PAGINATION } from '@/lib/config/constants'
+import {
+  GET_PROPOSALS,
+  GET_PROPOSAL,
+  GET_PROPOSAL_VOTES,
+  GET_ACTIVE_VALIDATORS,
+  GET_BLACKLISTED_ADDRESSES,
+} from '@/lib/graphql/queries/system-contracts'
 
 // Proposal Status enum
 export enum ProposalStatus {
@@ -14,91 +21,6 @@ export enum ProposalStatus {
   FAILED = 'failed',
   REJECTED = 'rejected',
 }
-
-// Query for proposals list
-// Note: Backend uses String for addresses, ProposalStatus enum for status
-// Filter only supports contract and status (not proposer)
-const GET_PROPOSALS = gql`
-  query GetProposals($contract: String, $status: ProposalStatus, $limit: Int, $offset: Int) {
-    proposals(filter: { contract: $contract, status: $status }, pagination: { limit: $limit, offset: $offset }) {
-      nodes {
-        contract
-        proposalId
-        proposer
-        actionType
-        callData
-        memberVersion
-        requiredApprovals
-        approved
-        rejected
-        status
-        createdAt
-        executedAt
-        blockNumber
-        transactionHash
-      }
-      totalCount
-      pageInfo {
-        hasNextPage
-        hasPreviousPage
-      }
-    }
-  }
-`
-
-// Query for specific proposal
-const GET_PROPOSAL = gql`
-  query GetProposal($contract: String!, $proposalId: String!) {
-    proposal(contract: $contract, proposalId: $proposalId) {
-      contract
-      proposalId
-      proposer
-      actionType
-      callData
-      memberVersion
-      requiredApprovals
-      approved
-      rejected
-      status
-      createdAt
-      executedAt
-      blockNumber
-      transactionHash
-    }
-  }
-`
-
-// Query for proposal votes
-const GET_PROPOSAL_VOTES = gql`
-  query GetProposalVotes($contract: String!, $proposalId: String!) {
-    proposalVotes(contract: $contract, proposalId: $proposalId) {
-      contract
-      proposalId
-      voter
-      approval
-      blockNumber
-      transactionHash
-      timestamp
-    }
-  }
-`
-
-// Query for active validators
-const GET_ACTIVE_VALIDATORS = gql`
-  query GetActiveValidators {
-    activeValidators {
-      address
-      isActive
-    }
-  }
-`
-
-// Query for blacklisted addresses
-const GET_BLACKLISTED_ADDRESSES = gql`
-  query GetBlacklistedAddresses {
-    blacklistedAddresses
-  }
-`
 
 // Types
 export interface Proposal {
@@ -135,7 +57,8 @@ export interface Validator {
 
 /**
  * Hook to fetch proposals list
- * Note: Backend filter only supports contract and status (not proposer)
+ * Note: Backend filter requires contract address. If not provided, query is skipped.
+ * @param params - Filter and pagination parameters (contract is required by schema)
  */
 export function useProposals(
   params: {
@@ -149,11 +72,14 @@ export function useProposals(
 
   const { data, loading, error, refetch, fetchMore, previousData } = useQuery(GET_PROPOSALS, {
     variables: {
-      ...(contract && { contract }),
-      ...(status && { status }),
-      limit,
-      offset,
+      filter: {
+        contract: contract ?? '',
+        ...(status && { status }),
+      },
+      pagination: { limit, offset },
     },
+    // Skip query if no contract provided (schema requires contract)
+    skip: !contract,
     returnPartialData: true,
   })
 

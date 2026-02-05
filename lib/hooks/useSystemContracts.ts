@@ -2,6 +2,24 @@
 
 import { gql, useQuery, useSubscription, useMutation } from '@apollo/client'
 import { PAGINATION } from '@/lib/config/constants'
+import {
+  GET_TOTAL_SUPPLY,
+  GET_ACTIVE_MINTERS,
+  GET_MINTER_ALLOWANCE,
+  GET_MINT_EVENTS,
+  GET_BURN_EVENTS,
+  GET_ACTIVE_VALIDATORS,
+  GET_BLACKLISTED_ADDRESSES,
+  GET_DEPOSIT_MINT_PROPOSALS as GET_DEPOSIT_MINT_PROPOSALS_CENTRAL,
+  GET_MAX_PROPOSALS_UPDATE_HISTORY as GET_MAX_PROPOSALS_UPDATE_HISTORY_CENTRAL,
+  GET_PROPOSAL_EXECUTION_SKIPPED as GET_PROPOSAL_EXECUTION_SKIPPED_CENTRAL,
+  SYSTEM_CONTRACT_EVENTS_SUBSCRIPTION,
+  REGISTER_CONTRACT as REGISTER_CONTRACT_CENTRAL,
+  UNREGISTER_CONTRACT as UNREGISTER_CONTRACT_CENTRAL,
+  GET_REGISTERED_CONTRACTS as GET_REGISTERED_CONTRACTS_CENTRAL,
+  GET_REGISTERED_CONTRACT as GET_REGISTERED_CONTRACT_CENTRAL,
+  DYNAMIC_CONTRACT_EVENTS_SUBSCRIPTION,
+} from '@/lib/graphql/queries/system-contracts'
 
 // ============================================================================
 // System Contract Addresses
@@ -16,95 +34,13 @@ export const SYSTEM_CONTRACTS = {
 } as const
 
 // ============================================================================
-// GraphQL Queries - NativeCoinAdapter (0x1000)
+// GraphQL Queries - Local definitions for queries not in centralized file
+// These use proper schema types (Address, BigInt) instead of String
 // ============================================================================
-
-const GET_TOTAL_SUPPLY = gql`
-  query GetTotalSupply {
-    totalSupply
-  }
-`
-
-// Backend uses SystemContractEventFilter: { fromBlock, toBlock, address }
-// and returns transactionHash (not txHash)
-const GET_MINT_EVENTS = gql`
-  query GetMintEvents(
-    $fromBlock: String!
-    $toBlock: String!
-    $address: String
-    $limit: Int
-    $offset: Int
-  ) {
-    mintEvents(
-      filter: { fromBlock: $fromBlock, toBlock: $toBlock, address: $address }
-      pagination: { limit: $limit, offset: $offset }
-    ) {
-      nodes {
-        blockNumber
-        transactionHash
-        minter
-        to
-        amount
-        timestamp
-      }
-      totalCount
-      pageInfo {
-        hasNextPage
-        hasPreviousPage
-      }
-    }
-  }
-`
-
-const GET_BURN_EVENTS = gql`
-  query GetBurnEvents(
-    $fromBlock: String!
-    $toBlock: String!
-    $address: String
-    $limit: Int
-    $offset: Int
-  ) {
-    burnEvents(
-      filter: { fromBlock: $fromBlock, toBlock: $toBlock, address: $address }
-      pagination: { limit: $limit, offset: $offset }
-    ) {
-      nodes {
-        blockNumber
-        transactionHash
-        burner
-        amount
-        timestamp
-        withdrawalId
-      }
-      totalCount
-      pageInfo {
-        hasNextPage
-        hasPreviousPage
-      }
-    }
-  }
-`
-
-// Backend returns [MinterInfo!]! with address, allowance, isActive
-const GET_ACTIVE_MINTERS = gql`
-  query GetActiveMinters {
-    activeMinters {
-      address
-      allowance
-      isActive
-    }
-  }
-`
-
-const GET_MINTER_ALLOWANCE = gql`
-  query GetMinterAllowance($minter: String!) {
-    minterAllowance(minter: $minter)
-  }
-`
 
 // Backend returns [MinterConfigEvent!]! with action field
 const GET_MINTER_HISTORY = gql`
-  query GetMinterHistory($minter: String!) {
+  query GetMinterHistoryLocal($minter: Address!) {
     minterHistory(minter: $minter) {
       blockNumber
       transactionHash
@@ -116,23 +52,9 @@ const GET_MINTER_HISTORY = gql`
   }
 `
 
-// ============================================================================
-// GraphQL Queries - GovValidator (0x1001)
-// ============================================================================
-
-// Backend returns [ValidatorInfo!]! with address, isActive
-const GET_ACTIVE_VALIDATORS = gql`
-  query GetActiveValidators {
-    activeValidators {
-      address
-      isActive
-    }
-  }
-`
-
 // Backend uses SystemContractEventFilter
 const GET_GAS_TIP_HISTORY = gql`
-  query GetGasTipHistory($fromBlock: String!, $toBlock: String!) {
+  query GetGasTipHistoryLocal($fromBlock: BigInt!, $toBlock: BigInt!) {
     gasTipHistory(filter: { fromBlock: $fromBlock, toBlock: $toBlock }) {
       blockNumber
       transactionHash
@@ -146,7 +68,7 @@ const GET_GAS_TIP_HISTORY = gql`
 
 // Backend returns [ValidatorChangeEvent!]!
 const GET_VALIDATOR_HISTORY = gql`
-  query GetValidatorHistory($validator: String!) {
+  query GetValidatorHistoryLocal($validator: Address!) {
     validatorHistory(validator: $validator) {
       blockNumber
       transactionHash
@@ -158,28 +80,24 @@ const GET_VALIDATOR_HISTORY = gql`
   }
 `
 
-// ============================================================================
-// GraphQL Queries - GovMasterMinter (0x1002)
 // NOTE: minterConfigHistory query is not exposed in backend GraphQL yet
-// ============================================================================
-
-// NOTE: This query may not be available - backend needs to expose it
-const GET_MINTER_CONFIG_HISTORY = gql`
-  query GetMinterConfigHistory($fromBlock: String!, $toBlock: String!) {
-    minterConfigHistory(fromBlock: $fromBlock, toBlock: $toBlock) {
-      blockNumber
-      transactionHash
-      minter
-      allowance
-      action
-      timestamp
-    }
-  }
-`
+// Commented out - not in schema
+// const GET_MINTER_CONFIG_HISTORY = gql`
+//   query GetMinterConfigHistoryLocal($fromBlock: BigInt!, $toBlock: BigInt!) {
+//     minterConfigHistory(fromBlock: $fromBlock, toBlock: $toBlock) {
+//       blockNumber
+//       transactionHash
+//       minter
+//       allowance
+//       action
+//       timestamp
+//     }
+//   }
+// `
 
 // Backend returns [EmergencyPauseEvent!]!
 const GET_EMERGENCY_PAUSE_HISTORY = gql`
-  query GetEmergencyPauseHistory($contract: String!) {
+  query GetEmergencyPauseHistoryLocal($contract: Address!) {
     emergencyPauseHistory(contract: $contract) {
       contract
       blockNumber
@@ -191,42 +109,10 @@ const GET_EMERGENCY_PAUSE_HISTORY = gql`
   }
 `
 
-// ============================================================================
-// GraphQL Queries - GovMinter (0x1003)
-// ============================================================================
-
-// Backend uses SystemContractEventFilter and optional status
-const GET_DEPOSIT_MINT_PROPOSALS = gql`
-  query GetDepositMintProposals(
-    $fromBlock: String!
-    $toBlock: String!
-    $status: ProposalStatus
-  ) {
-    depositMintProposals(
-      filter: { fromBlock: $fromBlock, toBlock: $toBlock }
-      status: $status
-    ) {
-      proposalId
-      requester
-      beneficiary
-      amount
-      depositId
-      bankReference
-      status
-      blockNumber
-      transactionHash
-      timestamp
-    }
-  }
-`
-
-// NOTE: burnHistory query is not exposed in backend GraphQL yet
-// Using burnEvents query instead for burn data
+// NOTE: burnHistory query uses burnEvents - local version with proper types
 const GET_BURN_HISTORY = gql`
-  query GetBurnHistory($fromBlock: String!, $toBlock: String!, $address: String) {
-    burnEvents(
-      filter: { fromBlock: $fromBlock, toBlock: $toBlock, address: $address }
-    ) {
+  query GetBurnHistoryLocal($filter: SystemContractEventFilter!, $pagination: PaginationInput) {
+    burnEvents(filter: $filter, pagination: $pagination) {
       nodes {
         blockNumber
         transactionHash
@@ -240,19 +126,9 @@ const GET_BURN_HISTORY = gql`
   }
 `
 
-// ============================================================================
-// GraphQL Queries - GovCouncil (0x1004)
-// ============================================================================
-
-const GET_BLACKLISTED_ADDRESSES = gql`
-  query GetBlacklistedAddresses {
-    blacklistedAddresses
-  }
-`
-
 // Backend returns [BlacklistEvent!]!
 const GET_BLACKLIST_HISTORY = gql`
-  query GetBlacklistHistory($address: String!) {
+  query GetBlacklistHistoryLocal($address: Address!) {
     blacklistHistory(address: $address) {
       blockNumber
       transactionHash
@@ -265,64 +141,20 @@ const GET_BLACKLIST_HISTORY = gql`
 `
 
 // NOTE: authorizedAccounts query is not exposed in backend GraphQL yet
-const GET_AUTHORIZED_ACCOUNTS = gql`
-  query GetAuthorizedAccounts {
-    authorizedAccounts
-  }
-`
+// Commented out - not in schema
+// const GET_AUTHORIZED_ACCOUNTS = gql`
+//   query GetAuthorizedAccountsLocal {
+//     authorizedAccounts
+//   }
+// `
 
-// ============================================================================
-// GraphQL Queries - MaxProposalsUpdate (GovBase 공통)
-// ============================================================================
-
-const GET_MAX_PROPOSALS_UPDATE_HISTORY = gql`
-  query GetMaxProposalsUpdateHistory($contract: String!) {
-    maxProposalsUpdateHistory(contract: $contract) {
-      contract
-      blockNumber
-      transactionHash
-      oldMax
-      newMax
-      timestamp
-    }
-  }
-`
-
-// ============================================================================
-// GraphQL Queries - ProposalExecutionSkipped (GovCouncil)
-// ============================================================================
-
-const GET_PROPOSAL_EXECUTION_SKIPPED = gql`
-  query GetProposalExecutionSkippedEvents($contract: String!, $proposalId: String) {
-    proposalExecutionSkippedEvents(contract: $contract, proposalId: $proposalId) {
-      contract
-      blockNumber
-      transactionHash
-      account
-      proposalId
-      reason
-      timestamp
-    }
-  }
-`
-
-// ============================================================================
-// GraphQL Queries - Common Governance
-// ============================================================================
-
-// Backend uses ProposalFilter: { contract (nullable), status, proposer }
-const GET_PROPOSALS = gql`
-  query GetProposals(
-    $contract: String
-    $status: ProposalStatus
-    $proposer: String
-    $limit: Int
-    $offset: Int
+// Local proposals query with flexible filter (contract nullable)
+const GET_PROPOSALS_LOCAL = gql`
+  query GetProposalsLocal(
+    $filter: ProposalFilter!
+    $pagination: PaginationInput
   ) {
-    proposals(
-      filter: { contract: $contract, status: $status, proposer: $proposer }
-      pagination: { limit: $limit, offset: $offset }
-    ) {
+    proposals(filter: $filter, pagination: $pagination) {
       nodes {
         proposalId
         contract
@@ -349,8 +181,8 @@ const GET_PROPOSALS = gql`
 `
 
 // Backend uses proposalId: BigInt!
-const GET_PROPOSAL_VOTES = gql`
-  query GetProposalVotes($contract: String!, $proposalId: String!) {
+const GET_PROPOSAL_VOTES_LOCAL = gql`
+  query GetProposalVotesLocal($contract: Address!, $proposalId: BigInt!) {
     proposalVotes(contract: $contract, proposalId: $proposalId) {
       contract
       proposalId
@@ -365,7 +197,7 @@ const GET_PROPOSAL_VOTES = gql`
 
 // Backend returns [MemberChangeEvent!]!
 const GET_MEMBER_HISTORY = gql`
-  query GetMemberHistory($contract: String!) {
+  query GetMemberHistoryLocal($contract: Address!) {
     memberHistory(contract: $contract) {
       contract
       blockNumber
@@ -665,11 +497,8 @@ export function useMintEvents(params: {
 
   const { data, loading, error, refetch, fetchMore, previousData } = useQuery(GET_MINT_EVENTS, {
     variables: {
-      fromBlock,
-      toBlock,
-      address: minter,
-      limit,
-      offset,
+      filter: { fromBlock, toBlock, address: minter },
+      pagination: { limit, offset },
     },
     returnPartialData: true,
     errorPolicy: 'all',
@@ -716,11 +545,8 @@ export function useBurnEvents(params: {
 
   const { data, loading, error, refetch, fetchMore, previousData } = useQuery(GET_BURN_EVENTS, {
     variables: {
-      fromBlock,
-      toBlock,
-      address: burner,
-      limit,
-      offset,
+      filter: { fromBlock, toBlock, address: burner },
+      pagination: { limit, offset },
     },
     returnPartialData: true,
     errorPolicy: 'all',
@@ -904,26 +730,19 @@ export function useValidatorHistory(validator: string) {
 
 /**
  * Hook to fetch minter config history across all minters
+ * NOTE: This query is not available in the backend GraphQL schema yet.
+ * Returns empty data until the backend implements minterConfigHistory query.
  */
-export function useMinterConfigHistory(params: {
+export function useMinterConfigHistory(_params: {
   fromBlock?: string
   toBlock?: string
 } = {}) {
-  const { fromBlock = '0', toBlock = '999999999' } = params
-
-  const { data, loading, error, refetch, previousData } = useQuery(GET_MINTER_CONFIG_HISTORY, {
-    variables: { fromBlock, toBlock },
-    returnPartialData: true,
-  })
-
-  const effectiveData = data ?? previousData
-  const history: MinterConfigEvent[] = effectiveData?.minterConfigHistory ?? []
-
+  // Query not available in schema - return empty data
   return {
-    history,
-    loading,
-    error,
-    refetch,
+    history: [] as MinterConfigEvent[],
+    loading: false,
+    error: undefined,
+    refetch: async () => ({ data: undefined }),
   }
 }
 
@@ -962,7 +781,7 @@ export function useDepositMintProposals(params: {
 } = {}) {
   const { fromBlock = '0', toBlock = '999999999', status } = params
 
-  const { data, loading, error, refetch, previousData } = useQuery(GET_DEPOSIT_MINT_PROPOSALS, {
+  const { data, loading, error, refetch, previousData } = useQuery(GET_DEPOSIT_MINT_PROPOSALS_CENTRAL, {
     variables: { fromBlock, toBlock, status },
     returnPartialData: true,
     errorPolicy: 'all',
@@ -992,9 +811,8 @@ export function useBurnHistory(params: {
 
   const { data, loading, error, refetch, previousData } = useQuery(GET_BURN_HISTORY, {
     variables: {
-      fromBlock,
-      toBlock,
-      address: user,
+      filter: { fromBlock, toBlock, address: user },
+      pagination: { limit: PAGINATION.DEFAULT_PAGE_SIZE, offset: 0 },
     },
     returnPartialData: true,
     errorPolicy: 'all',
@@ -1071,22 +889,17 @@ export function useBlacklistHistory(address: string) {
 
 /**
  * Hook to fetch authorized accounts (council members)
- * Note: Partially implemented in backend, may return empty array
+ * NOTE: This query is not available in the backend GraphQL schema yet.
+ * Returns empty data until the backend implements authorizedAccounts query.
  */
 export function useAuthorizedAccounts() {
-  const { data, loading, error, refetch, previousData } = useQuery(GET_AUTHORIZED_ACCOUNTS, {
-    returnPartialData: true,
-  })
-
-  const effectiveData = data ?? previousData
-  const accounts: string[] = effectiveData?.authorizedAccounts ?? []
-
+  // Query not available in schema - return empty data
   return {
-    accounts,
-    totalCount: accounts.length,
-    loading,
-    error,
-    refetch,
+    accounts: [] as string[],
+    totalCount: 0,
+    loading: false,
+    error: undefined,
+    refetch: async () => ({ data: undefined }),
   }
 }
 
@@ -1099,7 +912,7 @@ export function useAuthorizedAccounts() {
  * Returns history of changes to the maximum number of proposals per member
  */
 export function useMaxProposalsUpdateHistory(contract: string) {
-  const { data, loading, error, refetch, previousData } = useQuery(GET_MAX_PROPOSALS_UPDATE_HISTORY, {
+  const { data, loading, error, refetch, previousData } = useQuery(GET_MAX_PROPOSALS_UPDATE_HISTORY_CENTRAL, {
     variables: { contract },
     skip: !contract,
     returnPartialData: true,
@@ -1128,7 +941,7 @@ export function useMaxProposalsUpdateHistory(contract: string) {
  * @param proposalId - Optional proposal ID to filter by
  */
 export function useProposalExecutionSkipped(contract: string, proposalId?: string) {
-  const { data, loading, error, refetch, previousData } = useQuery(GET_PROPOSAL_EXECUTION_SKIPPED, {
+  const { data, loading, error, refetch, previousData } = useQuery(GET_PROPOSAL_EXECUTION_SKIPPED_CENTRAL, {
     variables: { contract, proposalId },
     skip: !contract,
     returnPartialData: true,
@@ -1174,8 +987,20 @@ export function useProposals(params: {
   // Convert UI filter to backend status (undefined for 'all' means no filter)
   const backendStatus = status ? filterToBackendStatus(status) : undefined
 
-  const { data, loading, error, refetch, fetchMore, previousData } = useQuery(GET_PROPOSALS, {
-    variables: { contract, status: backendStatus, proposer, limit, offset },
+  // Build filter with required contract field
+  // Note: Skip query if no contract provided (schema requires contract: Address!)
+  const filter = contract ? {
+    contract,
+    ...(backendStatus && { status: backendStatus }),
+    ...(proposer && { proposer }),
+  } : null
+
+  const { data, loading, error, refetch, fetchMore, previousData } = useQuery(GET_PROPOSALS_LOCAL, {
+    variables: {
+      filter: filter ?? { contract: '' },
+      pagination: { limit, offset },
+    },
+    skip: !filter,
     returnPartialData: true,
     errorPolicy: 'all',
   })
@@ -1199,7 +1024,7 @@ export function useProposals(params: {
  * Hook to fetch votes for a specific proposal
  */
 export function useProposalVotes(contract: string, proposalId: string) {
-  const { data, loading, error, refetch, previousData } = useQuery(GET_PROPOSAL_VOTES, {
+  const { data, loading, error, refetch, previousData } = useQuery(GET_PROPOSAL_VOTES_LOCAL, {
     variables: { contract, proposalId },
     skip: !contract || !proposalId,
     returnPartialData: true,
@@ -1327,24 +1152,6 @@ export function getProposalStatusColor(status: ProposalStatus | ProposalStatusFi
   }
   return colors[status] || 'text-text-secondary'
 }
-
-// ============================================================================
-// GraphQL Subscription - System Contract Events (WebSocket)
-// ============================================================================
-
-const SYSTEM_CONTRACT_EVENTS_SUBSCRIPTION = gql`
-  subscription SystemContractEvents($filter: SystemContractSubscriptionFilter) {
-    systemContractEvents(filter: $filter) {
-      contract
-      eventName
-      blockNumber
-      transactionHash
-      logIndex
-      data
-      timestamp
-    }
-  }
-`
 
 // ============================================================================
 // Subscription Types
@@ -1536,70 +1343,6 @@ export function useBlacklistEvents(params: {
 }
 
 // ============================================================================
-// GraphQL Operations - Dynamic Contract Registration
-// ============================================================================
-
-const REGISTER_CONTRACT = gql`
-  mutation RegisterContract($input: RegisterContractInput!) {
-    registerContract(input: $input) {
-      address
-      name
-      abi
-      registeredAt
-      blockNumber
-      isVerified
-      events
-    }
-  }
-`
-
-const UNREGISTER_CONTRACT = gql`
-  mutation UnregisterContract($address: String!) {
-    unregisterContract(address: $address)
-  }
-`
-
-const GET_REGISTERED_CONTRACTS = gql`
-  query GetRegisteredContracts {
-    registeredContracts {
-      address
-      name
-      events
-      isVerified
-      registeredAt
-    }
-  }
-`
-
-const GET_REGISTERED_CONTRACT = gql`
-  query GetRegisteredContract($address: String!) {
-    registeredContract(address: $address) {
-      address
-      name
-      abi
-      events
-      isVerified
-      registeredAt
-    }
-  }
-`
-
-const DYNAMIC_CONTRACT_EVENTS_SUBSCRIPTION = gql`
-  subscription DynamicContractEvents($filter: DynamicContractSubscriptionFilter) {
-    dynamicContractEvents(filter: $filter) {
-      contract
-      contractName
-      eventName
-      blockNumber
-      txHash
-      logIndex
-      data
-      timestamp
-    }
-  }
-`
-
-// ============================================================================
 // Dynamic Contract Types
 // ============================================================================
 
@@ -1717,15 +1460,15 @@ export function parseDynamicContractEvent<T = Record<string, unknown>>(
  */
 export function useContractRegistration() {
   const [registerMutation, { loading: registerLoading, error: registerError }] =
-    useMutation<{ registerContract: RegisteredContract }>(REGISTER_CONTRACT)
+    useMutation<{ registerContract: RegisteredContract }>(REGISTER_CONTRACT_CENTRAL)
 
   const [unregisterMutation, { loading: unregisterLoading, error: unregisterError }] =
-    useMutation<{ unregisterContract: boolean }>(UNREGISTER_CONTRACT)
+    useMutation<{ unregisterContract: boolean }>(UNREGISTER_CONTRACT_CENTRAL)
 
   const registerContract = async (input: RegisterContractInput) => {
     const result = await registerMutation({
       variables: { input },
-      refetchQueries: [{ query: GET_REGISTERED_CONTRACTS }],
+      refetchQueries: [{ query: GET_REGISTERED_CONTRACTS_CENTRAL }],
     })
     return result.data?.registerContract
   }
@@ -1733,7 +1476,7 @@ export function useContractRegistration() {
   const unregisterContract = async (address: string) => {
     const result = await unregisterMutation({
       variables: { address },
-      refetchQueries: [{ query: GET_REGISTERED_CONTRACTS }],
+      refetchQueries: [{ query: GET_REGISTERED_CONTRACTS_CENTRAL }],
     })
     return result.data?.unregisterContract
   }
@@ -1755,7 +1498,7 @@ export function useContractRegistration() {
 export function useRegisteredContracts() {
   const { data, loading, error, refetch, previousData } = useQuery<{
     registeredContracts: RegisteredContract[]
-  }>(GET_REGISTERED_CONTRACTS, {
+  }>(GET_REGISTERED_CONTRACTS_CENTRAL, {
     returnPartialData: true,
     errorPolicy: 'all',
   })
@@ -1780,7 +1523,7 @@ export function useRegisteredContracts() {
 export function useRegisteredContract(address: string) {
   const { data, loading, error, refetch, previousData } = useQuery<{
     registeredContract: RegisteredContract | null
-  }>(GET_REGISTERED_CONTRACT, {
+  }>(GET_REGISTERED_CONTRACT_CENTRAL, {
     variables: { address },
     skip: !address,
     returnPartialData: true,

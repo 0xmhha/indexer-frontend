@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useMemo } from 'react'
-import { gql, useQuery, useSubscription } from '@apollo/client'
+import { useQuery, useSubscription } from '@apollo/client'
 import { PAGINATION, POLLING_INTERVALS, CONSENSUS, REPLAY } from '@/lib/config/constants'
 import {
   SUBSCRIBE_CONSENSUS_BLOCK,
@@ -9,6 +9,15 @@ import {
   SUBSCRIBE_CONSENSUS_FORK,
   SUBSCRIBE_CONSENSUS_VALIDATOR_CHANGE,
 } from '@/lib/apollo/queries'
+import {
+  GET_WBFT_BLOCK_EXTRA,
+  GET_VALIDATOR_SIGNING_STATS,
+  GET_VALIDATOR_SIGNING_ACTIVITY,
+  GET_ALL_VALIDATORS_SIGNING_STATS,
+  GET_EPOCH_INFO,
+  GET_LATEST_EPOCH_INFO,
+  GET_BLOCK_SIGNERS,
+} from '@/lib/graphql/queries/consensus'
 import { useConsensusStore } from '@/stores/consensusStore'
 import { useRealtimeStore } from '@/stores/realtimeStore'
 import type {
@@ -17,180 +26,6 @@ import type {
   ConsensusForkEvent,
   ConsensusValidatorChangeEvent,
 } from '@/types/consensus'
-
-// ============================================================================
-// GraphQL Queries - Aligned with Backend Schema
-// ============================================================================
-
-/**
- * Query for WBFT block consensus data (available in backend)
- * Uses wbftBlockExtra as the primary source for consensus info
- */
-const GET_WBFT_BLOCK_EXTRA = gql`
-  query GetWBFTBlockExtra($blockNumber: String!) {
-    wbftBlockExtra(blockNumber: $blockNumber) {
-      blockNumber
-      blockHash
-      randaoReveal
-      prevRound
-      round
-      preparedSeal {
-        sealers
-        signature
-      }
-      committedSeal {
-        sealers
-        signature
-      }
-      gasTip
-      epochInfo {
-        epochNumber
-        blockNumber
-        candidates {
-          address
-          diligence
-        }
-        validators
-        blsPublicKeys
-      }
-      timestamp
-    }
-  }
-`
-
-/**
- * Query for individual validator signing statistics (backend: validatorSigningStats)
- */
-const GET_VALIDATOR_SIGNING_STATS = gql`
-  query GetValidatorSigningStats($validatorAddress: String!, $fromBlock: String!, $toBlock: String!) {
-    validatorSigningStats(validatorAddress: $validatorAddress, fromBlock: $fromBlock, toBlock: $toBlock) {
-      validatorAddress
-      validatorIndex
-      prepareSignCount
-      prepareMissCount
-      commitSignCount
-      commitMissCount
-      fromBlock
-      toBlock
-      signingRate
-    }
-  }
-`
-
-/**
- * Query for validator signing activity details (backend: validatorSigningActivity)
- */
-const GET_VALIDATOR_SIGNING_ACTIVITY = gql`
-  query GetValidatorSigningActivity(
-    $validatorAddress: String!
-    $fromBlock: String!
-    $toBlock: String!
-    $limit: Int
-    $offset: Int
-  ) {
-    validatorSigningActivity(
-      validatorAddress: $validatorAddress
-      fromBlock: $fromBlock
-      toBlock: $toBlock
-      pagination: { limit: $limit, offset: $offset }
-    ) {
-      nodes {
-        blockNumber
-        blockHash
-        validatorAddress
-        validatorIndex
-        signedPrepare
-        signedCommit
-        round
-        timestamp
-      }
-      totalCount
-      pageInfo {
-        hasNextPage
-        hasPreviousPage
-      }
-    }
-  }
-`
-
-/**
- * Query for all validators signing statistics (backend: allValidatorsSigningStats)
- */
-const GET_ALL_VALIDATORS_SIGNING_STATS = gql`
-  query GetAllValidatorsSigningStats($fromBlock: String!, $toBlock: String!, $limit: Int, $offset: Int) {
-    allValidatorsSigningStats(
-      fromBlock: $fromBlock
-      toBlock: $toBlock
-      pagination: { limit: $limit, offset: $offset }
-    ) {
-      nodes {
-        validatorAddress
-        validatorIndex
-        prepareSignCount
-        prepareMissCount
-        commitSignCount
-        commitMissCount
-        fromBlock
-        toBlock
-        signingRate
-      }
-      totalCount
-      pageInfo {
-        hasNextPage
-        hasPreviousPage
-      }
-    }
-  }
-`
-
-/**
- * Query for specific epoch info (backend: epochInfo)
- */
-const GET_EPOCH_INFO = gql`
-  query GetEpochInfo($epochNumber: String!) {
-    epochInfo(epochNumber: $epochNumber) {
-      epochNumber
-      blockNumber
-      candidates {
-        address
-        diligence
-      }
-      validators
-      blsPublicKeys
-    }
-  }
-`
-
-/**
- * Query for latest epoch info (backend: latestEpochInfo)
- */
-const GET_LATEST_EPOCH_INFO = gql`
-  query GetLatestEpochInfo {
-    latestEpochInfo {
-      epochNumber
-      blockNumber
-      candidates {
-        address
-        diligence
-      }
-      validators
-      blsPublicKeys
-    }
-  }
-`
-
-/**
- * Query for block signers (backend: blockSigners)
- */
-const GET_BLOCK_SIGNERS = gql`
-  query GetBlockSigners($blockNumber: String!) {
-    blockSigners(blockNumber: $blockNumber) {
-      blockNumber
-      preparers
-      committers
-    }
-  }
-`
 
 // ============================================================================
 // TypeScript Interfaces - Aligned with Backend Schema
