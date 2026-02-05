@@ -10,7 +10,7 @@ import { gql } from '@apollo/client'
  */
 export const CONTRACT_CALL = gql`
   query ContractCall(
-    $address: String!
+    $address: Address!
     $method: String!
     $params: String
     $abi: String
@@ -32,7 +32,7 @@ export const CONTRACT_CALL = gql`
  * Transaction Status - Real-time transaction status via RPC Proxy
  */
 export const TRANSACTION_STATUS = gql`
-  query TransactionStatus($txHash: String!) {
+  query TransactionStatus($txHash: Hash!) {
     transactionStatus(txHash: $txHash) {
       txHash
       status
@@ -48,7 +48,7 @@ export const TRANSACTION_STATUS = gql`
  * Internal Transactions via debug_traceTransaction RPC
  */
 export const INTERNAL_TRANSACTIONS_RPC = gql`
-  query InternalTransactionsRPC($txHash: String!) {
+  query InternalTransactionsRPC($txHash: Hash!) {
     internalTransactionsRPC(txHash: $txHash) {
       txHash
       totalCount
@@ -80,7 +80,7 @@ export const RPC_PROXY_METRICS = gql`
       failedRequests
       cacheHits
       cacheMisses
-      averageLatencyMs
+      averageLatency
       queueDepth
       activeWorkers
       circuitState
@@ -91,9 +91,11 @@ export const RPC_PROXY_METRICS = gql`
 /**
  * Native Balance - Get native coin balance via eth_getBalance RPC
  * Returns the balance in wei as a string
+ * NOTE: ethGetBalance query not available in current schema
+ * TODO: Use addressBalance query or liveBalance subscription instead
  */
-export const ETH_GET_BALANCE = gql`
-  query EthGetBalance($address: String!, $blockNumber: String) {
-    ethGetBalance(address: $address, blockNumber: $blockNumber)
-  }
-`
+// export const ETH_GET_BALANCE = gql`
+//   query EthGetBalance($address: Address!, $blockNumber: BigInt) {
+//     ethGetBalance(address: $address, blockNumber: $blockNumber)
+//   }
+// `

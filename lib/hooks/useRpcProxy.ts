@@ -6,8 +6,8 @@ import {
   TRANSACTION_STATUS,
   INTERNAL_TRANSACTIONS_RPC,
   RPC_PROXY_METRICS,
-  ETH_GET_BALANCE,
 } from '@/lib/graphql/queries/rpcProxy'
+import { GET_LIVE_BALANCE } from '@/lib/apollo/queries'
 
 // ============================================================================
 // Types
@@ -298,8 +298,12 @@ export function useNativeBalance(
   pollInterval?: number
 ) {
   const { data, loading, error, refetch, previousData } = useQuery<{
-    ethGetBalance: string
-  }>(ETH_GET_BALANCE, {
+    liveBalance: {
+      address: string
+      balance: string
+      blockNumber: string
+    }
+  }>(GET_LIVE_BALANCE, {
     variables: {
       address: address ?? '',
       blockNumber: blockNumber ?? null,
@@ -314,13 +318,13 @@ export function useNativeBalance(
   // Use previous data while loading to prevent flickering
   const effectiveData = data ?? previousData
 
-  const balance = effectiveData?.ethGetBalance
-    ? BigInt(effectiveData.ethGetBalance)
+  const balance = effectiveData?.liveBalance?.balance
+    ? BigInt(effectiveData.liveBalance.balance)
     : null
 
   return {
     balance,
-    rawBalance: effectiveData?.ethGetBalance ?? null,
+    rawBalance: effectiveData?.liveBalance?.balance ?? null,
     loading,
     error,
     refetch,

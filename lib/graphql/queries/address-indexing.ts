@@ -109,36 +109,33 @@ export const GET_INTERNAL_TRANSACTIONS_BY_ADDRESS = gql`
 // ============================================================================
 
 export const GET_ERC20_TRANSFER = gql`
-  query GetERC20Transfer($transactionHash: Hash!, $logIndex: Int!) {
-    erc20Transfer(transactionHash: $transactionHash, logIndex: $logIndex) {
+  query GetERC20Transfer($txHash: Hash!, $logIndex: Int!) {
+    erc20Transfer(txHash: $txHash, logIndex: $logIndex) {
       transactionHash
       logIndex
-      tokenAddress
+      contractAddress
       from
       to
       value
       blockNumber
-      timestamp
     }
   }
 `
 
 export const GET_ERC20_TRANSFERS_BY_TOKEN = gql`
   query GetERC20TransfersByToken(
-    $tokenAddress: String!
-    $filter: ERC20TransferFilter
+    $token: Address!
     $pagination: PaginationInput
   ) {
-    erc20TransfersByToken(tokenAddress: $tokenAddress, filter: $filter, pagination: $pagination) {
+    erc20TransfersByToken(token: $token, pagination: $pagination) {
       nodes {
         transactionHash
         logIndex
-        tokenAddress
+        contractAddress
         from
         to
         value
         blockNumber
-        timestamp
       }
       totalCount
       pageInfo {
@@ -180,36 +177,33 @@ export const GET_ERC20_TRANSFERS_BY_ADDRESS = gql`
 // ============================================================================
 
 export const GET_ERC721_TRANSFER = gql`
-  query GetERC721Transfer($transactionHash: Hash!, $logIndex: Int!) {
-    erc721Transfer(transactionHash: $transactionHash, logIndex: $logIndex) {
+  query GetERC721Transfer($txHash: Hash!, $logIndex: Int!) {
+    erc721Transfer(txHash: $txHash, logIndex: $logIndex) {
       transactionHash
       logIndex
-      tokenAddress
+      contractAddress
       from
       to
       tokenId
       blockNumber
-      timestamp
     }
   }
 `
 
 export const GET_ERC721_TRANSFERS_BY_TOKEN = gql`
   query GetERC721TransfersByToken(
-    $tokenAddress: String!
-    $filter: ERC721TransferFilter
+    $token: Address!
     $pagination: PaginationInput
   ) {
-    erc721TransfersByToken(tokenAddress: $tokenAddress, filter: $filter, pagination: $pagination) {
+    erc721TransfersByToken(token: $token, pagination: $pagination) {
       nodes {
         transactionHash
         logIndex
-        tokenAddress
+        contractAddress
         from
         to
         tokenId
         blockNumber
-        timestamp
       }
       totalCount
       pageInfo {
@@ -247,11 +241,7 @@ export const GET_ERC721_TRANSFERS_BY_ADDRESS = gql`
 `
 
 export const GET_ERC721_OWNER = gql`
-  query GetERC721Owner($tokenAddress: String!, $tokenId: String!) {
-    erc721Owner(tokenAddress: $tokenAddress, tokenId: $tokenId) {
-      tokenAddress
-      tokenId
-      owner
-    }
+  query GetERC721Owner($token: Address!, $tokenId: BigInt!) {
+    erc721Owner(token: $token, tokenId: $tokenId)
   }
 `

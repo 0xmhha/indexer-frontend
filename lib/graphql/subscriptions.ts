@@ -37,14 +37,14 @@ export const NEW_BLOCK_SUBSCRIPTION = gql`
 // ============================================================================
 
 export const NEW_TRANSACTION_SUBSCRIPTION = gql`
-  subscription OnNewTransaction {
-    newTransaction {
+  subscription OnNewTransaction($replayLast: Int) {
+    newTransaction(replayLast: $replayLast) {
       hash
       from
       to
       value
       nonce
-      gasLimit
+      gas
       gasPrice
       input
       type
@@ -59,14 +59,14 @@ export const NEW_TRANSACTION_SUBSCRIPTION = gql`
 `
 
 export const NEW_PENDING_TRANSACTION_SUBSCRIPTION = gql`
-  subscription OnNewPendingTransaction {
-    newPendingTransaction {
+  subscription OnNewPendingTransactions($limit: Int) {
+    newPendingTransactions(limit: $limit) {
       hash
       from
       to
       value
       nonce
-      gasLimit
+      gas
       gasPrice
       input
       type
@@ -82,8 +82,8 @@ export const NEW_PENDING_TRANSACTION_SUBSCRIPTION = gql`
 // ============================================================================
 
 export const LOGS_SUBSCRIPTION = gql`
-  subscription OnLogs($filter: LogFilter) {
-    logs(filter: $filter) {
+  subscription OnLogs($filter: LogFilter!, $replayLast: Int) {
+    logs(filter: $filter, replayLast: $replayLast) {
       address
       topics
       data
