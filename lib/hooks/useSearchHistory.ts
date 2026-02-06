@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { PAGINATION } from '@/lib/config/constants'
+import { errorLogger } from '@/lib/errors/logger'
 
 const STORAGE_KEY = 'search_history'
 const MAX_HISTORY_ITEMS = PAGINATION.SEARCH_LIMIT
@@ -32,7 +33,7 @@ export function useSearchHistory(): UseSearchHistoryResult {
         return JSON.parse(stored) as SearchHistoryItem[]
       }
     } catch (error) {
-      console.error('[useSearchHistory] Failed to load history:', error)
+      errorLogger.error(error, { component: 'useSearchHistory', action: 'load-history' })
     }
     return []
   })
@@ -42,7 +43,7 @@ export function useSearchHistory(): UseSearchHistoryResult {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
     } catch (error) {
-      console.error('[useSearchHistory] Failed to save history:', error)
+      errorLogger.error(error, { component: 'useSearchHistory', action: 'save-history' })
     }
   }, [])
 
@@ -72,7 +73,7 @@ export function useSearchHistory(): UseSearchHistoryResult {
     try {
       localStorage.removeItem(STORAGE_KEY)
     } catch (error) {
-      console.error('[useSearchHistory] Failed to clear history:', error)
+      errorLogger.error(error, { component: 'useSearchHistory', action: 'clear-history' })
     }
   }, [])
 

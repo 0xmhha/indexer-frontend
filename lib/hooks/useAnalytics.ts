@@ -19,6 +19,7 @@ import type {
   RawFeePayerStats,
 } from '@/types/graphql'
 import { PAGINATION, TIMING, CACHE_POLICIES } from '@/lib/config/constants'
+import { errorLogger } from '@/lib/errors/logger'
 
 // Re-export types for backward compatibility
 export type { FeeDelegationStats, FeePayerStats }
@@ -305,12 +306,12 @@ export function useFeeDelegationStats(options: FeeDelegationStatsOptions = {}) {
   const hasApiError = Boolean(statsError || payersError)
   const shouldUseMock = useMock || hasApiError
 
-  // Debug: Log errors to console
+  // Debug: Log errors
   if (statsError) {
-    console.error('[useFeeDelegationStats] feeDelegationStats query error:', statsError.message)
+    errorLogger.error(statsError, { component: 'useFeeDelegationStats', action: 'query-stats' })
   }
   if (payersError) {
-    console.error('[useFeeDelegationStats] topFeePayers query error:', payersError.message)
+    errorLogger.error(payersError, { component: 'useFeeDelegationStats', action: 'query-payers' })
   }
 
   // Transform data or use mock

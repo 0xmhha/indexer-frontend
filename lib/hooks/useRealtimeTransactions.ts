@@ -8,6 +8,7 @@ import {
   type RawTransaction,
   type TransformedTransaction,
 } from '@/lib/utils/graphql-transforms'
+import { errorLogger } from '@/lib/errors/logger'
 
 interface RealtimeTransactionsOptions {
   /** Callback when a new transaction is received */
@@ -97,7 +98,7 @@ export function useRealtimeTransactions(
           onNewTransactionRef.current(transformedTransaction)
         }
       } catch (error) {
-        console.error('[useRealtimeTransactions] Failed to transform transaction:', error)
+        errorLogger.error(error, { component: 'useRealtimeTransactions', action: 'transform-transaction' })
       }
     }
   }, [lastMessage, queryClient])

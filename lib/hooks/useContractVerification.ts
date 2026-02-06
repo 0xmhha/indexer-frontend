@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { getSystemContractInfo } from '@/lib/config/constants'
+import { errorLogger } from '@/lib/errors/logger'
 import type { ContractABI, AbiFunction } from '@/types/contract'
 
 // ============================================================================
@@ -385,7 +386,7 @@ export function useContractVerification(address: string) {
         setVerification(null)
       }
     } catch (err) {
-      console.error('Failed to fetch contract verification:', err)
+      errorLogger.error(err, { component: 'useContractVerification', action: 'fetch-verification' })
       setError(err instanceof Error ? err : new Error('Unknown error'))
 
       // Still provide system contract data on error

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
+import { errorLogger } from '@/lib/errors/logger'
 
 type Theme = 'dark' | 'light' | 'system'
 
@@ -44,7 +45,7 @@ export function useTheme(): UseThemeResult {
         return stored
       }
     } catch (error) {
-      console.error('[useTheme] Failed to read theme from localStorage:', error)
+      errorLogger.error(error, { component: 'useTheme', action: 'load-theme' })
     }
 
     return 'dark' // Default to dark theme
@@ -69,7 +70,7 @@ export function useTheme(): UseThemeResult {
     try {
       localStorage.setItem(STORAGE_KEY, theme)
     } catch (error) {
-      console.error('[useTheme] Failed to save theme to localStorage:', error)
+      errorLogger.error(error, { component: 'useTheme', action: 'save-theme' })
     }
   }, [theme])
 

@@ -4,6 +4,7 @@ import { useEffect, useCallback, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useWebSocket } from '@/lib/providers/WebSocketProvider'
 import { transformBlock, type RawBlock, type TransformedBlock } from '@/lib/utils/graphql-transforms'
+import { errorLogger } from '@/lib/errors/logger'
 
 interface RealtimeBlocksOptions {
   /** Callback when a new block is received */
@@ -85,7 +86,7 @@ export function useRealtimeBlocks(options: RealtimeBlocksOptions = {}): Realtime
           onNewBlock(transformedBlock)
         }
       } catch (error) {
-        console.error('[useRealtimeBlocks] Failed to transform block:', error)
+        errorLogger.error(error, { component: 'useRealtimeBlocks', action: 'transform-block' })
       }
     }
   }, [lastMessage, queryClient, onNewBlock])
