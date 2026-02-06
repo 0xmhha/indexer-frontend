@@ -28,9 +28,9 @@ This report identifies **173 technical debt items** across the codebase, categor
 |----------|-------|----------|------|--------|-----|
 | TODO/Deferred Code | 10 | 0 | 0 | 10 | 0 |
 | SOLID Violations | 20 | 1 | 4 | 14 | 1 |
-| Naming Conventions | 11 | 0 | 11 | 0 | 0 |
+| Naming Conventions | 0 | 0 | 0 | 0 | 0 |
 | Clean Code Violations | 130 | 5 | 15 | 90 | 20 |
-| **Total** | **171** | **6** | **30** | **114** | **21** |
+| **Total** | **160** | **6** | **19** | **114** | **21** |
 
 ### Key Findings
 
@@ -45,6 +45,7 @@ This report identifies **173 technical debt items** across the codebase, categor
 | Date | Task | Details |
 |------|------|---------|
 | 2026-02-06 | Split `useSystemContracts.ts` | Split 1,606 lines into 3 domain-specific modules: `useNativeCoinAdapter.ts` (230 lines), `useContractSubscriptions.ts` (349 lines), `useGovernance.ts` (649 lines) |
+| 2026-02-06 | Rename UI component files (NC-001) | Renamed 11 files from kebab-case to PascalCase, updated 80+ import statements |
 
 ---
 
@@ -248,25 +249,25 @@ const useWalletConnection = (provider?: WalletProvider) => {
 
 **Standard**: Component files should use PascalCase per project conventions (CLAUDE.md)
 
-| Current Name | Expected Name | Path |
-|--------------|---------------|------|
-| `button.tsx` | `Button.tsx` | `components/ui/` |
-| `card.tsx` | `Card.tsx` | `components/ui/` |
-| `checkbox.tsx` | `Checkbox.tsx` | `components/ui/` |
-| `input.tsx` | `Input.tsx` | `components/ui/` |
-| `select.tsx` | `Select.tsx` | `components/ui/` |
-| `table.tsx` | `Table.tsx` | `components/ui/` |
-| `tabs.tsx` | `Tabs.tsx` | `components/ui/` |
-| `pagination.tsx` | `Pagination.tsx` | `components/ui/` |
-| `pagination-buttons.tsx` | `PaginationButtons.tsx` | `components/ui/` |
-| `pagination-controls.tsx` | `PaginationControls.tsx` | `components/ui/` |
-| `virtualized-table.tsx` | `VirtualizedTable.tsx` | `components/ui/` |
+| Current Name | Expected Name | Path | Status |
+|--------------|---------------|------|--------|
+| ~~`button.tsx`~~ | `Button.tsx` | `components/ui/` | ✅ RESOLVED |
+| ~~`card.tsx`~~ | `Card.tsx` | `components/ui/` | ✅ RESOLVED |
+| ~~`checkbox.tsx`~~ | `Checkbox.tsx` | `components/ui/` | ✅ RESOLVED |
+| ~~`input.tsx`~~ | `Input.tsx` | `components/ui/` | ✅ RESOLVED |
+| ~~`select.tsx`~~ | `Select.tsx` | `components/ui/` | ✅ RESOLVED |
+| ~~`table.tsx`~~ | `Table.tsx` | `components/ui/` | ✅ RESOLVED |
+| ~~`tabs.tsx`~~ | `Tabs.tsx` | `components/ui/` | ✅ RESOLVED |
+| ~~`pagination.tsx`~~ | `Pagination.tsx` | `components/ui/` | ✅ RESOLVED |
+| ~~`pagination-buttons.tsx`~~ | `PaginationButtons.tsx` | `components/ui/` | ✅ RESOLVED |
+| ~~`pagination-controls.tsx`~~ | `PaginationControls.tsx` | `components/ui/` | ✅ RESOLVED |
+| ~~`virtualized-table.tsx`~~ | `VirtualizedTable.tsx` | `components/ui/` | ✅ RESOLVED |
 
 ### 3.2 Compliance Summary
 
 | Convention | Status | Notes |
 |------------|--------|-------|
-| Component Files (PascalCase) | ❌ 11 violations | `components/ui/` directory |
+| Component Files (PascalCase) | ✅ Compliant | Resolved 2026-02-06 |
 | Function Names (camelCase) | ✅ Compliant | - |
 | Hook Names (`use` prefix) | ✅ Compliant | - |
 | Types/Interfaces (PascalCase) | ✅ Compliant | - |
@@ -417,7 +418,7 @@ function NetworkForm({ formData, formErrors, editingId, handlers }: NetworkFormP
 
 | ID | Issue | Impact | Effort |
 |----|-------|--------|--------|
-| NC-001 | UI component file naming (11 files) | Consistency | Low |
+| ~~NC-001~~ | ~~UI component file naming (11 files)~~ | ~~Consistency~~ | ✅ **RESOLVED** |
 | CC-001 | Console statements (45+ files) | Production quality | Medium |
 | SRP-003 | `constants.ts` - 843 lines | Maintainability | Medium |
 
@@ -462,7 +463,7 @@ function NetworkForm({ formData, formErrors, editingId, handlers }: NetworkFormP
 1. Remove/replace console statements
    └── Implement logger utility
 
-2. Rename UI component files
+2. ✅ Rename UI component files (COMPLETED 2026-02-06)
    └── kebab-case → PascalCase (11 files)
 
 3. Document or remove ESLint disables
@@ -511,7 +512,7 @@ function NetworkForm({ formData, formErrors, editingId, handlers }: NetworkFormP
 
 | File | Issues | Priority |
 |------|--------|----------|
-| `components/ui/*.tsx` (11 files) | File naming | **HIGH** |
+| ~~`components/ui/*.tsx` (11 files)~~ | ~~File naming~~ | ✅ **RESOLVED** |
 | `lib/utils/graphql-transforms.ts` | LSP (null handling) | **MEDIUM** |
 | `stores/networkStore.ts` | Console statements (6) | **MEDIUM** |
 | `lib/apollo/client.ts` | Console statements (5), Commented code | **MEDIUM** |
@@ -527,7 +528,7 @@ function NetworkForm({ formData, formErrors, editingId, handlers }: NetworkFormP
 | ESLint disables | 11 | 3 (documented) | 2 weeks | - |
 | SRP violations | 6 major | 0 | 4 weeks | 1 resolved |
 | ISP violations | 3 major | 0 | 3 weeks | - |
-| Naming violations | 11 | 0 | 1 week | - |
+| Naming violations | 0 | 0 | ~~1 week~~ | ✅ 11 resolved |
 
 ---
 
@@ -541,3 +542,4 @@ function NetworkForm({ formData, formErrors, editingId, handlers }: NetworkFormP
 |------|--------|--------|
 | 2026-02-06 | Initial document creation | - |
 | 2026-02-06 | Updated: Completed `useSystemContracts.ts` split into 3 domain-specific modules | - |
+| 2026-02-06 | Updated: Completed NC-001 - UI component files renamed to PascalCase (11 files) | - |
