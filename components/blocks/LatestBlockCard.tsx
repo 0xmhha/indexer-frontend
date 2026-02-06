@@ -1,7 +1,7 @@
 'use client'
 
 import { useNewBlocks } from '@/lib/hooks/useSubscriptions'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { formatNumber, formatTimeAgo } from '@/lib/utils/format'
 import Link from 'next/link'

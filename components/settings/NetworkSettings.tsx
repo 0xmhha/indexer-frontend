@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { useNetworkStore, selectCustomNetworks, selectCurrentNetwork } from '@/stores/networkStore'
 import { PRESET_NETWORKS, MAX_CUSTOM_NETWORKS, NETWORK_TYPE_LABELS } from '@/config/networks.config'
 import { TIMEOUTS } from '@/lib/config/constants'

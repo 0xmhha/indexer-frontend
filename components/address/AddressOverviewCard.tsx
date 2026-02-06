@@ -1,6 +1,6 @@
 'use client'
 
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { CopyButton } from '@/components/common/CopyButton'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { formatCurrencyFull } from '@/lib/utils/format'

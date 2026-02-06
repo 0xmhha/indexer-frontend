@@ -6,15 +6,15 @@
  */
 
 // Buttons
-export { Button, buttonVariants } from './button'
+export { Button, buttonVariants } from './Button'
 
 // Cards
-export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from './card'
+export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent } from './Card'
 
 // Form elements
-export { Checkbox } from './checkbox'
-export { Input } from './input'
-export { Select } from './select'
+export { Checkbox } from './Checkbox'
+export { Input } from './Input'
+export { Select } from './Select'
 
 // Data display
 export {
@@ -26,14 +26,14 @@ export {
   TableRow,
   TableCell,
   TableCaption,
-} from './table'
-export { VirtualizedTable } from './virtualized-table'
+} from './Table'
+export { VirtualizedTable } from './VirtualizedTable'
 
 // Navigation
-export { Tabs, TabsList, TabsTrigger, TabsContent } from './tabs'
+export { Tabs, TabsList, TabsTrigger, TabsContent } from './Tabs'
 
 // Pagination
-export { Pagination } from './pagination'
+export { Pagination } from './Pagination'
 export {
   FirstPageButton,
   PrevPageButton,
@@ -41,5 +41,5 @@ export {
   LastPageButton,
   PageButton,
   PageEllipsis,
-} from './pagination-buttons'
-export { PaginationControls } from './pagination-controls'
+} from './PaginationButtons'
+export { PaginationControls } from './PaginationControls'

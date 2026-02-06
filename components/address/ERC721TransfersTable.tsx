@@ -10,8 +10,8 @@ import {
   TableRow,
   TableHead,
   TableCell,
-} from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
+} from '@/components/ui/Table'
+import { Button } from '@/components/ui/Button'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { formatHash, formatNumber, formatDate } from '@/lib/utils/format'

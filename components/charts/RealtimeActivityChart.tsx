@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from 'recharts'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { usePendingTransactions } from '@/lib/hooks/useSubscriptions'
 import { weiToGwei } from '@/lib/utils/gas'
 import { UI, BLOCKCHAIN, FORMATTING } from '@/lib/config/constants'

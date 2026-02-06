@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { useSearch } from '@/lib/hooks/useSearch'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/Card'
 import { TypeFilter } from '@/components/search/TypeFilter'
 import { SearchResultsList, SearchTipsCard } from '@/components/search/SearchResultsList'
 import type { SearchResultType } from '@/lib/graphql/queries/search'

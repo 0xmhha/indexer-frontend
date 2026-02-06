@@ -1,7 +1,7 @@
 'use client'
 
 import { useNewBlocks } from '@/lib/hooks/useSubscriptions'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { BlockCard } from './BlockCard'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { UI } from '@/lib/config/constants'

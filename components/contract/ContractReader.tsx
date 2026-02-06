@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { useLazyQuery } from '@apollo/client'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
 import { CONTRACT_CALL } from '@/lib/graphql/queries/rpcProxy'
 import type { ContractABI, AbiFunction } from '@/types/contract'
 

@@ -2,8 +2,8 @@
 
 import { useState, useCallback } from 'react'
 import Link from 'next/link'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { useInternalTransactionsRPCLazy, type InternalTransactionRPC } from '@/lib/hooks/useRpcProxy'
 import { formatHash, formatCurrency } from '@/lib/utils/format'

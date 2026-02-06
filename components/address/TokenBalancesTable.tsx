@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/Table'
 import { formatHash, formatNumber } from '@/lib/utils/format'
 import { getSystemContractInfo } from '@/lib/config/constants'
 import type { TokenBalance } from '@/types/graphql'

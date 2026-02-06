@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/Card'
 import { formatHash, formatCurrency } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
 

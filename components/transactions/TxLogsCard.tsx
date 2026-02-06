@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Table, TableBody, TableRow, TableCell } from '@/components/ui/table'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import { Table, TableBody, TableRow, TableCell } from '@/components/ui/Table'
 import { CopyButton } from '@/components/common/CopyButton'
 import { FORMATTING } from '@/lib/config/constants'
 import { decodeEventLog, formatTokenAmount } from '@/lib/utils/eventDecoder'

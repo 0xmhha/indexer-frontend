@@ -1,8 +1,8 @@
 'use client'
 
 import Link from 'next/link'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Table, TableBody, TableRow, TableCell } from '@/components/ui/table'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import { Table, TableBody, TableRow, TableCell } from '@/components/ui/Table'
 import { TransactionTypeBadge } from '@/components/transactions/TransactionTypeBadge'
 import { CopyButton } from '@/components/common/CopyButton'
 import { formatNumber, formatCurrency, formatGasPrice } from '@/lib/utils/format'

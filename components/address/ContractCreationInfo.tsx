@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useContractCreation, useContractsByCreator } from '@/lib/hooks/useAddressIndexing'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import {
   Table,
   TableHeader,
@@ -11,8 +11,8 @@ import {
   TableRow,
   TableHead,
   TableCell,
-} from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
+} from '@/components/ui/Table'
+import { Button } from '@/components/ui/Button'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { formatHash, formatNumber, formatDate } from '@/lib/utils/format'

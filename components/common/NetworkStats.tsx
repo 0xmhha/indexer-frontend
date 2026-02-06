@@ -2,7 +2,7 @@
 
 import { useLatestHeight } from '@/lib/hooks/useLatestHeight'
 import { useNetworkMetrics } from '@/lib/hooks/useNetworkMetrics'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/Card'
 import { formatNumber } from '@/lib/utils/format'
 import { LoadingSkeleton } from '@/components/common/LoadingSpinner'
 

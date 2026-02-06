@@ -1,4 +1,4 @@
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Skeleton, SkeletonTable } from '@/components/common/Skeleton'
 
 export function AddressDetailSkeleton() {

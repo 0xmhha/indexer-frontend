@@ -1,6 +1,6 @@
 'use client'
 
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import type { SearchResultType } from '@/lib/graphql/queries/search'
 import { TYPE_LABELS, TYPE_ICONS } from '@/components/search/SearchResultCard'
 

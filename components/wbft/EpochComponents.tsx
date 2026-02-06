@@ -1,6 +1,6 @@
 'use client'
 
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { truncateAddress } from '@/lib/utils/format'
 import type { ValidatorDisplayInfo, Epoch } from '@/lib/hooks/useWBFT'
 import { FORMATTING } from '@/lib/config/constants'

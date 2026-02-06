@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import { useBlock } from '@/lib/hooks/useBlock'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import {
   Table,
   TableHeader,
@@ -11,8 +11,8 @@ import {
   TableRow,
   TableHead,
   TableCell,
-} from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
+} from '@/components/ui/Table'
+import { Button } from '@/components/ui/Button'
 import { BlockDetailSkeleton } from '@/components/skeletons/BlockDetailSkeleton'
 import { NotFound } from '@/components/common/ErrorBoundary'
 import {

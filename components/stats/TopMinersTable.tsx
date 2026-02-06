@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/table'
+import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from '@/components/ui/Table'
 import { formatHash, formatNumber, formatDate } from '@/lib/utils/format'
 import type { MinerStats } from '@/lib/graphql/queries/stats'
 

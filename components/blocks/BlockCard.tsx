@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Card, CardContent } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/Card'
 import { formatTimeAgo, formatNumber } from '@/lib/utils/format'
 import type { Block } from '@/types/graphql'
 

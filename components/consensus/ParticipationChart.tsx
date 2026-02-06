@@ -13,7 +13,7 @@ import {
   type TooltipProps,
 } from 'recharts'
 import type { NameType, ValueType } from 'recharts/types/component/DefaultTooltipContent'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { useConsensusStore } from '@/stores/consensusStore'
 import { useRealtimeStore } from '@/stores/realtimeStore'

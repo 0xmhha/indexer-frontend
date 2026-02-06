@@ -6,7 +6,7 @@ import {
   TableBody,
   TableRow,
   TableHead,
-} from '@/components/ui/table'
+} from '@/components/ui/Table'
 import { TransactionRow } from './TransactionRow'
 import type { Transaction } from '@/types/graphql'
 

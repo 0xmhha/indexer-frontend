@@ -3,7 +3,7 @@
 import { useMemo } from 'react'
 import { useConsensusStore } from '@/stores/consensusStore'
 import { useRealtimeStore } from '@/stores/realtimeStore'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 
 /**
  * Network health status component

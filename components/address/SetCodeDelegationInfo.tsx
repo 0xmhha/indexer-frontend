@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useSetCodeDelegation } from '@/lib/hooks/useAddress'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { formatHash, formatNumber } from '@/lib/utils/format'
 import { CopyButton } from '@/components/common/CopyButton'

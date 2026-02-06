@@ -1,7 +1,7 @@
 'use client'
 
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { PaginationControls } from '@/components/ui/pagination-controls'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import { PaginationControls } from '@/components/ui/PaginationControls'
 import { ExportButton } from '@/components/common/ExportButton'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'

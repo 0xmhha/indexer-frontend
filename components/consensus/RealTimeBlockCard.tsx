@@ -3,7 +3,7 @@
 import { useConsensusBlockSubscription } from '@/lib/hooks/useConsensus'
 import { formatNumber, truncateAddress } from '@/lib/utils/format'
 import { getParticipationColor, getParticipationBgColor } from '@/types/consensus'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 
 /**

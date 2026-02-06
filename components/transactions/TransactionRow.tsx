@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { formatHash, formatNumber, formatCurrency } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
 import { TransactionTypeBadge } from './TransactionTypeBadge'
-import { TableRow, TableCell } from '@/components/ui/table'
+import { TableRow, TableCell } from '@/components/ui/Table'
 import type { Transaction } from '@/types/graphql'
 
 interface TransactionRowProps {

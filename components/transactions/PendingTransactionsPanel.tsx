@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import {
   Table,
   TableHeader,
@@ -9,7 +9,7 @@ import {
   TableRow,
   TableHead,
   TableCell,
-} from '@/components/ui/table'
+} from '@/components/ui/Table'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { TransactionTypeBadge } from '@/components/transactions/TransactionTypeBadge'

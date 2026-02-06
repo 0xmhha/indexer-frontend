@@ -1,7 +1,7 @@
 'use client'
 
 import { useMemo } from 'react'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import type { SearchResult, SearchResultType } from '@/lib/graphql/queries/search'
 import { SearchResultCard, TYPE_LABELS, TYPE_ICONS } from '@/components/search/SearchResultCard'

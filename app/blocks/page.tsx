@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useBlocksWithSubscription } from '@/lib/hooks/useBlocksWithSubscription'
 import { usePagination } from '@/lib/hooks/usePagination'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import {
   Table,
   TableHeader,
@@ -13,8 +13,8 @@ import {
   TableRow,
   TableHead,
   TableCell,
-} from '@/components/ui/table'
-import { PaginationControls } from '@/components/ui/pagination-controls'
+} from '@/components/ui/Table'
+import { PaginationControls } from '@/components/ui/PaginationControls'
 import { ExportButton } from '@/components/common/ExportButton'
 import { ListPageSkeleton } from '@/components/skeletons/ListPageSkeleton'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'

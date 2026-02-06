@@ -16,7 +16,7 @@ import {
   LastPageButton,
   PageButton,
   PageEllipsis,
-} from '@/components/ui/pagination-buttons'
+} from '@/components/ui/PaginationButtons'
 
 // ============================================================
 // Types

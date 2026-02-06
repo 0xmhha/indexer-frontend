@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import dynamic from 'next/dynamic'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { isValidAddress } from '@/lib/utils/validation'
 import type { ContractABI } from '@/types/contract'

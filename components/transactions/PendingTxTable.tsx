@@ -8,7 +8,7 @@ import {
   TableRow,
   TableHead,
   TableCell,
-} from '@/components/ui/table'
+} from '@/components/ui/Table'
 import { TransactionTypeBadge } from '@/components/transactions/TransactionTypeBadge'
 import { formatHash, formatCurrency, formatNumber } from '@/lib/utils/format'
 import { weiToGwei } from '@/lib/utils/gas'

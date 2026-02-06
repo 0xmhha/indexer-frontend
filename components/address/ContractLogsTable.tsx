@@ -8,7 +8,7 @@ import {
   TableRow,
   TableHead,
   TableCell,
-} from '@/components/ui/table'
+} from '@/components/ui/Table'
 import { formatHash, formatNumber } from '@/lib/utils/format'
 import { decodeEventLog, type DecodedLog } from '@/lib/utils/eventDecoder'
 import { FORMATTING } from '@/lib/config/constants'

@@ -1,7 +1,7 @@
 'use client'
 
 import { useUserPreferences } from '@/lib/hooks/useUserPreferences'
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { exportPreferences, importPreferences } from '@/lib/store/userPreferences'
 import { useState } from 'react'
 import { TIMEOUTS } from '@/lib/config/constants'
