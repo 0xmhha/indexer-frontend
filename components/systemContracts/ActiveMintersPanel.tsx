@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
-import { useActiveMinters } from '@/lib/hooks/useSystemContracts'
+import { useActiveMinters } from '@/lib/hooks/useNativeCoinAdapter'
 import { formatNumber, truncateAddress } from '@/lib/utils/format'
 
 /**

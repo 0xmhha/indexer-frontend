@@ -13,7 +13,7 @@ import {
   getProposalStatusColor,
   type Proposal,
   type ProposalStatusFilter,
-} from '@/lib/hooks/useSystemContracts'
+} from '@/lib/hooks/useGovernance'
 import { formatDateTime, truncateAddress } from '@/lib/utils/format'
 import { UI } from '@/lib/config/constants'
 

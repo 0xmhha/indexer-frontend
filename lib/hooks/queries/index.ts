@@ -35,7 +35,10 @@ export * as governanceQueries from '@/lib/hooks/useGovernance'
 export * as consensusQueries from '@/lib/hooks/useConsensus'
 export * as wbftQueries from '@/lib/hooks/useWBFT'
 export * as epochSearchQueries from '@/lib/hooks/useEpochSearch'
-export * as systemContractsQueries from '@/lib/hooks/useSystemContracts'
+
+// System Contract queries (split by domain)
+export * as nativeCoinAdapterQueries from '@/lib/hooks/useNativeCoinAdapter'
+export * as contractSubscriptionsQueries from '@/lib/hooks/useContractSubscriptions'
 
 // Search queries
 export * as searchQueries from '@/lib/hooks/useSearch'

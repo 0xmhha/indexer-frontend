@@ -304,7 +304,7 @@ function RecentProposalCard({ proposal }: { proposal: Proposal }) {
   )
 }
 
-function getStatusStyles(status: ProposalStatus): string {
+function getStatusStyles(status: string): string {
   switch (status) {
     case ProposalStatus.VOTING:
       return 'border-accent-blue bg-accent-blue/10 text-accent-blue'

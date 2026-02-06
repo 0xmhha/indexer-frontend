@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
-import { useTotalSupply, useActiveMinters, useMintEvents, useBurnEvents } from '@/lib/hooks/useSystemContracts'
+import { useTotalSupply, useActiveMinters, useMintEvents, useBurnEvents } from '@/lib/hooks/useNativeCoinAdapter'
 import { formatNumber, formatDateTime, formatTokenAmount, truncateAddress } from '@/lib/utils/format'
 import { FORMATTING, UI } from '@/lib/config/constants'
 

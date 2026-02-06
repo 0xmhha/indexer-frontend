@@ -268,7 +268,7 @@ function VoteCard({ vote }: { vote: ProposalVote }) {
   )
 }
 
-function getStatusStyles(status: ProposalStatus): {
+function getStatusStyles(status: string): {
   badge: string
 } {
   switch (status) {

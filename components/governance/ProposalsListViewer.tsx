@@ -244,7 +244,7 @@ function ProposalCard({ proposal }: { proposal: Proposal }) {
   )
 }
 
-function getStatusStyles(status: ProposalStatus): {
+function getStatusStyles(status: string): {
   badge: string
   active: string
 } {

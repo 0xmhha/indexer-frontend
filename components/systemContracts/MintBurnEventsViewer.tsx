@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
-import { useMintEvents, useBurnEvents, type MintEvent, type BurnEvent } from '@/lib/hooks/useSystemContracts'
+import { useMintEvents, useBurnEvents, type MintEvent, type BurnEvent } from '@/lib/hooks/useNativeCoinAdapter'
 import { formatNumber, formatDateTime, truncateAddress } from '@/lib/utils/format'
 import { UI } from '@/lib/config/constants'
 

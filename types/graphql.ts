@@ -154,7 +154,7 @@ export {
 } from '@/lib/hooks/useReceipt'
 
 // ============================================================================
-// System Contract Types (from useSystemContracts hook)
+// System Contract Types - Contract Subscriptions
 // ============================================================================
 
 export type {
@@ -168,18 +168,37 @@ export type {
   DynamicContractSubscriptionFilter,
   DynamicContractEventMessage,
   ParsedDynamicContractEvent,
-  // Governance Types
-  Proposal,
-  ProposalVote,
-  ProposalStatus,
-  ProposalStatusFilter,
-  DepositMintProposal,
-  // Event Types
+} from '@/lib/hooks/useContractSubscriptions'
+
+export {
+  // Constants
+  SYSTEM_CONTRACTS,
+  // Parsing Functions
+  parseSystemContractEvent,
+  parseDynamicContractEvent,
+} from '@/lib/hooks/useContractSubscriptions'
+
+// ============================================================================
+// System Contract Types - Native Coin Adapter (Token)
+// ============================================================================
+
+export type {
   MintEvent,
   BurnEvent,
   MinterInfo,
-  ValidatorInfo,
   MinterConfigEvent,
+} from '@/lib/hooks/useNativeCoinAdapter'
+
+// ============================================================================
+// System Contract Types - Governance
+// ============================================================================
+
+export type {
+  Proposal,
+  ProposalVote,
+  ProposalStatusFilter,
+  DepositMintProposal,
+  ValidatorInfo,
   GasTipUpdateEvent,
   ValidatorChangeEvent,
   EmergencyPauseEvent,
@@ -187,16 +206,12 @@ export type {
   MemberChangeEvent,
   MaxProposalsUpdateEvent,
   ProposalExecutionSkippedEvent,
-} from '@/lib/hooks/useSystemContracts'
+} from '@/lib/hooks/useGovernance'
 
 export {
-  // Constants
-  SYSTEM_CONTRACTS,
-  // Utility Functions
-  parseSystemContractEvent,
-  parseDynamicContractEvent,
+  ProposalStatus,
   isAddressBlacklisted,
   filterToBackendStatus,
   getProposalStatusLabel,
   getProposalStatusColor,
-} from '@/lib/hooks/useSystemContracts'
+} from '@/lib/hooks/useGovernance'
