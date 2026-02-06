@@ -47,6 +47,7 @@ This report identifies **173 technical debt items** across the codebase, categor
 | 2026-02-06 | Split `useSystemContracts.ts` | Split 1,606 lines into 3 domain-specific modules: `useNativeCoinAdapter.ts` (230 lines), `useContractSubscriptions.ts` (349 lines), `useGovernance.ts` (649 lines) |
 | 2026-02-06 | Rename UI component files (NC-001) | Renamed 11 files from kebab-case to PascalCase, updated 80+ import statements |
 | 2026-02-06 | Split `useConsensus.ts` (SRP-002) | Split 906 lines into 3 domain-specific modules: `consensus.types.ts` (145 lines), `useConsensusQueries.ts` (353 lines), `useConsensusSubscriptions.ts` (321 lines) |
+| 2026-02-06 | Split `constants.ts` (CC-001) | Split 843 lines into 6 domain-specific modules: pagination, realtime, consensus, blockchain, system-contracts, ui |
 
 ---
 
@@ -285,7 +286,7 @@ const useWalletConnection = (provider?: WalletProvider) => {
 |------|-------|----------|-------------------|
 | ~~`lib/hooks/useSystemContracts.ts`~~ | ~~1,606~~ | ~~**CRITICAL**~~ | ✅ **RESOLVED** - Split into 3 domain-specific files |
 | ~~`lib/hooks/useConsensus.ts`~~ | ~~906~~ | ~~**HIGH**~~ | ✅ **RESOLVED** - Split into 3 domain-specific files |
-| `lib/config/constants.ts` | 843 | **HIGH** | Split by domain (pagination, polling, features, etc.) |
+| ~~`lib/config/constants.ts`~~ | ~~843~~ | ~~**HIGH**~~ | ✅ **RESOLVED** - Split into 6 domain-specific files |
 | `lib/apollo/queries.ts` | 734 | **HIGH** | Split by entity (block, transaction, address, etc.) |
 | `lib/hooks/useGovernance.ts` | 649 | **MEDIUM** | Extracted from useSystemContracts, acceptable size |
 | `components/transactions/TxDetailCards.tsx` | 619 | **MEDIUM** | Extract individual card components |
@@ -420,8 +421,8 @@ function NetworkForm({ formData, formErrors, editingId, handlers }: NetworkFormP
 | ID | Issue | Impact | Effort |
 |----|-------|--------|--------|
 | ~~NC-001~~ | ~~UI component file naming (11 files)~~ | ~~Consistency~~ | ✅ **RESOLVED** |
-| CC-001 | Console statements (45+ files) | Production quality | Medium |
-| SRP-003 | `constants.ts` - 843 lines | Maintainability | Medium |
+| ~~CC-001~~ | ~~`constants.ts` - 843 lines~~ | ~~Maintainability~~ | ✅ **RESOLVED** |
+| CC-002 | Console statements (45+ files) | Production quality | Medium |
 
 ### Medium (Fix This Month)
 
@@ -455,7 +456,13 @@ function NetworkForm({ formData, formErrors, editingId, handlers }: NetworkFormP
    │   ├── consensus.types.ts (145 lines)
    │   ├── useConsensusQueries.ts (353 lines)
    │   └── useConsensusSubscriptions.ts (321 lines)
-   └── constants.ts → 5 domain files
+   └── ✅ constants.ts → 6 domain files (COMPLETED 2026-02-06)
+       ├── pagination.ts (28 lines)
+       ├── realtime.ts (195 lines)
+       ├── consensus.ts (107 lines)
+       ├── blockchain.ts (236 lines)
+       ├── system-contracts.ts (82 lines)
+       └── ui.ts (131 lines)
 
 2. Segregate bloated interfaces
    └── AddressTransactionsSectionProps → 4 focused interfaces
@@ -508,7 +515,7 @@ function NetworkForm({ formData, formErrors, editingId, handlers }: NetworkFormP
 | ~~`lib/hooks/useConsensus.ts`~~ | ~~SRP, Size (906 lines)~~ | ✅ **RESOLVED** |
 | `lib/hooks/useAddress.ts` | SRP (6 responsibilities) | **HIGH** |
 | `lib/hooks/usePagination.ts` | SRP, DIP | **MEDIUM** |
-| `lib/config/constants.ts` | Size (843 lines) | **HIGH** |
+| ~~`lib/config/constants.ts`~~ | ~~Size (843 lines)~~ | ✅ **RESOLVED** |
 | `components/address/AddressTransactionsSection.tsx` | ISP (14 props) | **HIGH** |
 | `components/transactions/TxDetailCards.tsx` | ISP, Size (619 lines) | **MEDIUM** |
 
@@ -527,7 +534,7 @@ function NetworkForm({ formData, formErrors, editingId, handlers }: NetworkFormP
 
 | Metric | Current | Target | Timeline | Progress |
 |--------|---------|--------|----------|----------|
-| Files >400 lines | 10 | 0 | 4 weeks | 2 resolved |
+| Files >400 lines | 10 | 0 | 4 weeks | 3 resolved |
 | Console statements | 45+ files | 0 | 2 weeks | - |
 | ESLint disables | 11 | 3 (documented) | 2 weeks | - |
 | SRP violations | 6 major | 0 | 4 weeks | 2 resolved |
@@ -548,3 +555,4 @@ function NetworkForm({ formData, formErrors, editingId, handlers }: NetworkFormP
 | 2026-02-06 | Updated: Completed `useSystemContracts.ts` split into 3 domain-specific modules | - |
 | 2026-02-06 | Updated: Completed NC-001 - UI component files renamed to PascalCase (11 files) | - |
 | 2026-02-06 | Updated: Completed SRP-002 - `useConsensus.ts` split into 3 domain-specific modules | - |
+| 2026-02-06 | Updated: Completed CC-001 - `constants.ts` split into 6 domain-specific modules | - |
