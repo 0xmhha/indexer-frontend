@@ -201,6 +201,16 @@ function TransactionsListContent() {
                             >
                               {formatHash(tx.to, true)}
                             </Link>
+                          ) : tx.contractAddress ? (
+                            <span className="inline-flex items-center gap-1">
+                              <span className="text-xs text-accent-orange">[Created]</span>
+                              <Link
+                                href={`/address/${tx.contractAddress}`}
+                                className="font-mono text-xs text-accent-blue hover:text-accent-cyan"
+                              >
+                                {formatHash(tx.contractAddress, true)}
+                              </Link>
+                            </span>
                           ) : (
                             <span className="font-mono text-xs text-text-muted">[Contract]</span>
                           )}

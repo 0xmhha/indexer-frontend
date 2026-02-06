@@ -30,6 +30,7 @@ const GET_TRANSACTIONS = gql`
         blockNumber
         from
         to
+        contractAddress
         value
         gas
         gasPrice

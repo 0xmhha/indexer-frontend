@@ -1668,6 +1668,7 @@ export type Transaction = {
   blockHash: Scalars['Hash']['output'];
   blockNumber: Scalars['BigInt']['output'];
   chainId?: Maybe<Scalars['BigInt']['output']>;
+  contractAddress?: Maybe<Scalars['Address']['output']>;
   feePayer?: Maybe<Scalars['Address']['output']>;
   feePayerSignatures?: Maybe<Array<FeePayerSignature>>;
   from: Scalars['Address']['output'];
@@ -1964,14 +1965,14 @@ export type GetBlockQueryVariables = Exact<{
 }>;
 
 
-export type GetBlockQuery = { __typename?: 'Query', block?: { __typename?: 'Block', number: string, hash: string, parentHash: string, timestamp: string, miner: string, gasUsed: string, gasLimit: string, size: string, transactionCount: number, baseFeePerGas?: string | null, withdrawalsRoot?: string | null, blobGasUsed?: string | null, excessBlobGas?: string | null, transactions: Array<{ __typename?: 'Transaction', hash: string, from: string, to?: string | null, value: string, gas: string, gasPrice?: string | null, type: number, nonce: string }> } | null };
+export type GetBlockQuery = { __typename?: 'Query', block?: { __typename?: 'Block', number: string, hash: string, parentHash: string, timestamp: string, miner: string, gasUsed: string, gasLimit: string, size: string, transactionCount: number, baseFeePerGas?: string | null, withdrawalsRoot?: string | null, blobGasUsed?: string | null, excessBlobGas?: string | null, transactions: Array<{ __typename?: 'Transaction', hash: string, from: string, to?: string | null, contractAddress?: string | null, value: string, gas: string, gasPrice?: string | null, type: number, nonce: string }> } | null };
 
 export type GetBlockByHashQueryVariables = Exact<{
   hash: Scalars['String']['input'];
 }>;
 
 
-export type GetBlockByHashQuery = { __typename?: 'Query', blockByHash?: { __typename?: 'Block', number: string, hash: string, parentHash: string, timestamp: string, miner: string, gasUsed: string, gasLimit: string, size: string, transactionCount: number, baseFeePerGas?: string | null, withdrawalsRoot?: string | null, blobGasUsed?: string | null, excessBlobGas?: string | null, transactions: Array<{ __typename?: 'Transaction', hash: string, from: string, to?: string | null, value: string }> } | null };
+export type GetBlockByHashQuery = { __typename?: 'Query', blockByHash?: { __typename?: 'Block', number: string, hash: string, parentHash: string, timestamp: string, miner: string, gasUsed: string, gasLimit: string, size: string, transactionCount: number, baseFeePerGas?: string | null, withdrawalsRoot?: string | null, blobGasUsed?: string | null, excessBlobGas?: string | null, transactions: Array<{ __typename?: 'Transaction', hash: string, from: string, to?: string | null, contractAddress?: string | null, value: string, gas: string, gasPrice?: string | null, type: number, nonce: string }> } | null };
 
 export type GetTransactionQueryVariables = Exact<{
   hash: Scalars['String']['input'];
@@ -2788,7 +2789,7 @@ export type GetTransactionsQueryVariables = Exact<{
 }>;
 
 
-export type GetTransactionsQuery = { __typename?: 'Query', transactions: { __typename?: 'TransactionConnection', totalCount: number, nodes: Array<{ __typename?: 'Transaction', hash: string, blockNumber: string, from: string, to?: string | null, value: string, gas: string, gasPrice?: string | null, type: number }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean } } };
+export type GetTransactionsQuery = { __typename?: 'Query', transactions: { __typename?: 'TransactionConnection', totalCount: number, nodes: Array<{ __typename?: 'Transaction', hash: string, blockNumber: string, from: string, to?: string | null, contractAddress?: string | null, value: string, gas: string, gasPrice?: string | null, type: number }>, pageInfo: { __typename?: 'PageInfo', hasNextPage: boolean, hasPreviousPage: boolean } } };
 
 
 export const GetTokenInfoDocument = gql`
@@ -2939,6 +2940,7 @@ export const GetBlockDocument = gql`
       hash
       from
       to
+      contractAddress
       value
       gas
       gasPrice
@@ -3001,7 +3003,12 @@ export const GetBlockByHashDocument = gql`
       hash
       from
       to
+      contractAddress
       value
+      gas
+      gasPrice
+      type
+      nonce
     }
   }
 }
@@ -8124,6 +8131,7 @@ export const GetTransactionsDocument = gql`
       blockNumber
       from
       to
+      contractAddress
       value
       gas
       gasPrice

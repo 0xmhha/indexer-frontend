@@ -37,6 +37,7 @@ export const GET_BLOCK = gql`
         hash
         from
         to
+        contractAddress
         value
         gas
         gasPrice
@@ -68,7 +69,12 @@ export const GET_BLOCK_BY_HASH = gql`
         hash
         from
         to
+        contractAddress
         value
+        gas
+        gasPrice
+        type
+        nonce
       }
     }
   }

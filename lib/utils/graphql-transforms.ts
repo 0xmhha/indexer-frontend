@@ -135,6 +135,7 @@ export interface RawTransaction {
   transactionIndex?: number
   from: string
   to: string | null
+  contractAddress?: string | null
   value: string
   gas: string
   gasPrice?: string | null
@@ -165,6 +166,7 @@ export interface TransformedTransaction {
   transactionIndex?: number | undefined
   from: string
   to: string | null
+  contractAddress?: string | null
   value: bigint
   gas: bigint
   gasPrice: bigint | null
@@ -343,6 +345,7 @@ export function transformTransaction(raw: RawTransaction): TransformedTransactio
     transactionIndex: raw.transactionIndex,
     from: raw.from,
     to: raw.to,
+    contractAddress: raw.contractAddress ?? null,
     value: toBigInt(raw.value),
     gas: toBigInt(raw.gas),
     gasPrice: raw.gasPrice ? toBigInt(raw.gasPrice) : null,
