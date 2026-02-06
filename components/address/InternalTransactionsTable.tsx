@@ -105,6 +105,16 @@ export function InternalTransactionsTable({ address, limit = PAGINATION.DEFAULT_
                 <TableCell>
                   {tx.to === null ? (
                     <span className="font-mono text-text-muted">[Contract Creation]</span>
+                  ) : tx.type.startsWith('CREATE') ? (
+                    <span className="inline-flex items-center gap-1">
+                      <span className="text-accent-orange">[Created]</span>
+                      <Link
+                        href={`/address/${tx.to}`}
+                        className="font-mono text-accent-blue hover:text-accent-cyan"
+                      >
+                        {formatHash(tx.to, true)}
+                      </Link>
+                    </span>
                   ) : tx.to === address ? (
                     <span className="font-mono text-text-secondary">Self</span>
                   ) : (
