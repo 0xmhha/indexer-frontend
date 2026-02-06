@@ -27,18 +27,24 @@ This report identifies **173 technical debt items** across the codebase, categor
 | Category | Count | Critical | High | Medium | Low |
 |----------|-------|----------|------|--------|-----|
 | TODO/Deferred Code | 10 | 0 | 0 | 10 | 0 |
-| SOLID Violations | 21 | 2 | 4 | 14 | 1 |
+| SOLID Violations | 20 | 1 | 4 | 14 | 1 |
 | Naming Conventions | 11 | 0 | 11 | 0 | 0 |
-| Clean Code Violations | 131 | 6 | 15 | 90 | 20 |
-| **Total** | **173** | **8** | **30** | **114** | **21** |
+| Clean Code Violations | 130 | 5 | 15 | 90 | 20 |
+| **Total** | **171** | **6** | **30** | **114** | **21** |
 
 ### Key Findings
 
-1. **Large Files**: 6 files exceed 500 lines, with `useSystemContracts.ts` at 1,606 lines
+1. **Large Files**: 5 files exceed 500 lines (~~`useSystemContracts.ts` at 1,606 lines~~ ✅ RESOLVED)
 2. **Console Statements**: 45+ files contain `console.log/error/warn` statements
 3. **Single Responsibility Violations**: Core hooks manage 5+ responsibilities each
 4. **Interface Bloat**: Props interfaces combine unrelated concerns (up to 14 props)
 5. **Inconsistent File Naming**: 11 UI component files use kebab-case instead of PascalCase
+
+### Completed Refactoring
+
+| Date | Task | Details |
+|------|------|---------|
+| 2026-02-06 | Split `useSystemContracts.ts` | Split 1,606 lines into 3 domain-specific modules: `useNativeCoinAdapter.ts` (230 lines), `useContractSubscriptions.ts` (349 lines), `useGovernance.ts` (649 lines) |
 
 ---
 
@@ -56,13 +62,11 @@ This report identifies **173 technical debt items** across the codebase, categor
 
 | ID | File | Line | Feature | Dependency |
 |----|------|------|---------|------------|
-| BF-001 | `lib/hooks/useSystemContracts.ts` | 83 | `minterConfigHistory` query | Backend GraphQL schema |
-| BF-002 | `lib/hooks/useSystemContracts.ts` | 143 | `authorizedAccounts` query | Backend GraphQL schema |
-| BF-003 | `lib/hooks/useSystemContracts.ts` | 733 | `useMinterConfigHistory()` hook | Backend GraphQL schema |
-| BF-004 | `lib/hooks/useSystemContracts.ts` | 892 | `useAuthorizedAccounts()` hook | Backend GraphQL schema |
-| BF-005 | `lib/graphql/queries/relay.ts` | 173 | `networkStats` query | Backend GraphQL schema |
-| BF-006 | `lib/graphql/queries/rpcProxy.ts` | 94 | `ethGetBalance` query | Backend GraphQL schema |
-| BF-007 | `app/contracts/page.tsx` | 82 | Contracts list feature | Backend support |
+| BF-001 | `lib/hooks/useGovernance.ts` | 487 | `useMinterConfigHistory()` hook | Backend GraphQL schema |
+| BF-002 | `lib/hooks/useGovernance.ts` | 595 | `useAuthorizedAccounts()` hook | Backend GraphQL schema |
+| BF-003 | `lib/graphql/queries/relay.ts` | 173 | `networkStats` query | Backend GraphQL schema |
+| BF-004 | `lib/graphql/queries/rpcProxy.ts` | 94 | `ethGetBalance` query | Backend GraphQL schema |
+| BF-005 | `app/contracts/page.tsx` | 82 | Contracts list feature | Backend support |
 
 ### 1.3 Impact Assessment
 
@@ -277,10 +281,11 @@ const useWalletConnection = (provider?: WalletProvider) => {
 
 | File | Lines | Severity | Recommended Action |
 |------|-------|----------|-------------------|
-| `lib/hooks/useSystemContracts.ts` | 1,606 | **CRITICAL** | Split into 4 domain-specific files |
+| ~~`lib/hooks/useSystemContracts.ts`~~ | ~~1,606~~ | ~~**CRITICAL**~~ | ✅ **RESOLVED** - Split into 3 domain-specific files |
 | `lib/hooks/useConsensus.ts` | 906 | **HIGH** | Split into 3 feature-specific files |
 | `lib/config/constants.ts` | 843 | **HIGH** | Split by domain (pagination, polling, features, etc.) |
 | `lib/apollo/queries.ts` | 734 | **HIGH** | Split by entity (block, transaction, address, etc.) |
+| `lib/hooks/useGovernance.ts` | 649 | **MEDIUM** | Extracted from useSystemContracts, acceptable size |
 | `components/transactions/TxDetailCards.tsx` | 619 | **MEDIUM** | Extract individual card components |
 | `components/settings/NetworkSettings.tsx` | 523 | **MEDIUM** | Extract form and card sub-components |
 | `components/systemContracts/GovernanceProposalsViewer.tsx` | 502 | **MEDIUM** | Extract table and filter components |
@@ -349,8 +354,6 @@ export { logger }
 | File | Lines | Content |
 |------|-------|---------|
 | `lib/apollo/client.ts` | 63-69 | GraphQL request logging code |
-| `lib/hooks/useSystemContracts.ts` | 84-96 | `minterConfigHistory` GraphQL query |
-| `lib/hooks/useSystemContracts.ts` | 144-156 | `authorizedAccounts` GraphQL query |
 
 ### 4.5 Functions with Excessive Parameters
 
@@ -406,7 +409,7 @@ function NetworkForm({ formData, formErrors, editingId, handlers }: NetworkFormP
 
 | ID | Issue | Impact | Effort |
 |----|-------|--------|--------|
-| SRP-001 | `useSystemContracts.ts` - 1,606 lines | Maintainability | High |
+| ~~SRP-001~~ | ~~`useSystemContracts.ts` - 1,606 lines~~ | ~~Maintainability~~ | ✅ **RESOLVED** |
 | SRP-002 | `useConsensus.ts` - 906 lines | Maintainability | Medium |
 | ISP-001 | `AddressTransactionsSectionProps` - 14 props | Reusability | Medium |
 
@@ -442,7 +445,10 @@ function NetworkForm({ formData, formErrors, editingId, handlers }: NetworkFormP
 
 ```
 1. Split large hook files
-   ├── useSystemContracts.ts → 4 files (~400 lines each)
+   ├── ✅ useSystemContracts.ts → 3 files (COMPLETED 2026-02-06)
+   │   ├── useNativeCoinAdapter.ts (230 lines)
+   │   ├── useContractSubscriptions.ts (349 lines)
+   │   └── useGovernance.ts (649 lines)
    ├── useConsensus.ts → 3 files (~300 lines each)
    └── constants.ts → 5 domain files
 
@@ -493,7 +499,7 @@ function NetworkForm({ formData, formErrors, editingId, handlers }: NetworkFormP
 
 | File | Issues | Priority |
 |------|--------|----------|
-| `lib/hooks/useSystemContracts.ts` | SRP, Size (1,606 lines) | **CRITICAL** |
+| ~~`lib/hooks/useSystemContracts.ts`~~ | ~~SRP, Size (1,606 lines)~~ | ✅ **RESOLVED** |
 | `lib/hooks/useConsensus.ts` | SRP, Size (906 lines) | **HIGH** |
 | `lib/hooks/useAddress.ts` | SRP (6 responsibilities) | **HIGH** |
 | `lib/hooks/usePagination.ts` | SRP, DIP | **MEDIUM** |
@@ -514,15 +520,24 @@ function NetworkForm({ formData, formErrors, editingId, handlers }: NetworkFormP
 
 ## Appendix B: Metrics Targets
 
-| Metric | Current | Target | Timeline |
-|--------|---------|--------|----------|
-| Files >400 lines | 11 | 0 | 4 weeks |
-| Console statements | 45+ files | 0 | 2 weeks |
-| ESLint disables | 11 | 3 (documented) | 2 weeks |
-| SRP violations | 7 major | 0 | 4 weeks |
-| ISP violations | 3 major | 0 | 3 weeks |
-| Naming violations | 11 | 0 | 1 week |
+| Metric | Current | Target | Timeline | Progress |
+|--------|---------|--------|----------|----------|
+| Files >400 lines | 10 | 0 | 4 weeks | 1 resolved |
+| Console statements | 45+ files | 0 | 2 weeks | - |
+| ESLint disables | 11 | 3 (documented) | 2 weeks | - |
+| SRP violations | 6 major | 0 | 4 weeks | 1 resolved |
+| ISP violations | 3 major | 0 | 3 weeks | - |
+| Naming violations | 11 | 0 | 1 week | - |
 
 ---
 
 *This document should be reviewed and updated after each refactoring phase.*
+
+---
+
+## Change Log
+
+| Date | Change | Author |
+|------|--------|--------|
+| 2026-02-06 | Initial document creation | - |
+| 2026-02-06 | Updated: Completed `useSystemContracts.ts` split into 3 domain-specific modules | - |
