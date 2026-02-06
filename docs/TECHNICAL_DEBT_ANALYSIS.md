@@ -48,6 +48,7 @@ This report identifies **173 technical debt items** across the codebase, categor
 | 2026-02-06 | Rename UI component files (NC-001) | Renamed 11 files from kebab-case to PascalCase, updated 80+ import statements |
 | 2026-02-06 | Split `useConsensus.ts` (SRP-002) | Split 906 lines into 3 domain-specific modules: `consensus.types.ts` (145 lines), `useConsensusQueries.ts` (353 lines), `useConsensusSubscriptions.ts` (321 lines) |
 | 2026-02-06 | Split `constants.ts` (CC-001) | Split 843 lines into 6 domain-specific modules: pagination, realtime, consensus, blockchain, system-contracts, ui |
+| 2026-02-06 | Replace console statements (CC-002) | Converted 45+ console statements to errorLogger across hooks, API routes, stores, and utilities |
 
 ---
 
@@ -298,48 +299,41 @@ const useWalletConnection = (provider?: WalletProvider) => {
 
 ### 4.2 Console Statements
 
-**Total: 36 files remaining** (originally 45+, 18 statements converted to errorLogger)
+**Status: ✅ RESOLVED** - All actionable console statements converted to errorLogger
 
-#### High-Impact Files (RESOLVED)
+#### Remaining Console Statements (Intentional)
 
-| File | Count | Type | Status |
-|------|-------|------|--------|
-| ~~`stores/networkStore.ts`~~ | ~~6~~ | ~~`console.error`~~ | ✅ Converted to errorLogger |
-| ~~`lib/apollo/client.ts`~~ | ~~5~~ | ~~`console.error`~~ | ✅ Converted to errorLogger |
-| ~~`lib/hooks/useSubscriptions.ts`~~ | ~~4~~ | ~~`console.error`~~ | ✅ Converted to errorLogger |
-| `components/settings/NotificationSettings.tsx` | 3 | `console.error` |
-| `components/providers/RealtimeProvider.tsx` | 3 | `console.error` |
+The only remaining console statements are intentional and should not be converted:
 
-#### API Routes with Console Statements
+| File | Count | Reason |
+|------|-------|--------|
+| `lib/errors/logger.ts` | 5 | The errorLogger itself uses console for output |
+| `lib/config/constants/index.ts` | 1 | DEV_LOG utility for development-only logging |
+| `lib/config/env.ts` | 1 | Startup validation (before errorLogger is available) |
+| `lib/apollo/client.ts` | 1 | Commented-out debug code |
 
-```
-app/api/v1/token/[address]/transfers/route.ts:104
-app/api/v1/token/[address]/route.ts:89
-app/api/v1/contract/[address]/source/route.ts:79
-app/api/v1/contract/[address]/abi/route.ts:76
-app/api/v1/contract/[address]/route.ts:80
-app/api/v1/tx/[hash]/logs/route.ts:62
-app/api/v1/tx/[hash]/route.ts:69
-```
+#### Converted Files
 
-#### Recommended Solution
+All console statements in the following files have been converted to use `errorLogger`:
 
-```typescript
-// Create a logging utility
-// lib/utils/logger.ts
-const logger = {
-  error: (message: string, ...args: unknown[]) => {
-    if (process.env.NODE_ENV !== 'production') {
-      console.error(`[ERROR] ${message}`, ...args)
-    }
-    // In production: send to logging service
-  },
-  warn: (message: string, ...args: unknown[]) => { /* ... */ },
-  info: (message: string, ...args: unknown[]) => { /* ... */ },
-}
+**Hooks (8 files):**
+- `useConsensusSubscriptions.ts`, `useSubscriptions.ts`, `useTheme.ts`, `useRealtimeBlocks.ts`
+- `useRealtimeTransactions.ts`, `useSearchHistory.ts`, `useAnalytics.ts`, `useContractVerification.ts`
 
-export { logger }
-```
+**Stores (2 files):**
+- `networkStore.ts`, `userPreferences.ts`
+
+**Components (3 files):**
+- `RealtimeProvider.tsx`, `NotificationSettings.tsx`, `ExportButton.tsx`
+
+**API Routes (18 files):**
+- All routes under `app/api/v1/` (stats, block, tx, validators, account, contract, token)
+
+**Utilities (2 files):**
+- `export.ts`, `websocket.ts`
+
+**Apollo Client (1 file):**
+- `lib/apollo/client.ts`
 
 ### 4.3 ESLint Disable Directives
 
@@ -422,7 +416,7 @@ function NetworkForm({ formData, formErrors, editingId, handlers }: NetworkFormP
 |----|-------|--------|--------|
 | ~~NC-001~~ | ~~UI component file naming (11 files)~~ | ~~Consistency~~ | ✅ **RESOLVED** |
 | ~~CC-001~~ | ~~`constants.ts` - 843 lines~~ | ~~Maintainability~~ | ✅ **RESOLVED** |
-| CC-002 | Console statements (45+ files) | Production quality | Medium |
+| ~~CC-002~~ | ~~Console statements (45+ files)~~ | ~~Production quality~~ | ✅ **RESOLVED** |
 
 ### Medium (Fix This Month)
 
@@ -535,7 +529,7 @@ function NetworkForm({ formData, formErrors, editingId, handlers }: NetworkFormP
 | Metric | Current | Target | Timeline | Progress |
 |--------|---------|--------|----------|----------|
 | Files >400 lines | 10 | 0 | 4 weeks | 3 resolved |
-| Console statements | 36 files | 0 | 2 weeks | 18 statements converted |
+| Console statements | 8 intentional | 8 (intentional only) | ~~2 weeks~~ | ✅ 45+ statements converted |
 | ESLint disables | 11 | 3 (documented) | 2 weeks | - |
 | SRP violations | 6 major | 0 | 4 weeks | 2 resolved |
 | ISP violations | 3 major | 0 | 3 weeks | - |
@@ -556,4 +550,4 @@ function NetworkForm({ formData, formErrors, editingId, handlers }: NetworkFormP
 | 2026-02-06 | Updated: Completed NC-001 - UI component files renamed to PascalCase (11 files) | - |
 | 2026-02-06 | Updated: Completed SRP-002 - `useConsensus.ts` split into 3 domain-specific modules | - |
 | 2026-02-06 | Updated: Completed CC-001 - `constants.ts` split into 6 domain-specific modules | - |
-| 2026-02-06 | Updated: CC-002 in progress - Converted 18 console statements in high-impact files to errorLogger | - |
+| 2026-02-06 | Updated: Completed CC-002 - All console statements converted to errorLogger (45+ statements across 34 files) | - |
