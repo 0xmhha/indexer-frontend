@@ -27,6 +27,7 @@ import type {
 } from '@/types/graphql'
 import { env } from '@/lib/config/env'
 import { REALTIME, REPLAY } from '@/lib/config/constants'
+import { errorLogger } from '@/lib/errors/logger'
 import {
   useRealtimeStore,
   selectRecentBlocks,
@@ -138,7 +139,7 @@ export function useLogs(filter: LogFilter = {}, options: UseLogsOptions = {}) {
     fetchPolicy: 'no-cache',
     variables,
     onError: (error) => {
-      console.error('[Logs Subscription Error]:', error)
+      errorLogger.error(error, { component: 'useSubscriptions', action: 'logs-subscription' })
     },
   })
 
@@ -254,7 +255,7 @@ export function useNewBlocks(maxBlocks: number = REALTIME.MAX_BLOCKS) {
             const result = await response.json()
             return result.data?.block ? transformBlock(result.data.block as RawBlock) : null
           } catch (err) {
-            console.error('[useNewBlocks] Failed to fetch block', blockNum, err)
+            errorLogger.error(err, { component: 'useNewBlocks', action: 'fetch-block', metadata: { blockNumber: blockNum } })
             return null
           }
         })
@@ -375,7 +376,7 @@ export function useChainConfig(options: UseChainConfigOptions = {}) {
     variables,
     fetchPolicy: 'no-cache',
     onError: (error) => {
-      console.error('[Chain Config Subscription Error]:', error)
+      errorLogger.error(error, { component: 'useSubscriptions', action: 'chain-config-subscription' })
     },
   })
 
@@ -444,7 +445,7 @@ export function useValidatorSet(options: UseValidatorSetOptions = {}) {
     variables,
     fetchPolicy: 'no-cache',
     onError: (error) => {
-      console.error('[Validator Set Subscription Error]:', error)
+      errorLogger.error(error, { component: 'useSubscriptions', action: 'validator-set-subscription' })
     },
   })
 

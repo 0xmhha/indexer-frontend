@@ -11,6 +11,7 @@
 import { useCallback, useMemo } from 'react'
 import { useSubscription } from '@apollo/client'
 import { REPLAY } from '@/lib/config/constants'
+import { errorLogger } from '@/lib/errors/logger'
 import {
   SUBSCRIBE_CONSENSUS_BLOCK,
   SUBSCRIBE_CONSENSUS_ERROR,
@@ -65,7 +66,7 @@ export function useConsensusBlockSubscription(options: ConsensusSubscriptionOpti
   // Stable callback for onError
   const onError = useCallback(
     (err: Error) => {
-      console.error('[Consensus Block Subscription] Error:', err.message)
+      errorLogger.error(err, { component: 'useConsensusSubscriptions', action: 'block-subscription' })
       setConnectionStatus(false, err.message)
     },
     [setConnectionStatus]
@@ -127,7 +128,7 @@ export function useConsensusErrorSubscription(options: ConsensusSubscriptionOpti
 
   // Stable callback for onError
   const onError = useCallback((err: Error) => {
-    console.error('[Consensus Error Subscription] Error:', err.message)
+    errorLogger.error(err, { component: 'useConsensusSubscriptions', action: 'error-subscription' })
   }, [])
 
   // Memoize subscription options to prevent re-subscription
@@ -193,7 +194,7 @@ export function useConsensusForkSubscription(options: ConsensusSubscriptionOptio
 
   // Stable callback for onError
   const onError = useCallback((err: Error) => {
-    console.error('[Consensus Fork Subscription] Error:', err.message)
+    errorLogger.error(err, { component: 'useConsensusSubscriptions', action: 'fork-subscription' })
   }, [])
 
   // Memoize subscription options to prevent re-subscription
@@ -261,7 +262,7 @@ export function useConsensusValidatorChangeSubscription(options: ConsensusSubscr
 
   // Stable callback for onError
   const onError = useCallback((err: Error) => {
-    console.error('[Validator Change Subscription] Error:', err.message)
+    errorLogger.error(err, { component: 'useConsensusSubscriptions', action: 'validator-change-subscription' })
   }, [])
 
   // Memoize subscription options to prevent re-subscription

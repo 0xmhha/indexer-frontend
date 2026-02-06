@@ -5,6 +5,7 @@ import { onError } from '@apollo/client/link/error'
 import { createClient, Client as WsClient } from 'graphql-ws'
 import { env } from '@/lib/config/env'
 import { REALTIME } from '@/lib/config/constants'
+import { errorLogger } from '@/lib/errors/logger'
 import type { NetworkEndpoints } from '@/lib/config/networks.types'
 
 /**
@@ -43,14 +44,20 @@ function createErrorLink() {
         if (shouldSuppressError(message)) {
           return
         }
-        console.error(
-          `[GraphQL error]: Message: ${message}, Location: ${JSON.stringify(locations)}, Path: ${path}, Operation: ${operation.operationName}`
-        )
+        errorLogger.error(new Error(message), {
+          component: 'ApolloClient',
+          action: 'graphql-error',
+          metadata: { locations, path, operation: operation.operationName },
+        })
       })
     }
 
     if (networkError) {
-      console.error(`[Network error]: ${networkError.message}, Operation: ${operation.operationName}`)
+      errorLogger.error(networkError, {
+        component: 'ApolloClient',
+        action: 'network-error',
+        metadata: { operation: operation.operationName },
+      })
     }
   })
 }
@@ -171,8 +178,8 @@ function createWsClient(wsEndpoint: string): WsClient | null {
       return true
     },
     on: {
-      error: (_error) => {
-        console.error('[WebSocket]: Connection failed')
+      error: (wsError) => {
+        errorLogger.error(wsError, { component: 'ApolloClient', action: 'websocket-error' })
       },
     },
   })
@@ -233,7 +240,7 @@ export function createApolloClient(endpoints: NetworkEndpoints): ApolloClientIns
       // Stop all active queries
       client.stop()
       // Clear cache
-      client.clearStore().catch(console.error)
+      client.clearStore().catch((err) => errorLogger.error(err, { component: 'ApolloClient', action: 'clearStore' }))
     },
   }
 }

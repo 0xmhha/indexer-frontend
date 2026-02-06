@@ -10,6 +10,7 @@
 
 import { create } from 'zustand'
 import { devtools, persist } from 'zustand/middleware'
+import { errorLogger } from '@/lib/errors/logger'
 import type { NetworkConfig, ConnectionStatus } from '@/lib/config/networks.types'
 import {
   PRESET_NETWORKS,
@@ -109,7 +110,7 @@ export const useNetworkStore = create<NetworkState>()(
           const network = findNetwork(networkId, state.customNetworks)
 
           if (!network) {
-            console.error(`[NetworkStore] Network not found: ${networkId}`)
+            errorLogger.warn(`Network not found: ${networkId}`, { component: 'NetworkStore', action: 'selectNetwork' })
             return
           }
 
@@ -132,13 +133,13 @@ export const useNetworkStore = create<NetworkState>()(
 
           // Check limit
           if (state.customNetworks.length >= MAX_CUSTOM_NETWORKS) {
-            console.error(`[NetworkStore] Maximum custom networks reached (${MAX_CUSTOM_NETWORKS})`)
+            errorLogger.warn(`Maximum custom networks reached (${MAX_CUSTOM_NETWORKS})`, { component: 'NetworkStore', action: 'addCustomNetwork' })
             return null
           }
 
           // Validate
           if (!isValidNetworkConfig(networkData as Partial<NetworkConfig>)) {
-            console.error('[NetworkStore] Invalid network configuration')
+            errorLogger.warn('Invalid network configuration', { component: 'NetworkStore', action: 'addCustomNetwork' })
             return null
           }
 
@@ -163,13 +164,13 @@ export const useNetworkStore = create<NetworkState>()(
           const networkIndex = state.customNetworks.findIndex((n) => n.id === networkId)
 
           if (networkIndex === -1) {
-            console.error(`[NetworkStore] Custom network not found: ${networkId}`)
+            errorLogger.warn(`Custom network not found: ${networkId}`, { component: 'NetworkStore', action: 'updateCustomNetwork' })
             return false
           }
 
           const existingNetwork = state.customNetworks[networkIndex]
           if (!existingNetwork) {
-            console.error(`[NetworkStore] Custom network not found at index: ${networkIndex}`)
+            errorLogger.warn(`Custom network not found at index: ${networkIndex}`, { component: 'NetworkStore', action: 'updateCustomNetwork' })
             return false
           }
 
@@ -218,7 +219,7 @@ export const useNetworkStore = create<NetworkState>()(
           const networkIndex = state.customNetworks.findIndex((n) => n.id === networkId)
 
           if (networkIndex === -1) {
-            console.error(`[NetworkStore] Custom network not found: ${networkId}`)
+            errorLogger.warn(`Custom network not found: ${networkId}`, { component: 'NetworkStore', action: 'removeCustomNetwork' })
             return false
           }
 
