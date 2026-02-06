@@ -298,15 +298,15 @@ const useWalletConnection = (provider?: WalletProvider) => {
 
 ### 4.2 Console Statements
 
-**Total: 45+ files affected**
+**Total: 36 files remaining** (originally 45+, 18 statements converted to errorLogger)
 
-#### High-Impact Files
+#### High-Impact Files (RESOLVED)
 
-| File | Count | Type |
-|------|-------|------|
-| `stores/networkStore.ts` | 6 | `console.error` |
-| `lib/apollo/client.ts` | 5 | `console.error` |
-| `lib/hooks/useSubscriptions.ts` | 4 | `console.error` |
+| File | Count | Type | Status |
+|------|-------|------|--------|
+| ~~`stores/networkStore.ts`~~ | ~~6~~ | ~~`console.error`~~ | ✅ Converted to errorLogger |
+| ~~`lib/apollo/client.ts`~~ | ~~5~~ | ~~`console.error`~~ | ✅ Converted to errorLogger |
+| ~~`lib/hooks/useSubscriptions.ts`~~ | ~~4~~ | ~~`console.error`~~ | ✅ Converted to errorLogger |
 | `components/settings/NotificationSettings.tsx` | 3 | `console.error` |
 | `components/providers/RealtimeProvider.tsx` | 3 | `console.error` |
 
@@ -535,7 +535,7 @@ function NetworkForm({ formData, formErrors, editingId, handlers }: NetworkFormP
 | Metric | Current | Target | Timeline | Progress |
 |--------|---------|--------|----------|----------|
 | Files >400 lines | 10 | 0 | 4 weeks | 3 resolved |
-| Console statements | 45+ files | 0 | 2 weeks | - |
+| Console statements | 36 files | 0 | 2 weeks | 18 statements converted |
 | ESLint disables | 11 | 3 (documented) | 2 weeks | - |
 | SRP violations | 6 major | 0 | 4 weeks | 2 resolved |
 | ISP violations | 3 major | 0 | 3 weeks | - |
@@ -556,3 +556,4 @@ function NetworkForm({ formData, formErrors, editingId, handlers }: NetworkFormP
 | 2026-02-06 | Updated: Completed NC-001 - UI component files renamed to PascalCase (11 files) | - |
 | 2026-02-06 | Updated: Completed SRP-002 - `useConsensus.ts` split into 3 domain-specific modules | - |
 | 2026-02-06 | Updated: Completed CC-001 - `constants.ts` split into 6 domain-specific modules | - |
+| 2026-02-06 | Updated: CC-002 in progress - Converted 18 console statements in high-impact files to errorLogger | - |
