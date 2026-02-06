@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Download } from 'lucide-react'
 import { exportData, type ExportFormat } from '@/lib/utils/export'
+import { errorLogger } from '@/lib/errors/logger'
 
 export interface ExportButtonProps<T extends Record<string, unknown>> {
   data: T[]
@@ -32,7 +33,7 @@ export function ExportButton<T extends Record<string, unknown>>({
       await new Promise((resolve) => setTimeout(resolve, 100))
       exportData(data, filename, format, headers)
     } catch (error) {
-      console.error('Export failed:', error)
+      errorLogger.error(error, { component: 'ExportButton', action: 'export' })
     } finally {
       setIsExporting(null)
     }

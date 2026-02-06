@@ -3,6 +3,8 @@
  * Manages user settings in localStorage with type safety
  */
 
+import { errorLogger } from '@/lib/errors/logger'
+
 export type Theme = 'light' | 'dark' | 'system'
 export type Language = 'en' | 'ko' | 'ja' | 'zh'
 export type DateFormat = 'relative' | 'absolute' | 'both'
@@ -65,7 +67,7 @@ export function getUserPreferences(): UserPreferences {
       ...parsed,
     }
   } catch (error) {
-    console.error('Failed to load user preferences:', error)
+    errorLogger.error(error, { component: 'userPreferences', action: 'load' })
     return DEFAULT_PREFERENCES
   }
 }
@@ -75,7 +77,7 @@ export function getUserPreferences(): UserPreferences {
  */
 export function saveUserPreferences(preferences: Partial<UserPreferences>): void {
   if (!isLocalStorageAvailable()) {
-    console.warn('localStorage is not available')
+    errorLogger.warn('localStorage is not available', { component: 'userPreferences', action: 'save' })
     return
   }
 
@@ -87,7 +89,7 @@ export function saveUserPreferences(preferences: Partial<UserPreferences>): void
     }
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
   } catch (error) {
-    console.error('Failed to save user preferences:', error)
+    errorLogger.error(error, { component: 'userPreferences', action: 'save' })
   }
 }
 
@@ -112,7 +114,7 @@ export function resetPreferences(): void {
   try {
     localStorage.removeItem(STORAGE_KEY)
   } catch (error) {
-    console.error('Failed to reset preferences:', error)
+    errorLogger.error(error, { component: 'userPreferences', action: 'reset' })
   }
 }
 
@@ -143,7 +145,7 @@ export function importPreferences(json: string): boolean {
     saveUserPreferences(parsed)
     return true
   } catch (error) {
-    console.error('Failed to import preferences:', error)
+    errorLogger.error(error, { component: 'userPreferences', action: 'import' })
     return false
   }
 }

@@ -3,6 +3,8 @@
  * Provides functions for exporting data to CSV and JSON formats
  */
 
+import { errorLogger } from '@/lib/errors/logger'
+
 export type ExportFormat = 'csv' | 'json'
 
 /**
@@ -102,7 +104,7 @@ export function exportData<T extends Record<string, unknown>>(
   headers?: string[]
 ): void {
   if (data.length === 0) {
-    console.warn('No data to export')
+    errorLogger.warn('No data to export', { component: 'export', action: 'export-data' })
     return
   }
 

@@ -5,6 +5,7 @@
 
 import { env } from '@/lib/config/env'
 import { TIMEOUTS } from '@/lib/config/constants'
+import { errorLogger } from '@/lib/errors/logger'
 
 export type WebSocketMessage =
   | { type: 'newBlock'; data: unknown }
@@ -62,7 +63,7 @@ function createWebSocketClientInternal(): WebSocketClient {
       ws.onopen = () => {
         connectionState = 'connected'
         if (env.isDevelopment) {
-          console.log('[WebSocket] Connected to', env.wsEndpoint)
+          errorLogger.info(`WebSocket connected to ${env.wsEndpoint}`, { component: 'WebSocket', action: 'connect' })
         }
 
         // Notify all handlers of connection
@@ -91,13 +92,13 @@ function createWebSocketClientInternal(): WebSocketClient {
             })
           }
         } catch (error) {
-          console.error('[WebSocket] Failed to parse message:', error)
+          errorLogger.error(error, { component: 'WebSocket', action: 'parse-message' })
         }
       }
 
       ws.onerror = (error) => {
         connectionState = 'error'
-        console.error('[WebSocket] Error:', error)
+        errorLogger.error(error, { component: 'WebSocket', action: 'error' })
 
         messageHandlers.forEach((handler) => {
           handler({ type: 'error', data: { message: 'WebSocket connection error' } })
@@ -107,7 +108,7 @@ function createWebSocketClientInternal(): WebSocketClient {
       ws.onclose = () => {
         connectionState = 'disconnected'
         if (env.isDevelopment) {
-          console.log('[WebSocket] Disconnected')
+          errorLogger.info('WebSocket disconnected', { component: 'WebSocket', action: 'disconnect' })
         }
 
         messageHandlers.forEach((handler) => {
@@ -123,7 +124,7 @@ function createWebSocketClientInternal(): WebSocketClient {
         }, TIMEOUTS.WS_RECONNECT_DELAY)
       }
     } catch (error) {
-      console.error('[WebSocket] Connection failed:', error)
+      errorLogger.error(error, { component: 'WebSocket', action: 'connect' })
     }
   }
 
