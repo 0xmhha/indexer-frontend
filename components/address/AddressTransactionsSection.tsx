@@ -6,7 +6,7 @@ import { ExportButton } from '@/components/common/ExportButton'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { TransactionFilters, type TransactionFilterValues } from '@/components/transactions/TransactionFilters'
-import { AddressTransactionsTable } from './AddressTransactionsTable'
+import { TransactionTable } from '@/components/transactions/TransactionTable'
 import { formatNumber } from '@/lib/utils/format'
 import type { Transaction } from '@/types/graphql'
 
@@ -111,16 +111,17 @@ export function AddressTransactionsSection({
           ) : transactions.length === 0 ? (
             <EmptyState />
           ) : (
-            <AddressTransactionsTable
+            <TransactionTable
               transactions={transactions}
-              address={address}
+              currentAddress={address}
               showStatus={hasFilters}
             />
           )}
         </CardContent>
       </Card>
 
-      {totalPages > 1 && (
+      {/* Always show pagination when there are transactions */}
+      {totalCount > 0 && (
         <div className="mt-6">
           <PaginationControls
             currentPage={currentPage}

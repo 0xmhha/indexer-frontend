@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { useContractCreation, useContractsByCreator } from '@/lib/hooks/useAddressIndexing'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
@@ -11,10 +12,11 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/table'
+import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { formatHash, formatNumber, formatDate } from '@/lib/utils/format'
-import { UI } from '@/lib/config/constants'
+import { PAGINATION } from '@/lib/config/constants'
 import type { ContractCreation } from '@/types/address-indexing'
 
 interface ContractCreationInfoProps {
@@ -22,6 +24,9 @@ interface ContractCreationInfoProps {
 }
 
 export function ContractCreationInfo({ address }: ContractCreationInfoProps) {
+  const [currentOffset, setCurrentOffset] = useState(0)
+  const limit = PAGINATION.DEFAULT_PAGE_SIZE
+
   // Check if this address IS a contract (get its creation info)
   const {
     contractCreation,
@@ -33,9 +38,11 @@ export function ContractCreationInfo({ address }: ContractCreationInfoProps) {
   const {
     contracts: createdContracts,
     totalCount,
+    pageInfo,
     loading: createdLoading,
     error: createdError,
-  } = useContractsByCreator(address, { limit: UI.MAX_LIST_PREVIEW, offset: 0 })
+    loadMore,
+  } = useContractsByCreator(address, { limit, offset: currentOffset })
 
   const hasCreationInfo = contractCreation !== null
   const hasCreatedContracts = createdContracts.length > 0
@@ -180,13 +187,37 @@ export function ContractCreationInfo({ address }: ContractCreationInfoProps) {
                     </TableBody>
                   </Table>
                 </div>
-                {totalCount > UI.MAX_LIST_PREVIEW && (
+                {/* Load More Button */}
+                {pageInfo.hasNextPage && (
                   <div className="border-t border-bg-tertiary p-4 text-center">
-                    <p className="font-mono text-xs text-text-secondary">
-                      Showing first 5 contracts. Visit creator&apos;s page to see all {formatNumber(totalCount)}
-                    </p>
+                    <Button
+                      onClick={() => {
+                        setCurrentOffset((prev) => prev + limit)
+                        loadMore?.()
+                      }}
+                      disabled={createdLoading}
+                      variant="outline"
+                    >
+                      {createdLoading ? (
+                        <>
+                          <LoadingSpinner className="mr-2" size="sm" />
+                          Loading...
+                        </>
+                      ) : (
+                        <>
+                          Load More ({formatNumber(totalCount - createdContracts.length)} remaining)
+                        </>
+                      )}
+                    </Button>
                   </div>
                 )}
+
+                {/* Total Count */}
+                <div className="border-t border-bg-tertiary p-4 text-center">
+                  <p className="font-mono text-xs text-text-secondary">
+                    Showing {formatNumber(createdContracts.length)} of {formatNumber(totalCount)} contracts
+                  </p>
+                </div>
               </>
             )}
           </CardContent>

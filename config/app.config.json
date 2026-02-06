@@ -2,7 +2,7 @@
   "chain": {
     "name": "Stable-One",
     "id": "8283",
-    "currencySymbol": "STABLEONE"
+    "currencySymbol": "WKRC"
   },
   "api": {
     "graphqlEndpoint": "http://localhost:8080/graphql",

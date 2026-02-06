@@ -479,10 +479,10 @@ export const SYSTEM_CONTRACTS: Record<
     isNativeWrapper?: boolean
   }
 > = {
-  // Native Coin Adapter (STABLEONE wrapper)
+  // Native Coin Adapter (WKRC wrapper)
   '0x0000000000000000000000000000000000001000': {
-    name: 'STABLEONE',
-    symbol: 'STONE',
+    name: 'Wrapped KRC',
+    symbol: 'WKRC',
     decimals: 18,
     description: 'Native coin ERC20 wrapper',
     isNativeWrapper: true,

@@ -214,7 +214,7 @@ export default function BlockPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-right font-mono">
-                      {formatCurrency(BigInt(tx.value), env.currencySymbol)}
+                      {formatCurrency(BigInt(tx.value ?? '0'), env.currencySymbol)}
                     </TableCell>
                   </TableRow>
                 ))}

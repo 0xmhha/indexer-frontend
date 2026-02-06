@@ -338,6 +338,10 @@ export function transformSetCodeAuthorization(raw: RawSetCodeAuthorization): Tra
  * Transform raw transaction to typed transaction
  */
 export function transformTransaction(raw: RawTransaction): TransformedTransaction {
+  // Use contractAddress from transaction level, or fallback to receipt.contractAddress
+  // This ensures contract creation transactions always have the contract address
+  const contractAddress = raw.contractAddress ?? raw.receipt?.contractAddress ?? null
+
   return {
     hash: raw.hash,
     blockNumber: toBigInt(raw.blockNumber),
@@ -345,7 +349,7 @@ export function transformTransaction(raw: RawTransaction): TransformedTransactio
     transactionIndex: raw.transactionIndex,
     from: raw.from,
     to: raw.to,
-    contractAddress: raw.contractAddress ?? null,
+    contractAddress,
     value: toBigInt(raw.value),
     gas: toBigInt(raw.gas),
     gasPrice: raw.gasPrice ? toBigInt(raw.gasPrice) : null,

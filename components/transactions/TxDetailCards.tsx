@@ -134,7 +134,7 @@ export function TxInfoCard({ tx, status }: { tx: TransactionData; status: string
                   href={`/block/${tx.blockNumber}`}
                   className="font-mono text-accent-blue hover:text-accent-cyan"
                 >
-                  #{formatNumber(BigInt(tx.blockNumber))}
+                  #{formatNumber(BigInt(tx.blockNumber ?? '0'))}
                 </Link>
               </TableCell>
             </TableRow>
@@ -197,7 +197,7 @@ export function TxInfoCard({ tx, status }: { tx: TransactionData; status: string
             <TableRow>
               <TableCell className="font-bold">Value</TableCell>
               <TableCell className="font-mono font-bold text-accent-blue">
-                {formatCurrency(BigInt(tx.value), env.currencySymbol)}
+                {formatCurrency(BigInt(tx.value ?? '0'), env.currencySymbol)}
               </TableCell>
             </TableRow>
           </TableBody>
@@ -247,7 +247,7 @@ export function TxGasCard({
             </TableRow>
             <TableRow>
               <TableCell className="font-bold">Gas Limit</TableCell>
-              <TableCell className="font-mono">{formatNumber(BigInt(tx.gas))}</TableCell>
+              <TableCell className="font-mono">{formatNumber(BigInt(tx.gas ?? '0'))}</TableCell>
             </TableRow>
             <TableRow>
               <TableCell className="font-bold">Gas Price</TableCell>

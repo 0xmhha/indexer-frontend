@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useERC721TransfersByAddress } from '@/lib/hooks/useAddressIndexing'
 import {
@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { formatHash, formatNumber, formatDate } from '@/lib/utils/format'
-import { PAGINATION } from '@/lib/config/constants'
+import { PAGINATION, getSystemContractInfo } from '@/lib/config/constants'
 import type { ERC721Transfer } from '@/types/address-indexing'
 
 interface ERC721TransfersTableProps {
@@ -26,10 +26,65 @@ interface ERC721TransfersTableProps {
 export function ERC721TransfersTable({ address, limit = PAGINATION.DEFAULT_PAGE_SIZE }: ERC721TransfersTableProps) {
   const [currentOffset, setCurrentOffset] = useState(0)
 
-  // Fetch both sent (isFrom=true) and received (isFrom=false) transfers
-  // For now, default to showing transfers FROM this address
-  const { erc721Transfers, totalCount, pageInfo, loading, error, loadMore } =
-    useERC721TransfersByAddress(address, true, { limit, offset: currentOffset })
+  // Query transfers FROM this address
+  const {
+    erc721Transfers: fromTransfers,
+    totalCount: fromTotalCount,
+    pageInfo: fromPageInfo,
+    loading: fromLoading,
+    error: fromError,
+    loadMore: loadMoreFrom,
+  } = useERC721TransfersByAddress(address, true, { limit, offset: currentOffset })
+
+  // Query transfers TO this address
+  const {
+    erc721Transfers: toTransfers,
+    totalCount: toTotalCount,
+    pageInfo: toPageInfo,
+    loading: toLoading,
+    error: toError,
+    loadMore: loadMoreTo,
+  } = useERC721TransfersByAddress(address, false, { limit, offset: currentOffset })
+
+  // Merge and deduplicate transfers from both directions
+  const erc721Transfers = useMemo(() => {
+    const seen = new Set<string>()
+    const merged: ERC721Transfer[] = []
+
+    // Add FROM transfers
+    for (const transfer of fromTransfers) {
+      const key = `${transfer.transactionHash}-${transfer.logIndex}`
+      if (!seen.has(key)) {
+        seen.add(key)
+        merged.push(transfer)
+      }
+    }
+
+    // Add TO transfers (avoiding duplicates)
+    for (const transfer of toTransfers) {
+      const key = `${transfer.transactionHash}-${transfer.logIndex}`
+      if (!seen.has(key)) {
+        seen.add(key)
+        merged.push(transfer)
+      }
+    }
+
+    // Sort by block number descending
+    return merged.sort((a, b) => Number(b.blockNumber - a.blockNumber))
+  }, [fromTransfers, toTransfers])
+
+  const totalCount = fromTotalCount + toTotalCount
+  const loading = fromLoading || toLoading
+  const error = fromError || toError
+  const pageInfo = {
+    hasNextPage: fromPageInfo.hasNextPage || toPageInfo.hasNextPage,
+    hasPreviousPage: fromPageInfo.hasPreviousPage || toPageInfo.hasPreviousPage,
+  }
+
+  const loadMore = () => {
+    if (fromPageInfo.hasNextPage) loadMoreFrom?.()
+    if (toPageInfo.hasNextPage) loadMoreTo?.()
+  }
 
   const handleLoadMore = () => {
     if (pageInfo.hasNextPage) {
@@ -89,13 +144,30 @@ export function ERC721TransfersTable({ address, limit = PAGINATION.DEFAULT_PAGE_
                   </Link>
                 </TableCell>
                 <TableCell>
-                  <Link
-                    href={`/address/${transfer.contractAddress}`}
-                    className="font-mono text-accent-blue hover:text-accent-cyan"
-                    title={transfer.contractAddress}
-                  >
-                    {formatHash(transfer.contractAddress, true)}
-                  </Link>
+                  {(() => {
+                    const tokenInfo = getSystemContractInfo(transfer.contractAddress)
+                    if (tokenInfo) {
+                      return (
+                        <Link
+                          href={`/address/${transfer.contractAddress}`}
+                          className="inline-flex items-center gap-1 font-mono text-accent-blue hover:text-accent-cyan"
+                          title={transfer.contractAddress}
+                        >
+                          <span className="font-semibold">{tokenInfo.symbol}</span>
+                          <span className="text-xs text-text-secondary">({tokenInfo.name})</span>
+                        </Link>
+                      )
+                    }
+                    return (
+                      <Link
+                        href={`/address/${transfer.contractAddress}`}
+                        className="font-mono text-accent-blue hover:text-accent-cyan"
+                        title={transfer.contractAddress}
+                      >
+                        {formatHash(transfer.contractAddress, true)}
+                      </Link>
+                    )
+                  })()}
                 </TableCell>
                 <TableCell className="font-mono text-text-secondary">
                   #{formatNumber(transfer.tokenId)}

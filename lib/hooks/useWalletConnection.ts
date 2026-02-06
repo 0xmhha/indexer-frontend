@@ -49,6 +49,7 @@ export function useWalletConnection(): UseWalletConnectionResult {
   })
 
   // Check existing connection on mount
+  // Silently check - don't throw errors if MetaMask is not ready
   useEffect(() => {
     const checkConnection = async () => {
       const ethereum = getEthereumProvider()
@@ -68,11 +69,15 @@ export function useWalletConnection(): UseWalletConnectionResult {
           })
         }
       } catch {
-        // Wallet not connected - silently ignore
+        // Wallet not connected or MetaMask not ready - silently ignore
+        // This prevents errors from appearing when MetaMask extension has issues
+        console.debug('[Wallet] Connection check skipped - wallet not ready')
       }
     }
 
-    checkConnection()
+    // Delay check to allow MetaMask to fully initialize
+    const timer = setTimeout(checkConnection, 500)
+    return () => clearTimeout(timer)
   }, [])
 
   const connect = useCallback(async () => {

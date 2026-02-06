@@ -1,8 +1,9 @@
 'use client'
 
-import { useRef } from 'react'
+import { useRef, useMemo } from 'react'
 import { useQuery } from '@apollo/client'
 import { GET_ADDRESS_BALANCE, GET_ADDRESS_OVERVIEW, GET_TRANSACTIONS_BY_ADDRESS, GET_BALANCE_HISTORY, GET_TOKEN_BALANCES, GET_SETCODE_TRANSACTIONS } from '@/lib/apollo/queries'
+import { transformTransactions, type TransformedTransaction } from '@/lib/utils/graphql-transforms'
 import type { TokenBalance } from '@/types/graphql'
 import { PAGINATION, POLLING_INTERVALS } from '@/lib/config/constants'
 
@@ -174,33 +175,64 @@ export function useAddressOverview(address: string | null) {
 
 /**
  * Hook to fetch transactions by address with auto-refresh
+ * Uses same transformation as useTransactions for consistency
  */
 export function useAddressTransactions(address: string | null, limit: number = PAGINATION.ADDRESS_TX_LIMIT, offset: number = 0) {
-  const { data, loading, error, fetchMore, previousData } = useQuery(GET_TRANSACTIONS_BY_ADDRESS, {
+  // Track last successful offset to prevent data mixing between pages
+  const lastOffsetRef = useRef<number>(offset)
+  const cachedDataRef = useRef<{
+    transactions: TransformedTransaction[]
+    totalCount: number
+    pageInfo: { hasNextPage: boolean; hasPreviousPage: boolean } | undefined
+  } | null>(null)
+
+  const { data, loading, error, fetchMore } = useQuery(GET_TRANSACTIONS_BY_ADDRESS, {
     variables: {
       address: address ?? '',
       limit,
       offset,
     },
     skip: !address,
-    returnPartialData: true,
+    // Use network-only to prevent stale cache issues when offset changes
+    fetchPolicy: 'network-only',
     // Enable polling for real-time transaction updates (10 seconds)
     pollInterval: POLLING_INTERVALS.FAST,
     // Prevent re-renders during polling to avoid flickering
     notifyOnNetworkStatusChange: false,
   })
 
-  // Use previous data while loading to prevent flickering
-  const effectiveData = data ?? previousData
+  // Memoize transformed data to prevent unnecessary re-renders
+  const result = useMemo(() => {
+    if (data?.transactionsByAddress) {
+      const rawTransactions = data.transactionsByAddress.nodes ?? []
+      const transactions = transformTransactions(rawTransactions)
+      const totalCount = data.transactionsByAddress.totalCount ?? 0
+      const pageInfo = data.transactionsByAddress.pageInfo
 
-  const transactions = effectiveData?.transactionsByAddress?.nodes ?? []
-  const totalCount = effectiveData?.transactionsByAddress?.totalCount ?? 0
-  const pageInfo = effectiveData?.transactionsByAddress?.pageInfo
+      // Cache successful result
+      lastOffsetRef.current = offset
+      cachedDataRef.current = { transactions, totalCount, pageInfo }
+
+      return { transactions, totalCount, pageInfo }
+    }
+
+    // Use cached data only if offset matches (same page)
+    if (cachedDataRef.current && lastOffsetRef.current === offset) {
+      return cachedDataRef.current
+    }
+
+    // Return empty state for new page while loading
+    return {
+      transactions: [] as TransformedTransaction[],
+      totalCount: cachedDataRef.current?.totalCount ?? 0, // Keep total count for pagination
+      pageInfo: undefined,
+    }
+  }, [data, offset])
 
   return {
-    transactions,
-    totalCount,
-    pageInfo,
+    transactions: result.transactions,
+    totalCount: result.totalCount,
+    pageInfo: result.pageInfo,
     loading,
     error,
     fetchMore,

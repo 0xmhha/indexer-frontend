@@ -136,6 +136,7 @@ export const GET_TRANSACTION = gql`
 `
 
 // Get transactions by address
+// Note: Including receipt for contractAddress (contract creation transactions)
 export const GET_TRANSACTIONS_BY_ADDRESS = gql`
   query GetTransactionsByAddress($address: String!, $limit: Int, $offset: Int) {
     transactionsByAddress(address: $address, pagination: { limit: $limit, offset: $offset }) {
@@ -144,8 +145,15 @@ export const GET_TRANSACTIONS_BY_ADDRESS = gql`
         blockNumber
         from
         to
+        contractAddress
         value
         gas
+        gasPrice
+        type
+        receipt {
+          status
+          contractAddress
+        }
       }
       totalCount
       pageInfo {

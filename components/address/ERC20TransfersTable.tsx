@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useERC20TransfersByAddress } from '@/lib/hooks/useAddressIndexing'
 import {
@@ -14,8 +14,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
-import { formatHash, formatNumber, formatDate } from '@/lib/utils/format'
-import { PAGINATION } from '@/lib/config/constants'
+import { formatHash, formatNumber, formatDate, formatTokenAmount } from '@/lib/utils/format'
+import { PAGINATION, getSystemContractInfo } from '@/lib/config/constants'
 import type { ERC20Transfer } from '@/types/address-indexing'
 
 interface ERC20TransfersTableProps {
@@ -26,10 +26,65 @@ interface ERC20TransfersTableProps {
 export function ERC20TransfersTable({ address, limit = PAGINATION.DEFAULT_PAGE_SIZE }: ERC20TransfersTableProps) {
   const [currentOffset, setCurrentOffset] = useState(0)
 
-  // Fetch both sent (isFrom=true) and received (isFrom=false) transfers
-  // For now, default to showing transfers FROM this address
-  const { erc20Transfers, totalCount, pageInfo, loading, error, loadMore } =
-    useERC20TransfersByAddress(address, true, { limit, offset: currentOffset })
+  // Query transfers FROM this address
+  const {
+    erc20Transfers: fromTransfers,
+    totalCount: fromTotalCount,
+    pageInfo: fromPageInfo,
+    loading: fromLoading,
+    error: fromError,
+    loadMore: loadMoreFrom,
+  } = useERC20TransfersByAddress(address, true, { limit, offset: currentOffset })
+
+  // Query transfers TO this address
+  const {
+    erc20Transfers: toTransfers,
+    totalCount: toTotalCount,
+    pageInfo: toPageInfo,
+    loading: toLoading,
+    error: toError,
+    loadMore: loadMoreTo,
+  } = useERC20TransfersByAddress(address, false, { limit, offset: currentOffset })
+
+  // Merge and deduplicate transfers from both directions
+  const erc20Transfers = useMemo(() => {
+    const seen = new Set<string>()
+    const merged: ERC20Transfer[] = []
+
+    // Add FROM transfers
+    for (const transfer of fromTransfers) {
+      const key = `${transfer.transactionHash}-${transfer.logIndex}`
+      if (!seen.has(key)) {
+        seen.add(key)
+        merged.push(transfer)
+      }
+    }
+
+    // Add TO transfers (avoiding duplicates)
+    for (const transfer of toTransfers) {
+      const key = `${transfer.transactionHash}-${transfer.logIndex}`
+      if (!seen.has(key)) {
+        seen.add(key)
+        merged.push(transfer)
+      }
+    }
+
+    // Sort by block number descending
+    return merged.sort((a, b) => Number(b.blockNumber - a.blockNumber))
+  }, [fromTransfers, toTransfers])
+
+  const totalCount = fromTotalCount + toTotalCount
+  const loading = fromLoading || toLoading
+  const error = fromError || toError
+  const pageInfo = {
+    hasNextPage: fromPageInfo.hasNextPage || toPageInfo.hasNextPage,
+    hasPreviousPage: fromPageInfo.hasPreviousPage || toPageInfo.hasPreviousPage,
+  }
+
+  const loadMore = () => {
+    if (fromPageInfo.hasNextPage) loadMoreFrom?.()
+    if (toPageInfo.hasNextPage) loadMoreTo?.()
+  }
 
   const handleLoadMore = () => {
     if (pageInfo.hasNextPage) {
@@ -89,13 +144,30 @@ export function ERC20TransfersTable({ address, limit = PAGINATION.DEFAULT_PAGE_S
                   </Link>
                 </TableCell>
                 <TableCell>
-                  <Link
-                    href={`/address/${transfer.contractAddress}`}
-                    className="font-mono text-accent-blue hover:text-accent-cyan"
-                    title={transfer.contractAddress}
-                  >
-                    {formatHash(transfer.contractAddress, true)}
-                  </Link>
+                  {(() => {
+                    const tokenInfo = getSystemContractInfo(transfer.contractAddress)
+                    if (tokenInfo) {
+                      return (
+                        <Link
+                          href={`/address/${transfer.contractAddress}`}
+                          className="inline-flex items-center gap-1 font-mono text-accent-blue hover:text-accent-cyan"
+                          title={transfer.contractAddress}
+                        >
+                          <span className="font-semibold">{tokenInfo.symbol}</span>
+                          <span className="text-xs text-text-secondary">({tokenInfo.name})</span>
+                        </Link>
+                      )
+                    }
+                    return (
+                      <Link
+                        href={`/address/${transfer.contractAddress}`}
+                        className="font-mono text-accent-blue hover:text-accent-cyan"
+                        title={transfer.contractAddress}
+                      >
+                        {formatHash(transfer.contractAddress, true)}
+                      </Link>
+                    )
+                  })()}
                 </TableCell>
                 <TableCell>
                   {transfer.from === address ? (
@@ -122,7 +194,12 @@ export function ERC20TransfersTable({ address, limit = PAGINATION.DEFAULT_PAGE_S
                   )}
                 </TableCell>
                 <TableCell className="text-right font-mono">
-                  {formatNumber(transfer.value)}
+                  {(() => {
+                    const tokenInfo = getSystemContractInfo(transfer.contractAddress)
+                    const decimals = tokenInfo?.decimals ?? 18
+                    const symbol = tokenInfo?.symbol ?? ''
+                    return `${formatTokenAmount(transfer.value, decimals)} ${symbol}`.trim()
+                  })()}
                 </TableCell>
                 <TableCell>
                   <Link

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useInternalTransactionsByAddress } from '@/lib/hooks/useAddressIndexing'
 import {
@@ -27,9 +27,65 @@ interface InternalTransactionsTableProps {
 export function InternalTransactionsTable({ address, limit = PAGINATION.DEFAULT_PAGE_SIZE }: InternalTransactionsTableProps) {
   const [currentOffset, setCurrentOffset] = useState(0)
 
-  // isFrom=true: get transactions FROM this address
-  const { internalTransactions, totalCount, pageInfo, loading, error, loadMore } =
-    useInternalTransactionsByAddress(address, true, { limit, offset: currentOffset })
+  // Query transactions FROM this address
+  const {
+    internalTransactions: fromTransactions,
+    totalCount: fromTotalCount,
+    pageInfo: fromPageInfo,
+    loading: fromLoading,
+    error: fromError,
+    loadMore: loadMoreFrom,
+  } = useInternalTransactionsByAddress(address, true, { limit, offset: currentOffset })
+
+  // Query transactions TO this address
+  const {
+    internalTransactions: toTransactions,
+    totalCount: toTotalCount,
+    pageInfo: toPageInfo,
+    loading: toLoading,
+    error: toError,
+    loadMore: loadMoreTo,
+  } = useInternalTransactionsByAddress(address, false, { limit, offset: currentOffset })
+
+  // Merge and deduplicate transactions from both directions
+  const internalTransactions = useMemo(() => {
+    const seen = new Set<string>()
+    const merged: InternalTransaction[] = []
+
+    // Add FROM transactions
+    for (const tx of fromTransactions) {
+      const key = `${tx.transactionHash}-${tx.from}-${tx.to}-${tx.value.toString()}`
+      if (!seen.has(key)) {
+        seen.add(key)
+        merged.push(tx)
+      }
+    }
+
+    // Add TO transactions (avoiding duplicates)
+    for (const tx of toTransactions) {
+      const key = `${tx.transactionHash}-${tx.from}-${tx.to}-${tx.value.toString()}`
+      if (!seen.has(key)) {
+        seen.add(key)
+        merged.push(tx)
+      }
+    }
+
+    // Sort by block number descending
+    return merged.sort((a, b) => Number(b.blockNumber - a.blockNumber))
+  }, [fromTransactions, toTransactions])
+
+  const totalCount = fromTotalCount + toTotalCount
+  const loading = fromLoading || toLoading
+  const error = fromError || toError
+  const pageInfo = {
+    hasNextPage: fromPageInfo.hasNextPage || toPageInfo.hasNextPage,
+    hasPreviousPage: fromPageInfo.hasPreviousPage || toPageInfo.hasPreviousPage,
+  }
+
+  const loadMore = () => {
+    if (fromPageInfo.hasNextPage) loadMoreFrom?.()
+    if (toPageInfo.hasNextPage) loadMoreTo?.()
+  }
 
   const handleLoadMore = () => {
     if (pageInfo.hasNextPage) {

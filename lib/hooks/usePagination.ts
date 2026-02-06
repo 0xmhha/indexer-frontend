@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { getPreference } from '@/lib/store/userPreferences'
 
@@ -55,7 +55,7 @@ export function usePagination(options: UsePaginationOptions): UsePaginationResul
     defaultItemsPerPage = userPreferredItemsPerPage || DEFAULT_ITEMS_PER_PAGE,
     maxItemsPerPage = MAX_ITEMS_PER_PAGE,
     minItemsPerPage = MIN_ITEMS_PER_PAGE,
-    scrollToTop = true,
+    scrollToTop = false,  // Default to false for better UX
   } = options
 
   const router = useRouter()
@@ -90,8 +90,22 @@ export function usePagination(options: UsePaginationOptions): UsePaginationResul
   const [currentPage, setCurrentPage] = useState(getPageFromURL)
   const [itemsPerPage, setItemsPerPageState] = useState(getItemsPerPageFromURL)
 
+  // Track last valid totalPages to prevent flickering during page transitions
+  const lastValidTotalPagesRef = useRef<number>(1)
+  const lastValidTotalCountRef = useRef<number>(0)
+
   // Calculate derived values
-  const totalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage))
+  // Use last valid totalPages if totalCount temporarily becomes 0 (during loading)
+  const calculatedTotalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage))
+
+  // Only update lastValidTotalPages when we have actual data
+  if (totalCount > 0) {
+    lastValidTotalPagesRef.current = calculatedTotalPages
+    lastValidTotalCountRef.current = totalCount
+  }
+
+  // Use the stable totalPages value to prevent pagination from jumping
+  const totalPages = totalCount > 0 ? calculatedTotalPages : lastValidTotalPagesRef.current
   const offset = (currentPage - 1) * itemsPerPage
   const canGoNext = currentPage < totalPages
   const canGoPrevious = currentPage > 1
@@ -151,11 +165,12 @@ export function usePagination(options: UsePaginationOptions): UsePaginationResul
   )
 
   // Validate current page when total pages changes
-  // Note: Only validate when totalCount > 0 (data has loaded)
+  // Note: Only validate when totalCount > 0 AND totalCount has actually changed (not just loading)
   // This prevents resetting to page 1 while data is still loading
   useEffect(() => {
-    if (totalCount > 0 && currentPage > totalPages) {
-       
+    // Only validate when we have real data that's different from last valid count
+    // This prevents the page from jumping back to 1 during page transitions
+    if (totalCount > 0 && totalCount !== lastValidTotalCountRef.current && currentPage > totalPages) {
       setCurrentPage(totalPages)
       updateURL(totalPages, itemsPerPage)
     }
