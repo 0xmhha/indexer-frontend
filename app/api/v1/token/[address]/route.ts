@@ -17,6 +17,7 @@ import {
   IndexerConnectionError,
   NotFoundError,
 } from '@/lib/api/errors'
+import { errorLogger } from '@/lib/errors/logger'
 import { gql } from '@apollo/client'
 import type { TokenInfoData } from '@/lib/api/types'
 
@@ -86,7 +87,7 @@ export async function GET(
 
     return successResponse(tokenInfo)
   } catch (error) {
-    console.error('Failed to fetch token info:', error)
+    errorLogger.error(error, { component: 'api/v1/token/[address]', action: 'fetch-token' })
 
     if (error instanceof ApiError) {
       return apiErrorResponse(error)

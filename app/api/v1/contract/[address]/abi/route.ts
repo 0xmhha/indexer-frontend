@@ -17,6 +17,7 @@ import {
   IndexerConnectionError,
   NotFoundError,
 } from '@/lib/api/errors'
+import { errorLogger } from '@/lib/errors/logger'
 import { GET_CONTRACT_VERIFICATION } from '@/lib/graphql/queries/relay'
 import type {
   ContractVerificationResponse,
@@ -73,7 +74,7 @@ export async function GET(
 
     return successResponse(abiData)
   } catch (error) {
-    console.error('Failed to fetch contract ABI:', error)
+    errorLogger.error(error, { component: 'api/v1/contract/[address]/abi', action: 'fetch-abi' })
 
     if (error instanceof ApiError) {
       return apiErrorResponse(error)

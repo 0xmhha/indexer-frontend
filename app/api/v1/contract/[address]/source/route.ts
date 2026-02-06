@@ -17,6 +17,7 @@ import {
   IndexerConnectionError,
   NotFoundError,
 } from '@/lib/api/errors'
+import { errorLogger } from '@/lib/errors/logger'
 import { GET_CONTRACT_VERIFICATION } from '@/lib/graphql/queries/relay'
 import type {
   ContractVerificationResponse,
@@ -76,7 +77,7 @@ export async function GET(
 
     return successResponse(sourceData)
   } catch (error) {
-    console.error('Failed to fetch contract source:', error)
+    errorLogger.error(error, { component: 'api/v1/contract/[address]/source', action: 'fetch-source' })
 
     if (error instanceof ApiError) {
       return apiErrorResponse(error)

@@ -16,6 +16,7 @@ import {
   InvalidAddressError,
   IndexerConnectionError,
 } from '@/lib/api/errors'
+import { errorLogger } from '@/lib/errors/logger'
 import {
   GET_ADDRESS_BALANCE,
   GET_TOKEN_BALANCES,
@@ -82,7 +83,7 @@ export async function GET(
 
     return successResponse(data)
   } catch (error) {
-    console.error('Failed to fetch balances:', error)
+    errorLogger.error(error, { component: 'api/v1/account/[address]/balances', action: 'fetch-balances' })
 
     if (error instanceof ApiError) {
       return apiErrorResponse(error)

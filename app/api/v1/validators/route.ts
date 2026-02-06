@@ -15,6 +15,7 @@ import {
   ApiError,
   IndexerConnectionError,
 } from '@/lib/api/errors'
+import { errorLogger } from '@/lib/errors/logger'
 import { GET_ACTIVE_VALIDATORS } from '@/lib/graphql/queries/relay'
 import type { ActiveValidatorsResponse, ValidatorItem } from '@/lib/api/types'
 
@@ -58,7 +59,7 @@ export async function GET(request: NextRequest) {
 
     return paginatedResponse(paginatedValidators, page, limit, totalCount)
   } catch (error) {
-    console.error('Failed to fetch validators:', error)
+    errorLogger.error(error, { component: 'api/v1/validators', action: 'fetch-validators' })
 
     if (error instanceof ApiError) {
       return apiErrorResponse(error)

@@ -17,6 +17,7 @@ import {
   IndexerConnectionError,
   NotFoundError,
 } from '@/lib/api/errors'
+import { errorLogger } from '@/lib/errors/logger'
 import { GET_TRANSACTION } from '@/lib/graphql/queries/relay'
 import type { TransactionResponse, TransactionData } from '@/lib/api/types'
 
@@ -66,7 +67,7 @@ export async function GET(
 
     return successResponse(txData)
   } catch (error) {
-    console.error('Failed to fetch transaction:', error)
+    errorLogger.error(error, { component: 'api/v1/tx/[hash]', action: 'fetch-transaction' })
 
     if (error instanceof ApiError) {
       return apiErrorResponse(error)

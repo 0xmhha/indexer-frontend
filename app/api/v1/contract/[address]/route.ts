@@ -17,6 +17,7 @@ import {
   IndexerConnectionError,
   NotFoundError,
 } from '@/lib/api/errors'
+import { errorLogger } from '@/lib/errors/logger'
 import {
   GET_CONTRACT_CREATION,
   GET_CONTRACT_VERIFICATION,
@@ -77,7 +78,7 @@ export async function GET(
 
     return successResponse(contractInfo)
   } catch (error) {
-    console.error('Failed to fetch contract info:', error)
+    errorLogger.error(error, { component: 'api/v1/contract/[address]', action: 'fetch-contract' })
 
     if (error instanceof ApiError) {
       return apiErrorResponse(error)

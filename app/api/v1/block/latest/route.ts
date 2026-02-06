@@ -13,6 +13,7 @@ import {
   ApiError,
   IndexerConnectionError,
 } from '@/lib/api/errors'
+import { errorLogger } from '@/lib/errors/logger'
 import { GET_LATEST_HEIGHT, GET_BLOCK_BY_NUMBER } from '@/lib/graphql/queries/relay'
 import type { LatestHeightResponse, BlockResponse, BlockData } from '@/lib/api/types'
 
@@ -58,7 +59,7 @@ export async function GET() {
 
     return successResponse(blockInfo)
   } catch (error) {
-    console.error('Failed to fetch latest block:', error)
+    errorLogger.error(error, { component: 'api/v1/block/latest', action: 'fetch-block' })
 
     if (error instanceof ApiError) {
       return apiErrorResponse(error)

@@ -17,6 +17,7 @@ import {
   InvalidAddressError,
   IndexerConnectionError,
 } from '@/lib/api/errors'
+import { errorLogger } from '@/lib/errors/logger'
 import { GET_LOGS_BY_ADDRESS } from '@/lib/graphql/queries/relay'
 import type { LogsResponse, TokenTransferInList } from '@/lib/api/types'
 
@@ -108,7 +109,7 @@ export async function GET(
 
     return paginatedResponse(transfers, page, limit, totalCount)
   } catch (error) {
-    console.error('Failed to fetch transfers:', error)
+    errorLogger.error(error, { component: 'api/v1/account/[address]/transfers', action: 'fetch-transfers' })
 
     if (error instanceof ApiError) {
       return apiErrorResponse(error)

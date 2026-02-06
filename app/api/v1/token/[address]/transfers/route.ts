@@ -17,6 +17,7 @@ import {
   InvalidAddressError,
   IndexerConnectionError,
 } from '@/lib/api/errors'
+import { errorLogger } from '@/lib/errors/logger'
 import { gql } from '@apollo/client'
 import type { TokenTransferItem } from '@/lib/api/types'
 
@@ -101,7 +102,7 @@ export async function GET(
 
     return paginatedResponse(transfers, page, limit, totalCount)
   } catch (error) {
-    console.error('Failed to fetch token transfers:', error)
+    errorLogger.error(error, { component: 'api/v1/token/[address]/transfers', action: 'fetch-transfers' })
 
     if (error instanceof ApiError) {
       return apiErrorResponse(error)

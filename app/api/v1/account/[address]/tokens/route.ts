@@ -17,6 +17,7 @@ import {
   InvalidAddressError,
   IndexerConnectionError,
 } from '@/lib/api/errors'
+import { errorLogger } from '@/lib/errors/logger'
 import { GET_TOKEN_BALANCES } from '@/lib/graphql/queries/relay'
 import type { TokenBalancesResponse, TokenInBalance } from '@/lib/api/types'
 
@@ -60,7 +61,7 @@ export async function GET(
 
     return paginatedResponse(paginatedTokens, page, limit, totalCount)
   } catch (error) {
-    console.error('Failed to fetch tokens:', error)
+    errorLogger.error(error, { component: 'api/v1/account/[address]/tokens', action: 'fetch-tokens' })
 
     if (error instanceof ApiError) {
       return apiErrorResponse(error)

@@ -16,6 +16,7 @@ import {
   IndexerConnectionError,
   NotFoundError,
 } from '@/lib/api/errors'
+import { errorLogger } from '@/lib/errors/logger'
 import { GET_BLOCK_BY_NUMBER, GET_BLOCK_BY_HASH } from '@/lib/graphql/queries/relay'
 import type { BlockResponse, BlockData } from '@/lib/api/types'
 
@@ -70,7 +71,7 @@ export async function GET(
 
     return successResponse(blockInfo)
   } catch (error) {
-    console.error('Failed to fetch block:', error)
+    errorLogger.error(error, { component: 'api/v1/block/[numberOrHash]', action: 'fetch-block' })
 
     if (error instanceof ApiError) {
       return apiErrorResponse(error)

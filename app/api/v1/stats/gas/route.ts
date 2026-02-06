@@ -13,6 +13,7 @@ import {
   ApiError,
   IndexerConnectionError,
 } from '@/lib/api/errors'
+import { errorLogger } from '@/lib/errors/logger'
 import { GET_RECENT_TRANSACTIONS } from '@/lib/graphql/queries/relay'
 import type { GasPriceData } from '@/lib/api/types'
 
@@ -87,7 +88,7 @@ export async function GET() {
 
     return successResponse(gasData)
   } catch (error) {
-    console.error('Failed to fetch gas prices:', error)
+    errorLogger.error(error, { component: 'api/v1/stats/gas', action: 'fetch-gas' })
 
     if (error instanceof ApiError) {
       return apiErrorResponse(error)

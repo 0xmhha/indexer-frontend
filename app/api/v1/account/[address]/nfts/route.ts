@@ -17,6 +17,7 @@ import {
   InvalidAddressError,
   IndexerConnectionError,
 } from '@/lib/api/errors'
+import { errorLogger } from '@/lib/errors/logger'
 import { GET_TOKEN_BALANCES } from '@/lib/graphql/queries/relay'
 import type { TokenBalancesResponse, NftItem } from '@/lib/api/types'
 
@@ -80,7 +81,7 @@ export async function GET(
 
     return paginatedResponse(paginatedNfts, page, limit, totalCount)
   } catch (error) {
-    console.error('Failed to fetch NFTs:', error)
+    errorLogger.error(error, { component: 'api/v1/account/[address]/nfts', action: 'fetch-nfts' })
 
     if (error instanceof ApiError) {
       return apiErrorResponse(error)

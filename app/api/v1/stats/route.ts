@@ -13,6 +13,7 @@ import {
   ApiError,
   IndexerConnectionError,
 } from '@/lib/api/errors'
+import { errorLogger } from '@/lib/errors/logger'
 import { GET_LATEST_HEIGHT } from '@/lib/graphql/queries/relay'
 // Note: GET_NETWORK_STATS not available in current schema, using fallback
 import type {
@@ -34,7 +35,7 @@ export async function GET() {
 
     return successResponse(statsData)
   } catch (error) {
-    console.error('Failed to fetch stats:', error)
+    errorLogger.error(error, { component: 'api/v1/stats', action: 'fetch-stats' })
 
     if (error instanceof ApiError) {
       return apiErrorResponse(error)

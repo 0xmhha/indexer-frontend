@@ -16,6 +16,7 @@ import {
   InvalidAddressError,
   IndexerConnectionError,
 } from '@/lib/api/errors'
+import { errorLogger } from '@/lib/errors/logger'
 import {
   GET_ADDRESS_BALANCE,
   GET_CONTRACT_CREATION,
@@ -71,7 +72,7 @@ export async function GET(
 
     return successResponse(summary)
   } catch (error) {
-    console.error('Failed to fetch account summary:', error)
+    errorLogger.error(error, { component: 'api/v1/account/[address]', action: 'fetch-summary' })
 
     if (error instanceof ApiError) {
       return apiErrorResponse(error)
