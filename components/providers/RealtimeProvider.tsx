@@ -21,6 +21,7 @@ import {
   SUBSCRIBE_PENDING_TRANSACTIONS,
 } from '@/lib/apollo/queries'
 import { REPLAY } from '@/lib/config/constants'
+import { errorLogger } from '@/lib/errors/logger'
 import {
   useRealtimeStore,
   type RealtimeBlock,
@@ -68,7 +69,7 @@ export function RealtimeProvider({
         }
       },
       onError: (error) => {
-        console.error('[RealtimeProvider] Block subscription error:', error.message)
+        errorLogger.error(error, { component: 'RealtimeProvider', action: 'block-subscription' })
         setConnected(false)
       },
     }
@@ -89,7 +90,7 @@ export function RealtimeProvider({
         }
       },
       onError: (error) => {
-        console.error('[RealtimeProvider] Transaction subscription error:', error.message)
+        errorLogger.error(error, { component: 'RealtimeProvider', action: 'transaction-subscription' })
       },
     }
   )
@@ -107,7 +108,7 @@ export function RealtimeProvider({
       }
     },
     onError: (error) => {
-      console.error('[RealtimeProvider] Pending tx subscription error:', error.message)
+      errorLogger.error(error, { component: 'RealtimeProvider', action: 'pending-tx-subscription' })
     },
   })
 

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import { errorLogger } from '@/lib/errors/logger'
 
 interface NotificationPreferences {
   pendingTransactions: boolean
@@ -37,7 +38,7 @@ export function NotificationSettings() {
         return JSON.parse(saved)
       }
     } catch (error) {
-      console.error('[Notification Settings] Failed to load preferences:', error)
+      errorLogger.error(error, { component: 'NotificationSettings', action: 'load-preferences' })
     }
     return DEFAULT_PREFERENCES
   })
@@ -52,7 +53,7 @@ export function NotificationSettings() {
     try {
       localStorage.setItem('notification-preferences', JSON.stringify(preferences))
     } catch (error) {
-      console.error('[Notification Settings] Failed to save preferences:', error)
+      errorLogger.error(error, { component: 'NotificationSettings', action: 'save-preferences' })
     }
   }, [preferences])
 
@@ -184,7 +185,7 @@ export function useNotificationPreferences(): NotificationPreferences {
         return JSON.parse(saved)
       }
     } catch (error) {
-      console.error('[Notification Preferences] Failed to load:', error)
+      errorLogger.error(error, { component: 'NotificationPreferences', action: 'load' })
     }
     return DEFAULT_PREFERENCES
   })
