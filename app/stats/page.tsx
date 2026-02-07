@@ -7,7 +7,6 @@ import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useBlocksByTimeRange, useNetworkMetrics } from '@/lib/hooks/useAnalytics'
 import { useTopMiners } from '@/lib/hooks/useStats'
 import { TopMinersTable } from '@/components/stats/TopMinersTable'
-import { AdvancedLogsViewer } from '@/components/logs/AdvancedLogsViewer'
 import { formatNumber } from '@/lib/utils/format'
 import { BLOCKCHAIN } from '@/lib/config/constants'
 
@@ -143,10 +142,6 @@ export default function StatsPage() {
         </CardContent>
       </Card>
 
-      {/* Advanced Real-time Logs Section with Filters */}
-      <div className="mt-6">
-        <AdvancedLogsViewer maxLogs={50} />
-      </div>
     </div>
   )
 }

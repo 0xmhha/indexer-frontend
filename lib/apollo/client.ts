@@ -3,7 +3,6 @@ import { GraphQLWsLink } from '@apollo/client/link/subscriptions'
 import { getMainDefinition } from '@apollo/client/utilities'
 import { onError } from '@apollo/client/link/error'
 import { createClient, Client as WsClient } from 'graphql-ws'
-import { env } from '@/lib/config/env'
 import { REALTIME } from '@/lib/config/constants'
 import { errorLogger } from '@/lib/errors/logger'
 import type { NetworkEndpoints } from '@/lib/config/networks.types'
@@ -245,38 +244,3 @@ export function createApolloClient(endpoints: NetworkEndpoints): ApolloClientIns
   }
 }
 
-// ============================================================================
-// Legacy Support - Singleton instance for backwards compatibility
-// ============================================================================
-
-/**
- * Legacy singleton Apollo Client
- *
- * @deprecated Use createApolloClient() factory function instead for dynamic network support.
- * This is maintained for backwards compatibility with existing code.
- */
-let legacyInstance: ApolloClientInstance | null = null
-
-/**
- * Get or create the legacy singleton Apollo Client
- *
- * @deprecated Use createApolloClient() instead
- */
-function getLegacyApolloClient(): ApolloClient<NormalizedCacheObject> {
-  if (!legacyInstance) {
-    legacyInstance = createApolloClient({
-      graphqlEndpoint: env.graphqlEndpoint,
-      wsEndpoint: env.wsEndpoint,
-      jsonRpcEndpoint: env.jsonRpcEndpoint,
-    })
-  }
-  return legacyInstance.client
-}
-
-/**
- * Apollo Client singleton instance
- *
- * @deprecated Use createApolloClient() for dynamic network support.
- * Maintained for backwards compatibility.
- */
-export const apolloClient = getLegacyApolloClient()

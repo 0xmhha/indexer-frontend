@@ -6,6 +6,7 @@ import { createApolloClient, ApolloClientInstance } from '@/lib/apollo/client'
 import { useNetworkStore, selectCurrentNetwork, selectIsConnecting } from '@/stores/networkStore'
 import { useRealtimeStore } from '@/stores/realtimeStore'
 import { useConsensusStore } from '@/stores/consensusStore'
+import { errorLogger } from '@/lib/errors/logger'
 
 // Client-side cache for Apollo instances
 const apolloClientCache = new Map<string, ApolloClientInstance>()
@@ -24,7 +25,7 @@ function getApolloClientForNetwork(networkId: string, endpoints: { graphqlEndpoi
   const instance = createApolloClient(endpoints)
   apolloClientCache.set(networkId, instance)
 
-  console.info(`[NetworkProvider] Created client for network: ${networkId}`)
+  errorLogger.info(`Created Apollo client for network: ${networkId}`, { component: 'NetworkProvider', action: 'create-client' })
 
   return instance
 }

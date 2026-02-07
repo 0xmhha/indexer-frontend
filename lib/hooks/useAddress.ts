@@ -93,11 +93,12 @@ export function useAddressBalance(address: string | null, blockNumber?: string) 
   // Use previous data while loading to prevent flickering
   const effectiveData = data ?? previousData
 
-  return {
+  // Memoize balance transformation and return value for stable reference
+  return useMemo(() => ({
     balance: effectiveData?.addressBalance !== null && effectiveData?.addressBalance !== undefined ? BigInt(effectiveData.addressBalance) : null,
     loading,
     error,
-  }
+  }), [effectiveData?.addressBalance, loading, error])
 }
 
 // ============================================================================
@@ -151,26 +152,32 @@ export function useAddressOverview(address: string | null) {
   const effectiveData = data ?? previousData
   const rawOverview: RawAddressOverview | null = effectiveData?.addressOverview ?? null
 
-  const overview: AddressOverview | null = rawOverview ? {
-    address: rawOverview.address,
-    isContract: rawOverview.isContract,
-    balance: BigInt(rawOverview.balance),
-    transactionCount: rawOverview.transactionCount,
-    sentCount: rawOverview.sentCount,
-    receivedCount: rawOverview.receivedCount,
-    internalTxCount: rawOverview.internalTxCount,
-    erc20TokenCount: rawOverview.erc20TokenCount,
-    erc721TokenCount: rawOverview.erc721TokenCount,
-    firstSeen: rawOverview.firstSeen ? BigInt(rawOverview.firstSeen) : null,
-    lastSeen: rawOverview.lastSeen ? BigInt(rawOverview.lastSeen) : null,
-  } : null
+  // Memoize overview transformation to prevent unnecessary re-renders
+  const overview = useMemo((): AddressOverview | null => {
+    if (!rawOverview) return null
 
-  return {
+    return {
+      address: rawOverview.address,
+      isContract: rawOverview.isContract,
+      balance: BigInt(rawOverview.balance),
+      transactionCount: rawOverview.transactionCount,
+      sentCount: rawOverview.sentCount,
+      receivedCount: rawOverview.receivedCount,
+      internalTxCount: rawOverview.internalTxCount,
+      erc20TokenCount: rawOverview.erc20TokenCount,
+      erc721TokenCount: rawOverview.erc721TokenCount,
+      firstSeen: rawOverview.firstSeen ? BigInt(rawOverview.firstSeen) : null,
+      lastSeen: rawOverview.lastSeen ? BigInt(rawOverview.lastSeen) : null,
+    }
+  }, [rawOverview])
+
+  // Memoize return value for stable reference
+  return useMemo(() => ({
     overview,
     isContract: overview?.isContract ?? false,
     loading,
     error,
-  }
+  }), [overview, loading, error])
 }
 
 /**
@@ -351,17 +358,21 @@ export function useTokenBalances(address: string | null, tokenType?: string) {
 
   const rawBalances = effectiveData?.tokenBalances ?? []
 
-  // Transform balance strings to bigint
-  const balances: TokenBalance[] = rawBalances.map((balance: RawTokenBalance) => ({
-    ...balance,
-    balance: BigInt(balance.balance),
-  }))
+  // Memoize balance transformation to prevent unnecessary re-renders
+  const balances = useMemo((): TokenBalance[] =>
+    rawBalances.map((balance: RawTokenBalance) => ({
+      ...balance,
+      balance: BigInt(balance.balance),
+    })),
+    [rawBalances]
+  )
 
-  return {
+  // Memoize return value for stable reference
+  return useMemo(() => ({
     balances,
     loading,
     error,
-  }
+  }), [balances, loading, error])
 }
 
 // ============================================================================
