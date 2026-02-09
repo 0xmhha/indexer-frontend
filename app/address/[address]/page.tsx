@@ -16,7 +16,9 @@ import { ERC20TransfersTable } from '@/components/address/ERC20TransfersTable'
 import { ERC721TransfersTable } from '@/components/address/ERC721TransfersTable'
 import { ContractCreationInfo } from '@/components/address/ContractCreationInfo'
 import { SetCodeDelegationInfo } from '@/components/address/SetCodeDelegationInfo'
+import { ProxyContractInfo } from '@/components/address/ProxyContractInfo'
 import { AddressOverviewCard } from '@/components/address/AddressOverviewCard'
+import { AddressStatsCard } from '@/components/address/AddressStatsCard'
 import { BalanceHistoryCard } from '@/components/address/BalanceHistoryCard'
 import { AddressTransactionsSection } from '@/components/address/AddressTransactionsSection'
 import { ContractLogsSection } from '@/components/address/ContractLogsSection'
@@ -156,11 +158,18 @@ function AddressPageContent() {
     <div className="container mx-auto px-4 py-8">
       <AddressHeader address={address} />
       <AddressOverviewCard address={address} balance={balance} loading={balanceLoading} error={balanceError} />
+      <AddressStatsCard
+        address={address}
+        transactions={transactions}
+        totalCount={totalCount}
+        loading={txLoading}
+      />
 
       {/* Only show contract-related modules for contract addresses */}
       {!isContractLoading && isContract && (
         <>
           <ContractVerificationStatus address={address} isContract={isContract} />
+          <ProxyContractInfo address={address} isContract={isContract} />
           <SourceCodeViewer address={address} />
           <ContractInteractionSection address={address} />
         </>

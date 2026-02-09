@@ -25,6 +25,7 @@ import {
 } from '@/lib/utils/format'
 import { isValidBlockNumber, parseBlockNumber } from '@/lib/utils/validation'
 import { env } from '@/lib/config/env'
+import { useValidators } from '@/lib/hooks/useWBFT'
 import type { Transaction } from '@/types/graphql'
 
 export default function BlockPage() {
@@ -41,6 +42,7 @@ export default function BlockPage() {
   }
 
   const { block, loading, error } = useBlock(blockIdentifier)
+  const { validators } = useValidators()
 
   if (loading) {
     return <BlockDetailSkeleton />
@@ -52,6 +54,11 @@ export default function BlockPage() {
 
   const blockNumber = BigInt(block.number)
   const timestamp = BigInt(block.timestamp)
+
+  // Check if block proposer is an active validator
+  const isProposerValidator = validators.some(
+    (v) => v.address.toLowerCase() === block.miner?.toLowerCase()
+  )
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -109,14 +116,25 @@ export default function BlockPage() {
                 <TableCell className="font-mono">{formatDate(timestamp)}</TableCell>
               </TableRow>
               <TableRow>
-                <TableCell className="font-bold">Miner</TableCell>
+                <TableCell className="font-bold">Block Proposer</TableCell>
                 <TableCell>
-                  <Link
-                    href={`/address/${block.miner}`}
-                    className="font-mono text-accent-blue hover:text-accent-cyan"
-                  >
-                    {block.miner}
-                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Link
+                      href={`/address/${block.miner}`}
+                      className="font-mono text-accent-blue hover:text-accent-cyan"
+                    >
+                      {block.miner}
+                    </Link>
+                    {isProposerValidator && (
+                      <Link
+                        href={`/validators/${block.miner}`}
+                        className="rounded bg-accent-purple/20 px-2 py-0.5 text-xs text-accent-purple hover:bg-accent-purple/30"
+                        title="Active Validator"
+                      >
+                        Validator
+                      </Link>
+                    )}
+                  </div>
                 </TableCell>
               </TableRow>
               <TableRow>

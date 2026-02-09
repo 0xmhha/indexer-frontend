@@ -5,13 +5,15 @@ import { GasCalculator } from '@/components/gas/GasCalculator'
 import { FeeEfficiencyAnalyzer } from '@/components/gas/FeeEfficiencyAnalyzer'
 import { FeeDelegationDashboard } from '@/components/gas/FeeDelegationDashboard'
 import { TransactionSimulator } from '@/components/gas/TransactionSimulator'
+import { NetworkGasMonitor } from '@/components/gas/NetworkGasMonitor'
 
-type ActiveTool = 'calculator' | 'analyzer' | 'simulator' | 'delegation'
+type ActiveTool = 'tracker' | 'calculator' | 'analyzer' | 'simulator' | 'delegation'
 
 export default function GasToolsPage() {
-  const [activeTool, setActiveTool] = useState<ActiveTool>('calculator')
+  const [activeTool, setActiveTool] = useState<ActiveTool>('tracker')
 
   const tools = [
+    { id: 'tracker' as const, label: 'Gas Tracker', icon: '⛽' },
     { id: 'calculator' as const, label: 'Gas Calculator', icon: '🧮' },
     { id: 'analyzer' as const, label: 'Fee Analyzer', icon: '📊' },
     { id: 'simulator' as const, label: 'TX Simulator', icon: '⚡' },
@@ -51,6 +53,12 @@ export default function GasToolsPage() {
 
       {/* Tool Content */}
       <div className="space-y-6">
+        {activeTool === 'tracker' && (
+          <div className="animate-fade-in">
+            <NetworkGasMonitor blockCount={20} showHistory={true} enableRealtime={true} />
+          </div>
+        )}
+
         {activeTool === 'calculator' && (
           <div className="animate-fade-in">
             <GasCalculator />

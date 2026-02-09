@@ -65,3 +65,10 @@ export {
   GET_TOP_FEE_PAYERS,
   GET_FEE_PAYER_STATS,
 } from './fee-delegation'
+
+// Gas tracker queries
+export {
+  GET_RECENT_BLOCKS_FOR_GAS,
+  GET_LATEST_BLOCK_GAS,
+  SUBSCRIBE_NEW_BLOCK_GAS,
+} from './gas'

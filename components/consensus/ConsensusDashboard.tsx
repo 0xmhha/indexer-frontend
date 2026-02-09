@@ -1,26 +1,32 @@
 'use client'
 
-import { useState } from 'react'
 import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
-import { LoadingSpinner } from '@/components/common/LoadingSpinner'
-import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useLatestEpochData, useConsensusMonitoring } from '@/lib/hooks/useConsensus'
 import { useBlocks } from '@/lib/hooks/useBlocks'
-import { truncateAddress, formatNumber } from '@/lib/utils/format'
+import { formatNumber } from '@/lib/utils/format'
 import { ConsensusStatusCard } from './ConsensusStatusCard'
 import { ValidatorLeaderboard } from './ValidatorLeaderboard'
 import { RealTimeBlockCard } from './RealTimeBlockCard'
 import { NetworkHealthStatus, ConnectionStatus } from './NetworkHealth'
 import dynamic from 'next/dynamic'
 import { ConsensusErrorHistory, ConsensusErrorAlert } from './ConsensusErrorAlert'
-import { FEATURES, THRESHOLDS, UI } from '@/lib/config/constants'
+import { FEATURES, THRESHOLDS } from '@/lib/config/constants'
 
 // Dynamic import for Recharts component to avoid SSR issues
 const ParticipationChart = dynamic(
   () => import('./ParticipationChart').then((mod) => mod.ParticipationChart),
   { ssr: false, loading: () => <div className="h-96 animate-pulse rounded-lg bg-bg-secondary" /> }
 )
+
+// Dynamic import for ValidatorHeatmap to avoid SSR issues
+const ValidatorHeatmap = dynamic(
+  () => import('./ValidatorHeatmap').then((mod) => mod.ValidatorHeatmap),
+  { ssr: false, loading: () => <div className="h-64 animate-pulse rounded-lg bg-bg-secondary" /> }
+)
+
+// Import EpochTimeline
+import { EpochTimeline } from './EpochTimeline'
 
 /**
  * Consensus Dashboard Component
@@ -33,7 +39,7 @@ const ParticipationChart = dynamic(
  * - Consensus error alerts
  */
 export function ConsensusDashboard() {
-  const { latestEpochData, loading: epochLoading, error: epochError } = useLatestEpochData()
+  const { latestEpochData, loading: epochLoading } = useLatestEpochData()
   const { blocks } = useBlocks({ limit: 1 })
 
   // Real-time consensus monitoring
@@ -141,13 +147,10 @@ export function ConsensusDashboard() {
           <ValidatorLeaderboard limit={10} />
         </div>
 
-        {/* Right Column - Epoch Info & Error History */}
+        {/* Right Column - Epoch Timeline & Error History */}
         <div className="space-y-6">
-          <EpochInfoPanel
-            epochData={latestEpochData}
-            loading={epochLoading}
-            error={epochError}
-          />
+          {/* Epoch Timeline - Enhanced visual representation */}
+          <EpochTimeline />
 
           {/* Error History */}
           {FEATURES.ENABLE_CONSENSUS_MONITORING && <ConsensusErrorHistory />}
@@ -186,6 +189,13 @@ export function ConsensusDashboard() {
         </div>
       </div>
 
+      {/* Validator Heatmap - Full Width */}
+      {FEATURES.ENABLE_CONSENSUS_MONITORING && (
+        <div className="mt-8">
+          <ValidatorHeatmap limit={10} />
+        </div>
+      )}
+
       {/* Participation Rate Chart - Full Width */}
       {FEATURES.ENABLE_CONSENSUS_MONITORING && (
         <div className="mt-8">
@@ -196,137 +206,3 @@ export function ConsensusDashboard() {
   )
 }
 
-interface EpochInfoPanelProps {
-  epochData: {
-    epochNumber: string
-    blockNumber?: string
-    validatorCount: number
-    candidateCount: number
-    validators: number[]  // validator indices from backend
-    blsPublicKeys?: string[]  // BLS public keys (same order as validators)
-    candidates: Array<{
-      address: string
-      diligence: string
-    }>
-  } | null
-  loading: boolean
-  error?: Error | undefined
-}
-
-function EpochInfoPanel({ epochData, loading, error }: EpochInfoPanelProps) {
-  const [showAllValidators, setShowAllValidators] = useState(false)
-
-  if (loading) {
-    return (
-      <Card>
-        <CardHeader className="border-b border-bg-tertiary">
-          <CardTitle>CURRENT EPOCH</CardTitle>
-        </CardHeader>
-        <CardContent className="flex h-48 items-center justify-center">
-          <LoadingSpinner />
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardHeader className="border-b border-bg-tertiary">
-          <CardTitle>CURRENT EPOCH</CardTitle>
-        </CardHeader>
-        <CardContent className="p-4">
-          <ErrorDisplay title="Failed to load epoch" message={error.message} />
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (!epochData) {
-    return (
-      <Card>
-        <CardHeader className="border-b border-bg-tertiary">
-          <CardTitle>CURRENT EPOCH</CardTitle>
-        </CardHeader>
-        <CardContent className="flex h-48 items-center justify-center">
-          <p className="font-mono text-sm text-text-muted">No epoch data</p>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  const displayValidators = showAllValidators
-    ? epochData.validators
-    : epochData.validators.slice(0, UI.MAX_LIST_PREVIEW)
-
-  return (
-    <Card>
-      <CardHeader className="border-b border-bg-tertiary">
-        <div className="flex items-center justify-between">
-          <CardTitle>EPOCH #{epochData.epochNumber}</CardTitle>
-          <Link
-            href={`/epochs/${epochData.epochNumber}`}
-            className="font-mono text-xs text-accent-blue hover:underline"
-          >
-            Details →
-          </Link>
-        </div>
-      </CardHeader>
-      <CardContent className="p-4">
-        <div className="space-y-4">
-          {/* Epoch Stats */}
-          <div className="grid grid-cols-2 gap-3">
-            <div className="rounded border border-bg-tertiary bg-bg-secondary p-3">
-              <div className="font-mono text-xs text-text-muted">Validators</div>
-              <div className="font-mono text-lg font-bold text-accent-green">
-                {epochData.validatorCount}
-              </div>
-            </div>
-            <div className="rounded border border-bg-tertiary bg-bg-secondary p-3">
-              <div className="font-mono text-xs text-text-muted">Candidates</div>
-              <div className="font-mono text-lg font-bold text-accent-cyan">
-                {epochData.candidateCount}
-              </div>
-            </div>
-          </div>
-
-          {/* Validator List Preview */}
-          <div>
-            <div className="mb-2 font-mono text-xs text-text-muted">ACTIVE VALIDATORS (by index)</div>
-            <div className="space-y-1">
-              {displayValidators.map((validatorIndex, idx) => {
-                // Get BLS public key if available (for display)
-                const blsPubKey = epochData.blsPublicKeys?.[idx]
-                return (
-                  <div
-                    key={`validator-${validatorIndex}`}
-                    className="flex items-center justify-between rounded border border-bg-tertiary bg-bg-secondary px-3 py-2"
-                  >
-                    <span className="font-mono text-xs text-text-secondary">
-                      Validator Index: {validatorIndex}
-                    </span>
-                    {blsPubKey && (
-                      <span className="font-mono text-xs text-text-muted" title={blsPubKey}>
-                        {truncateAddress(blsPubKey)}
-                      </span>
-                    )}
-                  </div>
-                )
-              })}
-            </div>
-            {epochData.validators.length > UI.MAX_LIST_PREVIEW && (
-              <button
-                onClick={() => setShowAllValidators(!showAllValidators)}
-                className="mt-2 w-full rounded border border-bg-tertiary p-2 font-mono text-xs text-text-muted transition-colors hover:border-accent-blue hover:text-accent-blue"
-              >
-                {showAllValidators
-                  ? 'Show Less'
-                  : `Show All (${epochData.validators.length})`}
-              </button>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}

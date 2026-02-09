@@ -48,3 +48,6 @@ next-env.d.ts
 *.tsbuildinfo
 CLAUDE.md
 .playwright-mcp/
+
+.serena
+

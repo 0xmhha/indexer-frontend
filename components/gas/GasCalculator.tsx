@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import {
   calculateEffectiveGasPrice,
@@ -12,6 +12,22 @@ import {
 } from '@/lib/utils/gas'
 import { formatCurrency } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
+import { useGasTracker } from '@/lib/hooks/useGasTracker'
+import { cn } from '@/lib/utils'
+
+/**
+ * Common transaction type presets with typical gas limits
+ */
+const TX_PRESETS = [
+  { id: 'transfer', label: 'Transfer', gasLimit: 21000, icon: '💸', description: 'Simple native token transfer' },
+  { id: 'erc20', label: 'ERC20 Transfer', gasLimit: 65000, icon: '🪙', description: 'Token transfer' },
+  { id: 'swap', label: 'DEX Swap', gasLimit: 150000, icon: '🔄', description: 'Decentralized exchange swap' },
+  { id: 'nft', label: 'NFT Mint', gasLimit: 120000, icon: '🎨', description: 'Mint NFT token' },
+  { id: 'deploy', label: 'Contract Deploy', gasLimit: 500000, icon: '📜', description: 'Deploy smart contract' },
+  { id: 'custom', label: 'Custom', gasLimit: 21000, icon: '⚙️', description: 'Custom gas limit' },
+] as const
+
+type TxPresetId = typeof TX_PRESETS[number]['id']
 
 interface GasCalculatorProps {
   defaultGasLimit?: number
@@ -37,11 +53,56 @@ export function GasCalculator({
   defaultPriorityFee = 2,
   className,
 }: GasCalculatorProps) {
+  // Get real-time gas data from network
+  const { metrics } = useGasTracker({ blockCount: 10, enableSubscription: true })
+
+  // Selected transaction preset
+  const [selectedPreset, setSelectedPreset] = useState<TxPresetId>('transfer')
+
   // Input values (in Gwei for user convenience)
   const [gasLimit, setGasLimit] = useState<number>(defaultGasLimit)
   const [baseFeeGwei, setBaseFeeGwei] = useState<number>(defaultBaseFee)
   const [priorityFeeGwei, setPriorityFeeGwei] = useState<number>(defaultPriorityFee)
   const [maxFeeGwei, setMaxFeeGwei] = useState<number>(defaultBaseFee + defaultPriorityFee + 10)
+
+  // Sync with real-time network data when available
+  useEffect(() => {
+    if (metrics?.baseFeeGwei) {
+      setBaseFeeGwei(Number(metrics.baseFeeGwei.toFixed(2)))
+      // Find standard tier priority fee
+      const standardLevel = metrics.priceLevels.find(l => l.tier === 'standard')
+      if (standardLevel) {
+        const priorityGwei = weiToGwei(standardLevel.maxPriorityFee)
+        setPriorityFeeGwei(Number(priorityGwei.toFixed(2)))
+        setMaxFeeGwei(Number((metrics.baseFeeGwei + priorityGwei + 10).toFixed(2)))
+      }
+    }
+  }, [metrics?.baseFeeGwei, metrics?.priceLevels])
+
+  // Handle preset selection
+  const handlePresetSelect = (presetId: TxPresetId) => {
+    setSelectedPreset(presetId)
+    const preset = TX_PRESETS.find(p => p.id === presetId)
+    if (preset && presetId !== 'custom') {
+      setGasLimit(preset.gasLimit)
+    }
+  }
+
+  // Get network comparison data
+  const networkComparison = useMemo(() => {
+    if (!metrics) return null
+
+    const economyLevel = metrics.priceLevels.find(l => l.tier === 'economy')
+    const standardLevel = metrics.priceLevels.find(l => l.tier === 'standard')
+    const priorityLevel = metrics.priceLevels.find(l => l.tier === 'priority')
+
+    return {
+      economy: economyLevel ? weiToGwei(economyLevel.maxPriorityFee) : 1,
+      standard: standardLevel ? weiToGwei(standardLevel.maxPriorityFee) : 2,
+      priority: priorityLevel ? weiToGwei(priorityLevel.maxPriorityFee) : 3,
+      utilization: metrics.networkUtilization,
+    }
+  }, [metrics])
 
   // Calculated values
   const [effectiveGasPrice, setEffectiveGasPrice] = useState<bigint>(BigInt(0))
@@ -97,10 +158,79 @@ export function GasCalculator({
       <CardHeader className="border-b border-bg-tertiary">
         <CardTitle className="flex items-center justify-between">
           <span>EIP-1559 GAS CALCULATOR</span>
-          <span className="font-mono text-xs text-text-secondary">ESTIMATE TRANSACTION COSTS</span>
+          <div className="flex items-center gap-2">
+            {metrics && (
+              <span className="flex items-center gap-1 rounded bg-accent-green/20 px-2 py-0.5 text-xs text-accent-green">
+                <span className="relative flex h-2 w-2">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent-green opacity-75" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-accent-green" />
+                </span>
+                LIVE
+              </span>
+            )}
+            <span className="font-mono text-xs text-text-secondary">ESTIMATE TRANSACTION COSTS</span>
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="p-6">
+        {/* Transaction Type Presets */}
+        <div className="mb-6">
+          <div className="annotation mb-3">TRANSACTION TYPE</div>
+          <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+            {TX_PRESETS.map((preset) => (
+              <button
+                key={preset.id}
+                onClick={() => handlePresetSelect(preset.id)}
+                className={cn(
+                  'flex flex-col items-center rounded border p-2 transition-colors',
+                  selectedPreset === preset.id
+                    ? 'border-accent-blue bg-accent-blue/10 text-accent-blue'
+                    : 'border-bg-tertiary bg-bg-secondary text-text-secondary hover:border-accent-blue/50'
+                )}
+                title={preset.description}
+              >
+                <span className="text-lg">{preset.icon}</span>
+                <span className="mt-1 font-mono text-[10px]">{preset.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Network Status */}
+        {networkComparison && (
+          <div className="mb-6 rounded border border-bg-tertiary bg-bg-secondary/50 p-3">
+            <div className="flex items-center justify-between">
+              <div className="font-mono text-xs text-text-muted">Network Priority Fees (Gwei)</div>
+              <div className="font-mono text-xs text-text-muted">
+                Utilization: <span className={cn(
+                  networkComparison.utilization > 80 ? 'text-accent-red' :
+                  networkComparison.utilization > 50 ? 'text-accent-yellow' : 'text-accent-green'
+                )}>{networkComparison.utilization}%</span>
+              </div>
+            </div>
+            <div className="mt-2 flex gap-4">
+              <button
+                onClick={() => setPriorityFeeGwei(Number(networkComparison.economy.toFixed(2)))}
+                className="flex-1 rounded bg-accent-green/10 p-2 text-center font-mono text-xs text-accent-green hover:bg-accent-green/20"
+              >
+                Economy: {networkComparison.economy.toFixed(2)}
+              </button>
+              <button
+                onClick={() => setPriorityFeeGwei(Number(networkComparison.standard.toFixed(2)))}
+                className="flex-1 rounded bg-accent-blue/10 p-2 text-center font-mono text-xs text-accent-blue hover:bg-accent-blue/20"
+              >
+                Standard: {networkComparison.standard.toFixed(2)}
+              </button>
+              <button
+                onClick={() => setPriorityFeeGwei(Number(networkComparison.priority.toFixed(2)))}
+                className="flex-1 rounded bg-accent-purple/10 p-2 text-center font-mono text-xs text-accent-purple hover:bg-accent-purple/20"
+              >
+                Priority: {networkComparison.priority.toFixed(2)}
+              </button>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
           {/* Input Section */}
           <div className="space-y-4">
@@ -115,13 +245,16 @@ export function GasCalculator({
                 id="gasLimit"
                 type="number"
                 value={gasLimit}
-                onChange={(e) => setGasLimit(Number(e.target.value))}
+                onChange={(e) => {
+                  setGasLimit(Number(e.target.value))
+                  setSelectedPreset('custom')
+                }}
                 className="w-full rounded border border-bg-tertiary bg-bg-secondary px-4 py-2 font-mono text-sm text-text-primary focus:border-accent-blue focus:outline-none"
                 min="21000"
                 step="1000"
               />
               <div className="mt-1 font-mono text-xs text-text-muted">
-                Standard transfer: 21,000 • Contract interaction: 50,000+
+                {TX_PRESETS.find(p => p.id === selectedPreset)?.description || 'Enter custom gas limit'}
               </div>
             </div>
 

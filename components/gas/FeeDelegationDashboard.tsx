@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import {
@@ -16,6 +17,19 @@ import { useFeeDelegationStats } from '@/lib/hooks/useAnalytics'
 import { formatCurrency, formatHash, formatNumber } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
 import { THRESHOLDS } from '@/lib/config/constants'
+import { cn } from '@/lib/utils'
+
+/**
+ * Time period options for filtering
+ */
+const TIME_PERIODS = [
+  { id: '24h', label: '24H', description: 'Last 24 hours' },
+  { id: '7d', label: '7D', description: 'Last 7 days' },
+  { id: '30d', label: '30D', description: 'Last 30 days' },
+  { id: 'all', label: 'ALL', description: 'All time' },
+] as const
+
+type TimePeriodId = typeof TIME_PERIODS[number]['id']
 
 interface FeeDelegationDashboardProps {
   className?: string
@@ -30,6 +44,10 @@ interface FeeDelegationDashboardProps {
  * @param className - Additional CSS classes
  */
 export function FeeDelegationDashboard({ className }: FeeDelegationDashboardProps) {
+  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriodId>('all')
+
+  // Note: Block range filtering can be added when backend supports time-based queries
+  // For now, we fetch all data and the selectedPeriod is just for UI state
   const { stats, loading, error, isMockData } = useFeeDelegationStats()
 
   if (loading) {
@@ -57,17 +75,32 @@ export function FeeDelegationDashboard({ className }: FeeDelegationDashboardProp
 
   return (
     <div className={`space-y-6 ${className}`}>
-      {/* Mock Data Notice */}
-      {isMockData && (
-        <div className="rounded border border-accent-orange/30 bg-accent-orange/5 p-3">
-          <div className="flex items-center gap-2">
-            <span className="text-accent-orange">⚠️</span>
-            <span className="font-mono text-xs text-accent-orange">
-              Demo Mode: Displaying sample data. Backend API not yet available.
-            </span>
-          </div>
+      {/* Time Period Selector */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {TIME_PERIODS.map((period) => (
+            <button
+              key={period.id}
+              onClick={() => setSelectedPeriod(period.id)}
+              className={cn(
+                'rounded border px-3 py-1.5 font-mono text-xs transition-colors',
+                selectedPeriod === period.id
+                  ? 'border-accent-purple bg-accent-purple/10 text-accent-purple'
+                  : 'border-bg-tertiary bg-bg-secondary text-text-secondary hover:border-accent-purple/50'
+              )}
+              title={period.description}
+            >
+              {period.label}
+            </button>
+          ))}
         </div>
-      )}
+        {isMockData && (
+          <div className="flex items-center gap-2 rounded bg-accent-orange/10 px-2 py-1">
+            <span className="text-accent-orange">⚠️</span>
+            <span className="font-mono text-xs text-accent-orange">Demo Mode</span>
+          </div>
+        )}
+      </div>
 
       {/* Statistics Overview */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">

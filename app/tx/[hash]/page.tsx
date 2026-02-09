@@ -15,6 +15,7 @@ import {
   TxReceiptCard,
   TxAuthorizationListCard,
 } from '@/components/transactions/TxDetailCards'
+// EIP-7702 SetCode transactions include authorizationList field
 import { InternalCallsViewer } from '@/components/transactions/InternalCallsViewer'
 import type { Log } from '@/types/graphql'
 import { BLOCKCHAIN } from '@/lib/config/constants'
@@ -92,7 +93,7 @@ export default function TransactionPage() {
   // Use logs from receipt query, fallback to embedded receipt logs
   const logs = receipt?.logs ?? transaction.receipt?.logs
 
-  // Check if authorizationList is available (EIP-7702 SetCode transactions)
+// Check if authorizationList is available (EIP-7702 SetCode transactions - type 4)
   const hasAuthorizationList = Boolean(
     transaction.authorizationList && transaction.authorizationList.length > 0
   )
@@ -115,7 +116,7 @@ export default function TransactionPage() {
       {/* Internal Calls - via debug_traceTransaction RPC */}
       <InternalCallsViewer txHash={hash} />
 
-      {/* EIP-7702 Authorization List - for SetCode transactions */}
+{/* EIP-7702 Authorization List - for SetCode transactions (type 4) */}
       {hasAuthorizationList && (
         <TxAuthorizationListCard authorizationList={transaction.authorizationList} />
       )}
