@@ -39,6 +39,8 @@ export interface RealtimeTransaction {
   blockHash?: string
   transactionIndex?: number
   feePayer?: string
+  /** Timestamp when this tx was first seen as pending (ms since epoch) */
+  seenAt?: number
 }
 
 export interface RealtimeState {
@@ -63,6 +65,7 @@ export interface RealtimeState {
   setLatestTransaction: (tx: RealtimeTransaction) => void
   addPendingTransaction: (tx: RealtimeTransaction) => void
   removePendingTransaction: (hash: string) => void
+  cleanExpiredPendingTransactions: (ttl: number) => void
   clearPendingTransactions: () => void
   reset: () => void
 }
@@ -147,10 +150,10 @@ export const useRealtimeStore = create<RealtimeState>()(
           }
 
           return {
-            pendingTransactions: [tx, ...state.pendingTransactions].slice(
-              0,
-              MAX_PENDING_TRANSACTIONS
-            ),
+            pendingTransactions: [
+              { ...tx, seenAt: Date.now() },
+              ...state.pendingTransactions,
+            ].slice(0, MAX_PENDING_TRANSACTIONS),
           }
         }),
 
@@ -160,6 +163,18 @@ export const useRealtimeStore = create<RealtimeState>()(
             (p) => p.hash !== hash
           ),
         })),
+
+      cleanExpiredPendingTransactions: (ttl) =>
+        set((state) => {
+          const now = Date.now()
+          const filtered = state.pendingTransactions.filter(
+            (tx) => tx.seenAt && now - tx.seenAt < ttl
+          )
+          if (filtered.length === state.pendingTransactions.length) {
+            return state
+          }
+          return { pendingTransactions: filtered }
+        }),
 
       clearPendingTransactions: () =>
         set({ pendingTransactions: [] }),

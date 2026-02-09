@@ -20,7 +20,7 @@ import {
   SUBSCRIBE_NEW_TRANSACTION,
   SUBSCRIBE_PENDING_TRANSACTIONS,
 } from '@/lib/apollo/queries'
-import { REPLAY } from '@/lib/config/constants'
+import { REALTIME, REPLAY } from '@/lib/config/constants'
 import { errorLogger } from '@/lib/errors/logger'
 import {
   useRealtimeStore,
@@ -46,9 +46,15 @@ export function RealtimeProvider({
   const setLatestBlock = useRealtimeStore((s) => s.setLatestBlock)
   const setLatestTransaction = useRealtimeStore((s) => s.setLatestTransaction)
   const addPendingTransaction = useRealtimeStore((s) => s.addPendingTransaction)
+  const cleanExpiredPendingTransactions = useRealtimeStore(
+    (s) => s.cleanExpiredPendingTransactions
+  )
+  const clearPendingTransactions = useRealtimeStore((s) => s.clearPendingTransactions)
 
   // Track if we've received any data (for connection status)
   const hasReceivedData = useRef(false)
+  // Track disconnection for pending tx cleanup on reconnect
+  const wasDisconnected = useRef(false)
 
   // Memoize subscription variables to prevent re-subscription
   const blockVariables = useMemo(() => ({ replayLast: replayBlocks }), [replayBlocks])
@@ -113,16 +119,33 @@ export function RealtimeProvider({
   })
 
   // =========================================================================
-  // Connection Status Management
+  // Connection Status Management (with reconnect pending tx cleanup)
   // =========================================================================
   useEffect(() => {
     // If any subscription has an error, mark as disconnected
     if (blockError || txError || pendingError) {
+      wasDisconnected.current = true
       setConnected(false)
     } else if (hasReceivedData.current) {
+      // On reconnect, clear stale pending txs that may have been mined
+      if (wasDisconnected.current) {
+        clearPendingTransactions()
+        wasDisconnected.current = false
+      }
       setConnected(true)
     }
-  }, [blockError, txError, pendingError, setConnected])
+  }, [blockError, txError, pendingError, setConnected, clearPendingTransactions])
+
+  // =========================================================================
+  // TTL-based cleanup for expired pending transactions
+  // =========================================================================
+  useEffect(() => {
+    const timer = setInterval(() => {
+      cleanExpiredPendingTransactions(REALTIME.PENDING_TX_TTL)
+    }, REALTIME.PENDING_TX_CLEANUP_INTERVAL)
+
+    return () => clearInterval(timer)
+  }, [cleanExpiredPendingTransactions])
 
   // Cleanup on unmount
   useEffect(() => {

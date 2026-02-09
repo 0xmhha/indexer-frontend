@@ -108,6 +108,15 @@ export const GET_TRANSACTION = gql`
         r
         s
       }
+      authorizationList {
+        chainId
+        address
+        nonce
+        yParity
+        r
+        s
+        authority
+      }
       receipt {
         status
         gasUsed
@@ -713,22 +722,19 @@ export const GET_FEE_PAYER_STATS = gql`
 // ============================================================================
 
 /**
- * Get SetCode (type 4) transactions for an address
- * Used to find EIP-7702 SetCode transactions where the address is involved.
- * Note: authorizationList is not available in transactionsByAddress query.
- * For full authorization details, use GET_TRANSACTION with individual tx hash.
+ * Get EIP-7702 SetCode delegation info for an address
+ * Returns authoritative delegation state directly from the backend index
  */
-export const GET_SETCODE_TRANSACTIONS = gql`
-  query GetSetCodeTransactions($address: String!, $limit: Int, $offset: Int) {
-    transactionsByAddress(address: $address, pagination: { limit: $limit, offset: $offset }) {
-      nodes {
-        hash
-        blockNumber
-        from
-        to
-        type
-      }
-      totalCount
+export const GET_ADDRESS_SETCODE_INFO = gql`
+  query GetAddressSetCodeInfo($address: String!) {
+    addressSetCodeInfo(address: $address) {
+      address
+      hasDelegation
+      delegationTarget
+      asAuthorityCount
+      asTargetCount
+      lastActivityBlock
+      lastActivityTimestamp
     }
   }
 `

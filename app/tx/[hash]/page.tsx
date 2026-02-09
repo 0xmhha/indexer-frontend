@@ -15,7 +15,6 @@ import {
   TxReceiptCard,
   TxAuthorizationListCard,
 } from '@/components/transactions/TxDetailCards'
-// Note: TX_TYPE import removed - authorizationList not yet supported by backend
 import { InternalCallsViewer } from '@/components/transactions/InternalCallsViewer'
 import type { Log } from '@/types/graphql'
 import { BLOCKCHAIN } from '@/lib/config/constants'
@@ -94,7 +93,6 @@ export default function TransactionPage() {
   const logs = receipt?.logs ?? transaction.receipt?.logs
 
   // Check if authorizationList is available (EIP-7702 SetCode transactions)
-  // Note: authorizationList field is not yet supported by the backend GraphQL schema
   const hasAuthorizationList = Boolean(
     transaction.authorizationList && transaction.authorizationList.length > 0
   )
@@ -118,7 +116,6 @@ export default function TransactionPage() {
       <InternalCallsViewer txHash={hash} />
 
       {/* EIP-7702 Authorization List - for SetCode transactions */}
-      {/* Note: authorizationList field is not yet supported by the backend GraphQL schema */}
       {hasAuthorizationList && (
         <TxAuthorizationListCard authorizationList={transaction.authorizationList} />
       )}

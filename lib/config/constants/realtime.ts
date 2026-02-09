@@ -33,6 +33,12 @@ export const REALTIME = {
 
   /** WebSocket close code: Going away (page closing, server shutdown) */
   WS_CLOSE_GOING_AWAY: 1001,
+
+  /** Pending transaction TTL - matches backend PendingPool TTL (ms) */
+  PENDING_TX_TTL: 5 * 60 * 1000,
+
+  /** Pending transaction cleanup interval (ms) */
+  PENDING_TX_CLEANUP_INTERVAL: 10_000,
 } as const
 
 // ============================================================================
