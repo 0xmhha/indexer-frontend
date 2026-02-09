@@ -226,7 +226,7 @@ export type MemberHistoryEvent = MemberChangeEvent
 // ============================================================================
 
 const GET_GAS_TIP_HISTORY = gql`
-  query GetGasTipHistoryLocal($fromBlock: BigInt!, $toBlock: BigInt!) {
+  query GetGasTipHistoryLocal($fromBlock: String!, $toBlock: String!) {
     gasTipHistory(filter: { fromBlock: $fromBlock, toBlock: $toBlock }) {
       blockNumber
       transactionHash
@@ -239,7 +239,7 @@ const GET_GAS_TIP_HISTORY = gql`
 `
 
 const GET_VALIDATOR_HISTORY = gql`
-  query GetValidatorHistoryLocal($validator: Address!) {
+  query GetValidatorHistoryLocal($validator: String!) {
     validatorHistory(validator: $validator) {
       blockNumber
       transactionHash
@@ -252,7 +252,7 @@ const GET_VALIDATOR_HISTORY = gql`
 `
 
 const GET_EMERGENCY_PAUSE_HISTORY = gql`
-  query GetEmergencyPauseHistoryLocal($contract: Address!) {
+  query GetEmergencyPauseHistoryLocal($contract: String!) {
     emergencyPauseHistory(contract: $contract) {
       contract
       blockNumber
@@ -281,7 +281,7 @@ const GET_BURN_HISTORY = gql`
 `
 
 const GET_BLACKLIST_HISTORY = gql`
-  query GetBlacklistHistoryLocal($address: Address!) {
+  query GetBlacklistHistoryLocal($address: String!) {
     blacklistHistory(address: $address) {
       blockNumber
       transactionHash
@@ -294,7 +294,7 @@ const GET_BLACKLIST_HISTORY = gql`
 `
 
 const GET_MEMBER_HISTORY = gql`
-  query GetMemberHistoryLocal($contract: Address!) {
+  query GetMemberHistoryLocal($contract: String!) {
     memberHistory(contract: $contract) {
       contract
       blockNumber

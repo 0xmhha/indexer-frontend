@@ -4543,7 +4543,7 @@ export type GetInternalTransactionsByAddressLazyQueryHookResult = ReturnType<typ
 export type GetInternalTransactionsByAddressSuspenseQueryHookResult = ReturnType<typeof useGetInternalTransactionsByAddressSuspenseQuery>;
 export type GetInternalTransactionsByAddressQueryResult = Apollo.QueryResult<GetInternalTransactionsByAddressQuery, GetInternalTransactionsByAddressQueryVariables>;
 export const GetErc20TransferDocument = gql`
-    query GetERC20Transfer($txHash: Hash!, $logIndex: Int!) {
+    query GetERC20Transfer($txHash: String!, $logIndex: Int!) {
   erc20Transfer(txHash: $txHash, logIndex: $logIndex) {
     transactionHash
     logIndex
@@ -4590,7 +4590,7 @@ export type GetErc20TransferLazyQueryHookResult = ReturnType<typeof useGetErc20T
 export type GetErc20TransferSuspenseQueryHookResult = ReturnType<typeof useGetErc20TransferSuspenseQuery>;
 export type GetErc20TransferQueryResult = Apollo.QueryResult<GetErc20TransferQuery, GetErc20TransferQueryVariables>;
 export const GetErc20TransfersByTokenDocument = gql`
-    query GetERC20TransfersByToken($token: Address!, $pagination: PaginationInput) {
+    query GetERC20TransfersByToken($token: String!, $pagination: PaginationInput) {
   erc20TransfersByToken(token: $token, pagination: $pagination) {
     nodes {
       transactionHash
@@ -4704,7 +4704,7 @@ export type GetErc20TransfersByAddressLazyQueryHookResult = ReturnType<typeof us
 export type GetErc20TransfersByAddressSuspenseQueryHookResult = ReturnType<typeof useGetErc20TransfersByAddressSuspenseQuery>;
 export type GetErc20TransfersByAddressQueryResult = Apollo.QueryResult<GetErc20TransfersByAddressQuery, GetErc20TransfersByAddressQueryVariables>;
 export const GetErc721TransferDocument = gql`
-    query GetERC721Transfer($txHash: Hash!, $logIndex: Int!) {
+    query GetERC721Transfer($txHash: String!, $logIndex: Int!) {
   erc721Transfer(txHash: $txHash, logIndex: $logIndex) {
     transactionHash
     logIndex
@@ -4751,7 +4751,7 @@ export type GetErc721TransferLazyQueryHookResult = ReturnType<typeof useGetErc72
 export type GetErc721TransferSuspenseQueryHookResult = ReturnType<typeof useGetErc721TransferSuspenseQuery>;
 export type GetErc721TransferQueryResult = Apollo.QueryResult<GetErc721TransferQuery, GetErc721TransferQueryVariables>;
 export const GetErc721TransfersByTokenDocument = gql`
-    query GetERC721TransfersByToken($token: Address!, $pagination: PaginationInput) {
+    query GetERC721TransfersByToken($token: String!, $pagination: PaginationInput) {
   erc721TransfersByToken(token: $token, pagination: $pagination) {
     nodes {
       transactionHash
@@ -4865,7 +4865,7 @@ export type GetErc721TransfersByAddressLazyQueryHookResult = ReturnType<typeof u
 export type GetErc721TransfersByAddressSuspenseQueryHookResult = ReturnType<typeof useGetErc721TransfersByAddressSuspenseQuery>;
 export type GetErc721TransfersByAddressQueryResult = Apollo.QueryResult<GetErc721TransfersByAddressQuery, GetErc721TransfersByAddressQueryVariables>;
 export const GetErc721OwnerDocument = gql`
-    query GetERC721Owner($token: Address!, $tokenId: BigInt!) {
+    query GetERC721Owner($token: String!, $tokenId: String!) {
   erc721Owner(token: $token, tokenId: $tokenId)
 }
     `;
@@ -4904,7 +4904,7 @@ export type GetErc721OwnerLazyQueryHookResult = ReturnType<typeof useGetErc721Ow
 export type GetErc721OwnerSuspenseQueryHookResult = ReturnType<typeof useGetErc721OwnerSuspenseQuery>;
 export type GetErc721OwnerQueryResult = Apollo.QueryResult<GetErc721OwnerQuery, GetErc721OwnerQueryVariables>;
 export const GetWbftBlockExtraDocument = gql`
-    query GetWbftBlockExtra($blockNumber: BigInt!) {
+    query GetWbftBlockExtra($blockNumber: String!) {
   wbftBlockExtra(blockNumber: $blockNumber) {
     blockNumber
     blockHash
@@ -4968,7 +4968,7 @@ export type GetWbftBlockExtraLazyQueryHookResult = ReturnType<typeof useGetWbftB
 export type GetWbftBlockExtraSuspenseQueryHookResult = ReturnType<typeof useGetWbftBlockExtraSuspenseQuery>;
 export type GetWbftBlockExtraQueryResult = Apollo.QueryResult<GetWbftBlockExtraQuery, GetWbftBlockExtraQueryVariables>;
 export const GetWbftBlockExtraByHashDocument = gql`
-    query GetWbftBlockExtraByHash($blockHash: Hash!) {
+    query GetWbftBlockExtraByHash($blockHash: String!) {
   wbftBlockExtraByHash(blockHash: $blockHash) {
     blockNumber
     blockHash
@@ -5032,7 +5032,7 @@ export type GetWbftBlockExtraByHashLazyQueryHookResult = ReturnType<typeof useGe
 export type GetWbftBlockExtraByHashSuspenseQueryHookResult = ReturnType<typeof useGetWbftBlockExtraByHashSuspenseQuery>;
 export type GetWbftBlockExtraByHashQueryResult = Apollo.QueryResult<GetWbftBlockExtraByHashQuery, GetWbftBlockExtraByHashQueryVariables>;
 export const GetEpochInfoDocument = gql`
-    query GetEpochInfo($epochNumber: BigInt!) {
+    query GetEpochInfo($epochNumber: String!) {
   epochInfo(epochNumber: $epochNumber) {
     epochNumber
     blockNumber
@@ -5125,7 +5125,7 @@ export type GetLatestEpochInfoLazyQueryHookResult = ReturnType<typeof useGetLate
 export type GetLatestEpochInfoSuspenseQueryHookResult = ReturnType<typeof useGetLatestEpochInfoSuspenseQuery>;
 export type GetLatestEpochInfoQueryResult = Apollo.QueryResult<GetLatestEpochInfoQuery, GetLatestEpochInfoQueryVariables>;
 export const GetValidatorSigningStatsDocument = gql`
-    query GetValidatorSigningStats($validatorAddress: Address!, $fromBlock: BigInt!, $toBlock: BigInt!) {
+    query GetValidatorSigningStats($validatorAddress: String!, $fromBlock: String!, $toBlock: String!) {
   validatorSigningStats(
     validatorAddress: $validatorAddress
     fromBlock: $fromBlock
@@ -5179,7 +5179,7 @@ export type GetValidatorSigningStatsLazyQueryHookResult = ReturnType<typeof useG
 export type GetValidatorSigningStatsSuspenseQueryHookResult = ReturnType<typeof useGetValidatorSigningStatsSuspenseQuery>;
 export type GetValidatorSigningStatsQueryResult = Apollo.QueryResult<GetValidatorSigningStatsQuery, GetValidatorSigningStatsQueryVariables>;
 export const GetAllValidatorsSigningStatsDocument = gql`
-    query GetAllValidatorsSigningStats($fromBlock: BigInt!, $toBlock: BigInt!, $limit: Int, $offset: Int) {
+    query GetAllValidatorsSigningStats($fromBlock: String!, $toBlock: String!, $limit: Int, $offset: Int) {
   allValidatorsSigningStats(
     fromBlock: $fromBlock
     toBlock: $toBlock
@@ -5241,7 +5241,7 @@ export type GetAllValidatorsSigningStatsLazyQueryHookResult = ReturnType<typeof 
 export type GetAllValidatorsSigningStatsSuspenseQueryHookResult = ReturnType<typeof useGetAllValidatorsSigningStatsSuspenseQuery>;
 export type GetAllValidatorsSigningStatsQueryResult = Apollo.QueryResult<GetAllValidatorsSigningStatsQuery, GetAllValidatorsSigningStatsQueryVariables>;
 export const GetValidatorSigningActivityDocument = gql`
-    query GetValidatorSigningActivity($validatorAddress: Address!, $fromBlock: BigInt!, $toBlock: BigInt!, $limit: Int, $offset: Int) {
+    query GetValidatorSigningActivity($validatorAddress: String!, $fromBlock: String!, $toBlock: String!, $limit: Int, $offset: Int) {
   validatorSigningActivity(
     validatorAddress: $validatorAddress
     fromBlock: $fromBlock
@@ -5304,7 +5304,7 @@ export type GetValidatorSigningActivityLazyQueryHookResult = ReturnType<typeof u
 export type GetValidatorSigningActivitySuspenseQueryHookResult = ReturnType<typeof useGetValidatorSigningActivitySuspenseQuery>;
 export type GetValidatorSigningActivityQueryResult = Apollo.QueryResult<GetValidatorSigningActivityQuery, GetValidatorSigningActivityQueryVariables>;
 export const GetBlockSignersDocument = gql`
-    query GetBlockSigners($blockNumber: BigInt!) {
+    query GetBlockSigners($blockNumber: String!) {
   blockSigners(blockNumber: $blockNumber) {
     blockNumber
     preparers
@@ -5447,7 +5447,7 @@ export type VerifyContractMutationHookResult = ReturnType<typeof useVerifyContra
 export type VerifyContractMutationResult = Apollo.MutationResult<VerifyContractMutation>;
 export type VerifyContractMutationOptions = Apollo.BaseMutationOptions<VerifyContractMutation, VerifyContractMutationVariables>;
 export const GetAddressBalanceRelayDocument = gql`
-    query GetAddressBalanceRelay($address: Address!) {
+    query GetAddressBalanceRelay($address: String!) {
   addressBalance(address: $address)
 }
     `;
@@ -5485,7 +5485,7 @@ export type GetAddressBalanceRelayLazyQueryHookResult = ReturnType<typeof useGet
 export type GetAddressBalanceRelaySuspenseQueryHookResult = ReturnType<typeof useGetAddressBalanceRelaySuspenseQuery>;
 export type GetAddressBalanceRelayQueryResult = Apollo.QueryResult<GetAddressBalanceRelayQuery, GetAddressBalanceRelayQueryVariables>;
 export const GetTokenBalancesRelayDocument = gql`
-    query GetTokenBalancesRelay($address: Address!) {
+    query GetTokenBalancesRelay($address: String!) {
   tokenBalances(address: $address) {
     address
     balance
@@ -5528,7 +5528,7 @@ export type GetTokenBalancesRelayLazyQueryHookResult = ReturnType<typeof useGetT
 export type GetTokenBalancesRelaySuspenseQueryHookResult = ReturnType<typeof useGetTokenBalancesRelaySuspenseQuery>;
 export type GetTokenBalancesRelayQueryResult = Apollo.QueryResult<GetTokenBalancesRelayQuery, GetTokenBalancesRelayQueryVariables>;
 export const GetTransactionsByAddressRelayDocument = gql`
-    query GetTransactionsByAddressRelay($address: Address!, $limit: Int, $offset: Int) {
+    query GetTransactionsByAddressRelay($address: String!, $limit: Int, $offset: Int) {
   transactionsByAddress(
     address: $address
     pagination: {limit: $limit, offset: $offset}
@@ -5654,7 +5654,7 @@ export type GetLogsByAddressRelayLazyQueryHookResult = ReturnType<typeof useGetL
 export type GetLogsByAddressRelaySuspenseQueryHookResult = ReturnType<typeof useGetLogsByAddressRelaySuspenseQuery>;
 export type GetLogsByAddressRelayQueryResult = Apollo.QueryResult<GetLogsByAddressRelayQuery, GetLogsByAddressRelayQueryVariables>;
 export const GetBlockTimestampDocument = gql`
-    query GetBlockTimestamp($number: BigInt!) {
+    query GetBlockTimestamp($number: String!) {
   block(number: $number) {
     number
     timestamp
@@ -5732,7 +5732,7 @@ export type GetLatestHeightRelayLazyQueryHookResult = ReturnType<typeof useGetLa
 export type GetLatestHeightRelaySuspenseQueryHookResult = ReturnType<typeof useGetLatestHeightRelaySuspenseQuery>;
 export type GetLatestHeightRelayQueryResult = Apollo.QueryResult<GetLatestHeightRelayQuery, GetLatestHeightRelayQueryVariables>;
 export const GetContractCreationRelayDocument = gql`
-    query GetContractCreationRelay($address: Address!) {
+    query GetContractCreationRelay($address: String!) {
   contractCreation(address: $address) {
     contractAddress
     creator
@@ -5776,7 +5776,7 @@ export type GetContractCreationRelayLazyQueryHookResult = ReturnType<typeof useG
 export type GetContractCreationRelaySuspenseQueryHookResult = ReturnType<typeof useGetContractCreationRelaySuspenseQuery>;
 export type GetContractCreationRelayQueryResult = Apollo.QueryResult<GetContractCreationRelayQuery, GetContractCreationRelayQueryVariables>;
 export const GetContractVerificationRelayDocument = gql`
-    query GetContractVerificationRelay($address: Address!) {
+    query GetContractVerificationRelay($address: String!) {
   contractVerification(address: $address) {
     address
     isVerified
@@ -5866,7 +5866,7 @@ export type GetActiveValidatorsRelayLazyQueryHookResult = ReturnType<typeof useG
 export type GetActiveValidatorsRelaySuspenseQueryHookResult = ReturnType<typeof useGetActiveValidatorsRelaySuspenseQuery>;
 export type GetActiveValidatorsRelayQueryResult = Apollo.QueryResult<GetActiveValidatorsRelayQuery, GetActiveValidatorsRelayQueryVariables>;
 export const GetBlockByNumberRelayDocument = gql`
-    query GetBlockByNumberRelay($number: BigInt!) {
+    query GetBlockByNumberRelay($number: String!) {
   block(number: $number) {
     number
     hash
@@ -5915,7 +5915,7 @@ export type GetBlockByNumberRelayLazyQueryHookResult = ReturnType<typeof useGetB
 export type GetBlockByNumberRelaySuspenseQueryHookResult = ReturnType<typeof useGetBlockByNumberRelaySuspenseQuery>;
 export type GetBlockByNumberRelayQueryResult = Apollo.QueryResult<GetBlockByNumberRelayQuery, GetBlockByNumberRelayQueryVariables>;
 export const GetBlockByHashRelayDocument = gql`
-    query GetBlockByHashRelay($hash: Hash!) {
+    query GetBlockByHashRelay($hash: String!) {
   blockByHash(hash: $hash) {
     number
     hash
@@ -5964,7 +5964,7 @@ export type GetBlockByHashRelayLazyQueryHookResult = ReturnType<typeof useGetBlo
 export type GetBlockByHashRelaySuspenseQueryHookResult = ReturnType<typeof useGetBlockByHashRelaySuspenseQuery>;
 export type GetBlockByHashRelayQueryResult = Apollo.QueryResult<GetBlockByHashRelayQuery, GetBlockByHashRelayQueryVariables>;
 export const GetTransactionRelayDocument = gql`
-    query GetTransactionRelay($hash: Hash!) {
+    query GetTransactionRelay($hash: String!) {
   transaction(hash: $hash) {
     hash
     blockNumber
@@ -6030,7 +6030,7 @@ export type GetTransactionRelayLazyQueryHookResult = ReturnType<typeof useGetTra
 export type GetTransactionRelaySuspenseQueryHookResult = ReturnType<typeof useGetTransactionRelaySuspenseQuery>;
 export type GetTransactionRelayQueryResult = Apollo.QueryResult<GetTransactionRelayQuery, GetTransactionRelayQueryVariables>;
 export const GetAccountTxCountRelayDocument = gql`
-    query GetAccountTxCountRelay($address: Address!) {
+    query GetAccountTxCountRelay($address: String!) {
   transactionsByAddress(address: $address, pagination: {limit: 1}) {
     totalCount
   }
@@ -6115,7 +6115,7 @@ export type GetRecentTransactionsRelayLazyQueryHookResult = ReturnType<typeof us
 export type GetRecentTransactionsRelaySuspenseQueryHookResult = ReturnType<typeof useGetRecentTransactionsRelaySuspenseQuery>;
 export type GetRecentTransactionsRelayQueryResult = Apollo.QueryResult<GetRecentTransactionsRelayQuery, GetRecentTransactionsRelayQueryVariables>;
 export const ContractCallDocument = gql`
-    query ContractCall($address: Address!, $method: String!, $params: String, $abi: String) {
+    query ContractCall($address: String!, $method: String!, $params: String, $abi: String) {
   contractCall(address: $address, method: $method, params: $params, abi: $abi) {
     result
     rawResult
@@ -6160,7 +6160,7 @@ export type ContractCallLazyQueryHookResult = ReturnType<typeof useContractCallL
 export type ContractCallSuspenseQueryHookResult = ReturnType<typeof useContractCallSuspenseQuery>;
 export type ContractCallQueryResult = Apollo.QueryResult<ContractCallQuery, ContractCallQueryVariables>;
 export const TransactionStatusDocument = gql`
-    query TransactionStatus($txHash: Hash!) {
+    query TransactionStatus($txHash: String!) {
   transactionStatus(txHash: $txHash) {
     txHash
     status
@@ -6205,7 +6205,7 @@ export type TransactionStatusLazyQueryHookResult = ReturnType<typeof useTransact
 export type TransactionStatusSuspenseQueryHookResult = ReturnType<typeof useTransactionStatusSuspenseQuery>;
 export type TransactionStatusQueryResult = Apollo.QueryResult<TransactionStatusQuery, TransactionStatusQueryVariables>;
 export const InternalTransactionsRpcDocument = gql`
-    query InternalTransactionsRPC($txHash: Hash!) {
+    query InternalTransactionsRPC($txHash: String!) {
   internalTransactionsRPC(txHash: $txHash) {
     txHash
     totalCount
@@ -6563,7 +6563,7 @@ export type GetActiveMintersLazyQueryHookResult = ReturnType<typeof useGetActive
 export type GetActiveMintersSuspenseQueryHookResult = ReturnType<typeof useGetActiveMintersSuspenseQuery>;
 export type GetActiveMintersQueryResult = Apollo.QueryResult<GetActiveMintersQuery, GetActiveMintersQueryVariables>;
 export const GetMinterAllowanceDocument = gql`
-    query GetMinterAllowance($minter: Address!) {
+    query GetMinterAllowance($minter: String!) {
   minterAllowance(minter: $minter)
 }
     `;
@@ -6768,7 +6768,7 @@ export type GetProposalsLazyQueryHookResult = ReturnType<typeof useGetProposalsL
 export type GetProposalsSuspenseQueryHookResult = ReturnType<typeof useGetProposalsSuspenseQuery>;
 export type GetProposalsQueryResult = Apollo.QueryResult<GetProposalsQuery, GetProposalsQueryVariables>;
 export const GetProposalDocument = gql`
-    query GetProposal($contract: Address!, $proposalId: BigInt!) {
+    query GetProposal($contract: String!, $proposalId: String!) {
   proposal(contract: $contract, proposalId: $proposalId) {
     contract
     proposalId
@@ -6822,7 +6822,7 @@ export type GetProposalLazyQueryHookResult = ReturnType<typeof useGetProposalLaz
 export type GetProposalSuspenseQueryHookResult = ReturnType<typeof useGetProposalSuspenseQuery>;
 export type GetProposalQueryResult = Apollo.QueryResult<GetProposalQuery, GetProposalQueryVariables>;
 export const GetProposalVotesDocument = gql`
-    query GetProposalVotes($contract: Address!, $proposalId: BigInt!) {
+    query GetProposalVotes($contract: String!, $proposalId: String!) {
   proposalVotes(contract: $contract, proposalId: $proposalId) {
     contract
     proposalId
@@ -6996,7 +6996,7 @@ export type GetDepositMintProposalsLazyQueryHookResult = ReturnType<typeof useGe
 export type GetDepositMintProposalsSuspenseQueryHookResult = ReturnType<typeof useGetDepositMintProposalsSuspenseQuery>;
 export type GetDepositMintProposalsQueryResult = Apollo.QueryResult<GetDepositMintProposalsQuery, GetDepositMintProposalsQueryVariables>;
 export const GetMaxProposalsUpdateHistoryDocument = gql`
-    query GetMaxProposalsUpdateHistory($contract: Address!) {
+    query GetMaxProposalsUpdateHistory($contract: String!) {
   maxProposalsUpdateHistory(contract: $contract) {
     contract
     blockNumber
@@ -7041,7 +7041,7 @@ export type GetMaxProposalsUpdateHistoryLazyQueryHookResult = ReturnType<typeof 
 export type GetMaxProposalsUpdateHistorySuspenseQueryHookResult = ReturnType<typeof useGetMaxProposalsUpdateHistorySuspenseQuery>;
 export type GetMaxProposalsUpdateHistoryQueryResult = Apollo.QueryResult<GetMaxProposalsUpdateHistoryQuery, GetMaxProposalsUpdateHistoryQueryVariables>;
 export const GetProposalExecutionSkippedEventsDocument = gql`
-    query GetProposalExecutionSkippedEvents($contract: Address!, $proposalId: BigInt) {
+    query GetProposalExecutionSkippedEvents($contract: String!, $proposalId: String) {
   proposalExecutionSkippedEvents(contract: $contract, proposalId: $proposalId) {
     contract
     blockNumber
@@ -7163,7 +7163,7 @@ export type RegisterContractMutationHookResult = ReturnType<typeof useRegisterCo
 export type RegisterContractMutationResult = Apollo.MutationResult<RegisterContractMutation>;
 export type RegisterContractMutationOptions = Apollo.BaseMutationOptions<RegisterContractMutation, RegisterContractMutationVariables>;
 export const UnregisterContractDocument = gql`
-    mutation UnregisterContract($address: Address!) {
+    mutation UnregisterContract($address: String!) {
   unregisterContract(address: $address)
 }
     `;
@@ -7237,7 +7237,7 @@ export type GetRegisteredContractsLazyQueryHookResult = ReturnType<typeof useGet
 export type GetRegisteredContractsSuspenseQueryHookResult = ReturnType<typeof useGetRegisteredContractsSuspenseQuery>;
 export type GetRegisteredContractsQueryResult = Apollo.QueryResult<GetRegisteredContractsQuery, GetRegisteredContractsQueryVariables>;
 export const GetRegisteredContractDocument = gql`
-    query GetRegisteredContract($address: Address!) {
+    query GetRegisteredContract($address: String!) {
   registeredContract(address: $address) {
     address
     name
@@ -7485,7 +7485,7 @@ export function useOnLogsSubscription(baseOptions: Apollo.SubscriptionHookOption
 export type OnLogsSubscriptionHookResult = ReturnType<typeof useOnLogsSubscription>;
 export type OnLogsSubscriptionResult = Apollo.SubscriptionResult<OnLogsSubscription>;
 export const OnLogsByAddressDocument = gql`
-    subscription OnLogsByAddress($address: Address!) {
+    subscription OnLogsByAddress($address: String!) {
   logs(filter: {address: $address}) {
     address
     topics
@@ -7690,7 +7690,7 @@ export type GetFilteredTransactionsLazyQueryHookResult = ReturnType<typeof useGe
 export type GetFilteredTransactionsSuspenseQueryHookResult = ReturnType<typeof useGetFilteredTransactionsSuspenseQuery>;
 export type GetFilteredTransactionsQueryResult = Apollo.QueryResult<GetFilteredTransactionsQuery, GetFilteredTransactionsQueryVariables>;
 export const GetMinterHistoryLocalDocument = gql`
-    query GetMinterHistoryLocal($minter: Address!) {
+    query GetMinterHistoryLocal($minter: String!) {
   minterHistory(minter: $minter) {
     blockNumber
     transactionHash
@@ -7735,7 +7735,7 @@ export type GetMinterHistoryLocalLazyQueryHookResult = ReturnType<typeof useGetM
 export type GetMinterHistoryLocalSuspenseQueryHookResult = ReturnType<typeof useGetMinterHistoryLocalSuspenseQuery>;
 export type GetMinterHistoryLocalQueryResult = Apollo.QueryResult<GetMinterHistoryLocalQuery, GetMinterHistoryLocalQueryVariables>;
 export const GetGasTipHistoryLocalDocument = gql`
-    query GetGasTipHistoryLocal($fromBlock: BigInt!, $toBlock: BigInt!) {
+    query GetGasTipHistoryLocal($fromBlock: String!, $toBlock: String!) {
   gasTipHistory(filter: {fromBlock: $fromBlock, toBlock: $toBlock}) {
     blockNumber
     transactionHash
@@ -7781,7 +7781,7 @@ export type GetGasTipHistoryLocalLazyQueryHookResult = ReturnType<typeof useGetG
 export type GetGasTipHistoryLocalSuspenseQueryHookResult = ReturnType<typeof useGetGasTipHistoryLocalSuspenseQuery>;
 export type GetGasTipHistoryLocalQueryResult = Apollo.QueryResult<GetGasTipHistoryLocalQuery, GetGasTipHistoryLocalQueryVariables>;
 export const GetValidatorHistoryLocalDocument = gql`
-    query GetValidatorHistoryLocal($validator: Address!) {
+    query GetValidatorHistoryLocal($validator: String!) {
   validatorHistory(validator: $validator) {
     blockNumber
     transactionHash
@@ -7826,7 +7826,7 @@ export type GetValidatorHistoryLocalLazyQueryHookResult = ReturnType<typeof useG
 export type GetValidatorHistoryLocalSuspenseQueryHookResult = ReturnType<typeof useGetValidatorHistoryLocalSuspenseQuery>;
 export type GetValidatorHistoryLocalQueryResult = Apollo.QueryResult<GetValidatorHistoryLocalQuery, GetValidatorHistoryLocalQueryVariables>;
 export const GetEmergencyPauseHistoryLocalDocument = gql`
-    query GetEmergencyPauseHistoryLocal($contract: Address!) {
+    query GetEmergencyPauseHistoryLocal($contract: String!) {
   emergencyPauseHistory(contract: $contract) {
     contract
     blockNumber
@@ -7920,7 +7920,7 @@ export type GetBurnHistoryLocalLazyQueryHookResult = ReturnType<typeof useGetBur
 export type GetBurnHistoryLocalSuspenseQueryHookResult = ReturnType<typeof useGetBurnHistoryLocalSuspenseQuery>;
 export type GetBurnHistoryLocalQueryResult = Apollo.QueryResult<GetBurnHistoryLocalQuery, GetBurnHistoryLocalQueryVariables>;
 export const GetBlacklistHistoryLocalDocument = gql`
-    query GetBlacklistHistoryLocal($address: Address!) {
+    query GetBlacklistHistoryLocal($address: String!) {
   blacklistHistory(address: $address) {
     blockNumber
     transactionHash
@@ -8026,7 +8026,7 @@ export type GetProposalsLocalLazyQueryHookResult = ReturnType<typeof useGetPropo
 export type GetProposalsLocalSuspenseQueryHookResult = ReturnType<typeof useGetProposalsLocalSuspenseQuery>;
 export type GetProposalsLocalQueryResult = Apollo.QueryResult<GetProposalsLocalQuery, GetProposalsLocalQueryVariables>;
 export const GetProposalVotesLocalDocument = gql`
-    query GetProposalVotesLocal($contract: Address!, $proposalId: BigInt!) {
+    query GetProposalVotesLocal($contract: String!, $proposalId: String!) {
   proposalVotes(contract: $contract, proposalId: $proposalId) {
     contract
     proposalId
@@ -8073,7 +8073,7 @@ export type GetProposalVotesLocalLazyQueryHookResult = ReturnType<typeof useGetP
 export type GetProposalVotesLocalSuspenseQueryHookResult = ReturnType<typeof useGetProposalVotesLocalSuspenseQuery>;
 export type GetProposalVotesLocalQueryResult = Apollo.QueryResult<GetProposalVotesLocalQuery, GetProposalVotesLocalQueryVariables>;
 export const GetMemberHistoryLocalDocument = gql`
-    query GetMemberHistoryLocal($contract: Address!) {
+    query GetMemberHistoryLocal($contract: String!) {
   memberHistory(contract: $contract) {
     contract
     blockNumber

@@ -21,7 +21,7 @@ export const GET_ACTIVE_MINTERS = gql`
 `
 
 export const GET_MINTER_ALLOWANCE = gql`
-  query GetMinterAllowance($minter: Address!) {
+  query GetMinterAllowance($minter: String!) {
     minterAllowance(minter: $minter)
   }
 `
@@ -99,7 +99,7 @@ export const GET_PROPOSALS = gql`
 `
 
 export const GET_PROPOSAL = gql`
-  query GetProposal($contract: Address!, $proposalId: BigInt!) {
+  query GetProposal($contract: String!, $proposalId: String!) {
     proposal(contract: $contract, proposalId: $proposalId) {
       contract
       proposalId
@@ -120,7 +120,7 @@ export const GET_PROPOSAL = gql`
 `
 
 export const GET_PROPOSAL_VOTES = gql`
-  query GetProposalVotes($contract: Address!, $proposalId: BigInt!) {
+  query GetProposalVotes($contract: String!, $proposalId: String!) {
     proposalVotes(contract: $contract, proposalId: $proposalId) {
       contract
       proposalId
@@ -174,7 +174,7 @@ export const GET_DEPOSIT_MINT_PROPOSALS = gql`
 // ============================================================================
 
 export const GET_MAX_PROPOSALS_UPDATE_HISTORY = gql`
-  query GetMaxProposalsUpdateHistory($contract: Address!) {
+  query GetMaxProposalsUpdateHistory($contract: String!) {
     maxProposalsUpdateHistory(contract: $contract) {
       contract
       blockNumber
@@ -191,7 +191,7 @@ export const GET_MAX_PROPOSALS_UPDATE_HISTORY = gql`
 // ============================================================================
 
 export const GET_PROPOSAL_EXECUTION_SKIPPED = gql`
-  query GetProposalExecutionSkippedEvents($contract: Address!, $proposalId: BigInt) {
+  query GetProposalExecutionSkippedEvents($contract: String!, $proposalId: String) {
     proposalExecutionSkippedEvents(contract: $contract, proposalId: $proposalId) {
       contract
       blockNumber
@@ -251,7 +251,7 @@ export const REGISTER_CONTRACT = gql`
  * Unregister a contract from event indexing
  */
 export const UNREGISTER_CONTRACT = gql`
-  mutation UnregisterContract($address: Address!) {
+  mutation UnregisterContract($address: String!) {
     unregisterContract(address: $address)
   }
 `
@@ -275,7 +275,7 @@ export const GET_REGISTERED_CONTRACTS = gql`
  * Get a specific registered contract by address
  */
 export const GET_REGISTERED_CONTRACT = gql`
-  query GetRegisteredContract($address: Address!) {
+  query GetRegisteredContract($address: String!) {
     registeredContract(address: $address) {
       address
       name

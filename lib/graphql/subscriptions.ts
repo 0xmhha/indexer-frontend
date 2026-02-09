@@ -97,7 +97,7 @@ export const LOGS_SUBSCRIPTION = gql`
 `
 
 export const LOGS_BY_ADDRESS_SUBSCRIPTION = gql`
-  subscription OnLogsByAddress($address: Address!) {
+  subscription OnLogsByAddress($address: String!) {
     logs(filter: { address: $address }) {
       address
       topics

@@ -10,7 +10,7 @@ import { gql } from '@apollo/client'
  */
 export const CONTRACT_CALL = gql`
   query ContractCall(
-    $address: Address!
+    $address: String!
     $method: String!
     $params: String
     $abi: String
@@ -32,7 +32,7 @@ export const CONTRACT_CALL = gql`
  * Transaction Status - Real-time transaction status via RPC Proxy
  */
 export const TRANSACTION_STATUS = gql`
-  query TransactionStatus($txHash: Hash!) {
+  query TransactionStatus($txHash: String!) {
     transactionStatus(txHash: $txHash) {
       txHash
       status
@@ -48,7 +48,7 @@ export const TRANSACTION_STATUS = gql`
  * Internal Transactions via debug_traceTransaction RPC
  */
 export const INTERNAL_TRANSACTIONS_RPC = gql`
-  query InternalTransactionsRPC($txHash: Hash!) {
+  query InternalTransactionsRPC($txHash: String!) {
     internalTransactionsRPC(txHash: $txHash) {
       txHash
       totalCount
@@ -95,7 +95,7 @@ export const RPC_PROXY_METRICS = gql`
  * TODO: Use addressBalance query or liveBalance subscription instead
  */
 // export const ETH_GET_BALANCE = gql`
-//   query EthGetBalance($address: Address!, $blockNumber: BigInt) {
+//   query EthGetBalance($address: String!, $blockNumber: BigInt) {
 //     ethGetBalance(address: $address, blockNumber: $blockNumber)
 //   }
 // `

@@ -61,7 +61,7 @@ export interface MinterConfigEvent {
 // ============================================================================
 
 const GET_MINTER_HISTORY = gql`
-  query GetMinterHistoryLocal($minter: Address!) {
+  query GetMinterHistoryLocal($minter: String!) {
     minterHistory(minter: $minter) {
       blockNumber
       transactionHash

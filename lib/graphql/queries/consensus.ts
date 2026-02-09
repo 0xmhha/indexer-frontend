@@ -16,7 +16,7 @@ import { gql } from '@apollo/client'
  * Returns consensus metadata including round, seals, and epoch info
  */
 export const GET_WBFT_BLOCK_EXTRA = gql`
-  query GetWbftBlockExtra($blockNumber: BigInt!) {
+  query GetWbftBlockExtra($blockNumber: String!) {
     wbftBlockExtra(blockNumber: $blockNumber) {
       blockNumber
       blockHash
@@ -51,7 +51,7 @@ export const GET_WBFT_BLOCK_EXTRA = gql`
  * Get WBFT block consensus data by block hash
  */
 export const GET_WBFT_BLOCK_EXTRA_BY_HASH = gql`
-  query GetWbftBlockExtraByHash($blockHash: Hash!) {
+  query GetWbftBlockExtraByHash($blockHash: String!) {
     wbftBlockExtraByHash(blockHash: $blockHash) {
       blockNumber
       blockHash
@@ -90,7 +90,7 @@ export const GET_WBFT_BLOCK_EXTRA_BY_HASH = gql`
  * Get epoch information by epoch number
  */
 export const GET_EPOCH_INFO = gql`
-  query GetEpochInfo($epochNumber: BigInt!) {
+  query GetEpochInfo($epochNumber: String!) {
     epochInfo(epochNumber: $epochNumber) {
       epochNumber
       blockNumber
@@ -131,9 +131,9 @@ export const GET_LATEST_EPOCH_INFO = gql`
  */
 export const GET_VALIDATOR_SIGNING_STATS = gql`
   query GetValidatorSigningStats(
-    $validatorAddress: Address!
-    $fromBlock: BigInt!
-    $toBlock: BigInt!
+    $validatorAddress: String!
+    $fromBlock: String!
+    $toBlock: String!
   ) {
     validatorSigningStats(
       validatorAddress: $validatorAddress
@@ -158,8 +158,8 @@ export const GET_VALIDATOR_SIGNING_STATS = gql`
  */
 export const GET_ALL_VALIDATORS_SIGNING_STATS = gql`
   query GetAllValidatorsSigningStats(
-    $fromBlock: BigInt!
-    $toBlock: BigInt!
+    $fromBlock: String!
+    $toBlock: String!
     $limit: Int
     $offset: Int
   ) {
@@ -193,9 +193,9 @@ export const GET_ALL_VALIDATORS_SIGNING_STATS = gql`
  */
 export const GET_VALIDATOR_SIGNING_ACTIVITY = gql`
   query GetValidatorSigningActivity(
-    $validatorAddress: Address!
-    $fromBlock: BigInt!
-    $toBlock: BigInt!
+    $validatorAddress: String!
+    $fromBlock: String!
+    $toBlock: String!
     $limit: Int
     $offset: Int
   ) {
@@ -232,7 +232,7 @@ export const GET_VALIDATOR_SIGNING_ACTIVITY = gql`
  * Get block signers (preparers and committers) for a specific block
  */
 export const GET_BLOCK_SIGNERS = gql`
-  query GetBlockSigners($blockNumber: BigInt!) {
+  query GetBlockSigners($blockNumber: String!) {
     blockSigners(blockNumber: $blockNumber) {
       blockNumber
       preparers

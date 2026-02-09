@@ -9,7 +9,7 @@ import { gql } from '@apollo/client'
  * Get native balance for an address
  */
 export const GET_ADDRESS_BALANCE = gql`
-  query GetAddressBalanceRelay($address: Address!) {
+  query GetAddressBalanceRelay($address: String!) {
     addressBalance(address: $address)
   }
 `
@@ -18,7 +18,7 @@ export const GET_ADDRESS_BALANCE = gql`
  * Get token balances for an address
  */
 export const GET_TOKEN_BALANCES = gql`
-  query GetTokenBalancesRelay($address: Address!) {
+  query GetTokenBalancesRelay($address: String!) {
     tokenBalances(address: $address) {
       address
       balance
@@ -33,7 +33,7 @@ export const GET_TOKEN_BALANCES = gql`
  */
 export const GET_TRANSACTIONS_BY_ADDRESS = gql`
   query GetTransactionsByAddressRelay(
-    $address: Address!
+    $address: String!
     $limit: Int
     $offset: Int
   ) {
@@ -76,7 +76,7 @@ export const GET_TRANSACTIONS_BY_ADDRESS = gql`
  */
 export const GET_LOGS_BY_ADDRESS = gql`
   query GetLogsByAddressRelay(
-    $address: Address
+    $address: String
     $limit: Int
     $offset: Int
   ) {
@@ -107,7 +107,7 @@ export const GET_LOGS_BY_ADDRESS = gql`
  * Get block by number for timestamp lookup
  */
 export const GET_BLOCK_TIMESTAMP = gql`
-  query GetBlockTimestamp($number: BigInt!) {
+  query GetBlockTimestamp($number: String!) {
     block(number: $number) {
       number
       timestamp
@@ -132,7 +132,7 @@ export const GET_LATEST_HEIGHT = gql`
  * Get contract creation info
  */
 export const GET_CONTRACT_CREATION = gql`
-  query GetContractCreationRelay($address: Address!) {
+  query GetContractCreationRelay($address: String!) {
     contractCreation(address: $address) {
       contractAddress
       creator
@@ -147,7 +147,7 @@ export const GET_CONTRACT_CREATION = gql`
  * Get contract verification info (includes ABI and source)
  */
 export const GET_CONTRACT_VERIFICATION = gql`
-  query GetContractVerificationRelay($address: Address!) {
+  query GetContractVerificationRelay($address: String!) {
     contractVerification(address: $address) {
       address
       isVerified
@@ -205,7 +205,7 @@ export const GET_ACTIVE_VALIDATORS = gql`
  * Get block by number
  */
 export const GET_BLOCK_BY_NUMBER = gql`
-  query GetBlockByNumberRelay($number: BigInt!) {
+  query GetBlockByNumberRelay($number: String!) {
     block(number: $number) {
       number
       hash
@@ -225,7 +225,7 @@ export const GET_BLOCK_BY_NUMBER = gql`
  * Get block by hash
  */
 export const GET_BLOCK_BY_HASH = gql`
-  query GetBlockByHashRelay($hash: Hash!) {
+  query GetBlockByHashRelay($hash: String!) {
     blockByHash(hash: $hash) {
       number
       hash
@@ -245,7 +245,7 @@ export const GET_BLOCK_BY_HASH = gql`
  * Get transaction by hash
  */
 export const GET_TRANSACTION = gql`
-  query GetTransactionRelay($hash: Hash!) {
+  query GetTransactionRelay($hash: String!) {
     transaction(hash: $hash) {
       hash
       blockNumber
@@ -282,7 +282,7 @@ export const GET_TRANSACTION = gql`
  * Get account transaction count
  */
 export const GET_ACCOUNT_TX_COUNT = gql`
-  query GetAccountTxCountRelay($address: Address!) {
+  query GetAccountTxCountRelay($address: String!) {
     transactionsByAddress(address: $address, pagination: { limit: 1 }) {
       totalCount
     }

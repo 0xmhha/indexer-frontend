@@ -109,7 +109,7 @@ export const GET_INTERNAL_TRANSACTIONS_BY_ADDRESS = gql`
 // ============================================================================
 
 export const GET_ERC20_TRANSFER = gql`
-  query GetERC20Transfer($txHash: Hash!, $logIndex: Int!) {
+  query GetERC20Transfer($txHash: String!, $logIndex: Int!) {
     erc20Transfer(txHash: $txHash, logIndex: $logIndex) {
       transactionHash
       logIndex
@@ -124,7 +124,7 @@ export const GET_ERC20_TRANSFER = gql`
 
 export const GET_ERC20_TRANSFERS_BY_TOKEN = gql`
   query GetERC20TransfersByToken(
-    $token: Address!
+    $token: String!
     $pagination: PaginationInput
   ) {
     erc20TransfersByToken(token: $token, pagination: $pagination) {
@@ -177,7 +177,7 @@ export const GET_ERC20_TRANSFERS_BY_ADDRESS = gql`
 // ============================================================================
 
 export const GET_ERC721_TRANSFER = gql`
-  query GetERC721Transfer($txHash: Hash!, $logIndex: Int!) {
+  query GetERC721Transfer($txHash: String!, $logIndex: Int!) {
     erc721Transfer(txHash: $txHash, logIndex: $logIndex) {
       transactionHash
       logIndex
@@ -192,7 +192,7 @@ export const GET_ERC721_TRANSFER = gql`
 
 export const GET_ERC721_TRANSFERS_BY_TOKEN = gql`
   query GetERC721TransfersByToken(
-    $token: Address!
+    $token: String!
     $pagination: PaginationInput
   ) {
     erc721TransfersByToken(token: $token, pagination: $pagination) {
@@ -241,7 +241,7 @@ export const GET_ERC721_TRANSFERS_BY_ADDRESS = gql`
 `
 
 export const GET_ERC721_OWNER = gql`
-  query GetERC721Owner($token: Address!, $tokenId: BigInt!) {
+  query GetERC721Owner($token: String!, $tokenId: String!) {
     erc721Owner(token: $token, tokenId: $tokenId)
   }
 `
