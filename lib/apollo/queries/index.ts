@@ -32,6 +32,7 @@ export {
   GET_LIVE_BALANCE,
   GET_BALANCE_HISTORY,
   GET_TOKEN_BALANCES,
+  GET_ADDRESS_SETCODE_INFO,
 } from './address'
 
 // Receipt and log queries

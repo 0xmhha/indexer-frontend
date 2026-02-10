@@ -100,3 +100,20 @@ export const GET_TOKEN_BALANCES = gql`
     }
   }
 `
+
+/**
+ * Get EIP-7702 SetCode delegation info for an address
+ */
+export const GET_ADDRESS_SETCODE_INFO = gql`
+  query GetAddressSetCodeInfo($address: String!) {
+    addressSetCodeInfo(address: $address) {
+      address
+      hasDelegation
+      delegationTarget
+      asAuthorityCount
+      asTargetCount
+      lastActivityBlock
+      lastActivityTimestamp
+    }
+  }
+`
