@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import Link from 'next/link'
 import { useERC20TransfersByAddress } from '@/lib/hooks/useAddressIndexing'
+import { useMergedTransfers } from '@/lib/hooks/useMergedTransfers'
 import {
   Table,
   TableHeader,
@@ -26,70 +27,18 @@ interface ERC20TransfersTableProps {
 export function ERC20TransfersTable({ address, limit = PAGINATION.DEFAULT_PAGE_SIZE }: ERC20TransfersTableProps) {
   const [currentOffset, setCurrentOffset] = useState(0)
 
-  // Query transfers FROM this address
-  const {
-    erc20Transfers: fromTransfers,
-    totalCount: fromTotalCount,
-    pageInfo: fromPageInfo,
-    loading: fromLoading,
-    error: fromError,
-    loadMore: loadMoreFrom,
-  } = useERC20TransfersByAddress(address, true, { limit, offset: currentOffset })
+  const fromResult = useERC20TransfersByAddress(address, true, { limit, offset: currentOffset })
+  const toResult = useERC20TransfersByAddress(address, false, { limit, offset: currentOffset })
 
-  // Query transfers TO this address
-  const {
-    erc20Transfers: toTransfers,
-    totalCount: toTotalCount,
-    pageInfo: toPageInfo,
-    loading: toLoading,
-    error: toError,
-    loadMore: loadMoreTo,
-  } = useERC20TransfersByAddress(address, false, { limit, offset: currentOffset })
-
-  // Merge and deduplicate transfers from both directions
-  const erc20Transfers = useMemo(() => {
-    const seen = new Set<string>()
-    const merged: ERC20Transfer[] = []
-
-    // Add FROM transfers
-    for (const transfer of fromTransfers) {
-      const key = `${transfer.transactionHash}-${transfer.logIndex}`
-      if (!seen.has(key)) {
-        seen.add(key)
-        merged.push(transfer)
-      }
-    }
-
-    // Add TO transfers (avoiding duplicates)
-    for (const transfer of toTransfers) {
-      const key = `${transfer.transactionHash}-${transfer.logIndex}`
-      if (!seen.has(key)) {
-        seen.add(key)
-        merged.push(transfer)
-      }
-    }
-
-    // Sort by block number descending
-    return merged.sort((a, b) => Number(b.blockNumber - a.blockNumber))
-  }, [fromTransfers, toTransfers])
-
-  const totalCount = fromTotalCount + toTotalCount
-  const loading = fromLoading || toLoading
-  const error = fromError || toError
-  const pageInfo = {
-    hasNextPage: fromPageInfo.hasNextPage || toPageInfo.hasNextPage,
-    hasPreviousPage: fromPageInfo.hasPreviousPage || toPageInfo.hasPreviousPage,
-  }
-
-  const loadMore = () => {
-    if (fromPageInfo.hasNextPage) loadMoreFrom?.()
-    if (toPageInfo.hasNextPage) loadMoreTo?.()
-  }
+  const { transfers: erc20Transfers, totalCount, loading, error, pageInfo, loadMore } = useMergedTransfers<ERC20Transfer>(
+    { transfers: fromResult.erc20Transfers, totalCount: fromResult.totalCount, pageInfo: fromResult.pageInfo, loading: fromResult.loading, error: fromResult.error, loadMore: fromResult.loadMore },
+    { transfers: toResult.erc20Transfers, totalCount: toResult.totalCount, pageInfo: toResult.pageInfo, loading: toResult.loading, error: toResult.error, loadMore: toResult.loadMore },
+  )
 
   const handleLoadMore = () => {
     if (pageInfo.hasNextPage) {
       setCurrentOffset((prev) => prev + limit)
-      loadMore?.()
+      loadMore()
     }
   }
 
@@ -218,7 +167,6 @@ export function ERC20TransfersTable({ address, limit = PAGINATION.DEFAULT_PAGE_S
         </Table>
       </div>
 
-      {/* Load More Button */}
       {pageInfo.hasNextPage && (
         <div className="border-t border-bg-tertiary p-4 text-center">
           <Button onClick={handleLoadMore} disabled={loading} variant="outline">
@@ -236,7 +184,6 @@ export function ERC20TransfersTable({ address, limit = PAGINATION.DEFAULT_PAGE_S
         </div>
       )}
 
-      {/* Total Count */}
       <div className="border-t border-bg-tertiary p-4 text-center">
         <p className="font-mono text-xs text-text-secondary">
           Showing {formatNumber(erc20Transfers.length)} of {formatNumber(totalCount)} ERC20 transfers
