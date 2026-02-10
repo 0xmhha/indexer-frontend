@@ -63,7 +63,7 @@ export function FeeDelegationDashboard({ className }: FeeDelegationDashboardProp
     }
   }, [selectedPeriod])
 
-  const { stats, loading, error, isMockData } = useFeeDelegationStats(timeFilter)
+  const { stats, loading, error } = useFeeDelegationStats(timeFilter)
 
   if (loading) {
     return (
@@ -109,12 +109,6 @@ export function FeeDelegationDashboard({ className }: FeeDelegationDashboardProp
             </button>
           ))}
         </div>
-        {isMockData && (
-          <div className="flex items-center gap-2 rounded bg-accent-orange/10 px-2 py-1">
-            <span className="text-accent-orange">⚠️</span>
-            <span className="font-mono text-xs text-accent-orange">Demo Mode</span>
-          </div>
-        )}
       </div>
 
       {/* Statistics Overview */}

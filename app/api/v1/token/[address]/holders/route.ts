@@ -1,12 +1,10 @@
 /**
  * GET /api/v1/token/{address}/holders
- * Returns token holder list
- *
- * Note: This endpoint requires a dedicated tokenHolders query from the indexer.
- * Currently returns empty list as placeholder until backend implements this query.
+ * Returns token holder list from backend tokenHolders query
  */
 
 import { NextRequest } from 'next/server'
+import { queryIndexer } from '@/lib/api/relay'
 import {
   paginatedResponse,
   apiErrorResponse,
@@ -16,10 +14,25 @@ import {
 import { isValidAddress } from '@/lib/utils/validation'
 import {
   InvalidAddressError,
+  IndexerConnectionError,
 } from '@/lib/api/errors'
+import { errorLogger } from '@/lib/errors/logger'
+import { GET_TOKEN_HOLDERS } from '@/lib/graphql/queries/relay'
 import type { TokenHolderItem } from '@/lib/api/types'
 
 export const dynamic = 'force-dynamic'
+
+interface TokenHolderNode {
+  holderAddress: string
+  balance: string
+}
+
+interface TokenHoldersResponse {
+  tokenHolders: {
+    nodes: TokenHolderNode[]
+    totalCount: number
+  }
+}
 
 export async function OPTIONS() {
   return handleCorsOptions()
@@ -36,11 +49,24 @@ export async function GET(
   }
 
   const { page, limit } = parsePaginationParams(request.nextUrl.searchParams)
+  const offset = (page - 1) * limit
 
-  // Note: Token holders query not available in current GraphQL schema
-  // This would require a dedicated tokenHolders(tokenAddress) query
-  const holders: TokenHolderItem[] = []
-  const totalCount = 0
+  try {
+    const data = await queryIndexer<TokenHoldersResponse>(
+      GET_TOKEN_HOLDERS,
+      { token: address, limit, offset }
+    )
 
-  return paginatedResponse(holders, page, limit, totalCount)
+    const totalCount = data.tokenHolders?.totalCount ?? 0
+    const holders: TokenHolderItem[] = (data.tokenHolders?.nodes ?? []).map((node) => ({
+      address: node.holderAddress,
+      balance: node.balance,
+      percentage: totalCount > 0 ? 0 : 0, // Backend doesn't provide percentage
+    }))
+
+    return paginatedResponse(holders, page, limit, totalCount)
+  } catch (err) {
+    errorLogger.error(err, { component: 'token-holders-api', action: 'query' })
+    return apiErrorResponse(new IndexerConnectionError())
+  }
 }

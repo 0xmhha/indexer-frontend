@@ -7,12 +7,13 @@
 import { useQuery } from '@apollo/client'
 import {
   GET_TOP_MINERS,
-  GET_NETWORK_STATS,
+  GET_NETWORK_METRICS,
   type MinerStats,
   type GetTopMinersVariables,
   type GetTopMinersData,
-  type NetworkStats,
-  type GetNetworkStatsData,
+  type NetworkMetrics,
+  type GetNetworkMetricsVariables,
+  type GetNetworkMetricsData,
 } from '@/lib/graphql/queries/stats'
 import { PAGINATION, POLLING_INTERVALS, BLOCKCHAIN, FORMATTING } from '@/lib/config/constants'
 
@@ -91,57 +92,68 @@ export function useTopMiners(options: UseTopMinersOptions = {}): UseTopMinersRes
 }
 
 // ============================================================================
-// Network Stats Hook
+// Network Metrics Hook
 // ============================================================================
 
-export interface UseNetworkStatsOptions {
-  pollInterval?: number // Auto-refresh interval in ms
+export interface UseNetworkMetricsOptions {
+  fromTime?: string
+  toTime?: string
+  pollInterval?: number
 }
 
-export interface UseNetworkStatsResult {
-  stats: NetworkStats | null
+export interface UseNetworkMetricsResult {
+  metrics: NetworkMetrics | null
   loading: boolean
   error: Error | null
   refetch: () => void
 }
 
 /**
- * Hook for fetching general network statistics
+ * Hook for fetching network metrics with time-range filtering
  *
- * @param options Query options including poll interval
- * @returns Network statistics, loading state, error state, and refetch function
+ * @param options Query options including time range and poll interval
+ * @returns Network metrics, loading state, error state, and refetch function
  *
  * @example
  * ```tsx
- * // Get network stats with auto-refresh every 30 seconds (default)
- * const { stats, loading } = useNetworkStats()
- *
- * if (stats) {
- *   console.log('Latest block:', stats.latestBlock)
- *   console.log('Total transactions:', stats.totalTransactions)
- * }
+ * // Get last 24h network metrics
+ * const now = Math.floor(Date.now() / 1000)
+ * const { metrics, loading } = useNetworkMetrics({
+ *   fromTime: String(now - 86400),
+ *   toTime: String(now),
+ * })
  * ```
  */
-export function useNetworkStats(
-  options: UseNetworkStatsOptions = {}
-): UseNetworkStatsResult {
-  const { pollInterval = POLLING_INTERVALS.NORMAL } = options // Default: 30 seconds
+export function useNetworkMetrics(
+  options: UseNetworkMetricsOptions = {}
+): UseNetworkMetricsResult {
+  const {
+    fromTime = String(Math.floor(Date.now() / 1000) - FORMATTING.SECONDS_PER_DAY),
+    toTime = String(Math.floor(Date.now() / 1000)),
+    pollInterval = POLLING_INTERVALS.NORMAL,
+  } = options
 
-  const { data, loading, error, refetch } = useQuery<GetNetworkStatsData>(GET_NETWORK_STATS, {
-    // Enable polling for network statistics updates (30 seconds)
-    pollInterval,
-    fetchPolicy: 'cache-and-network',
-  })
+  const { data, loading, error, refetch } = useQuery<GetNetworkMetricsData, GetNetworkMetricsVariables>(
+    GET_NETWORK_METRICS,
+    {
+      variables: { fromTime, toTime },
+      pollInterval,
+      fetchPolicy: 'cache-and-network',
+    }
+  )
 
-  const stats = data?.networkStats ?? null
+  const metrics = data?.networkMetrics ?? null
 
   return {
-    stats,
+    metrics,
     loading,
     error: error ? new Error(error.message) : null,
     refetch,
   }
 }
+
+/** @deprecated Use useNetworkMetrics instead */
+export const useNetworkStats = useNetworkMetrics
 
 // ============================================================================
 // Utility Functions

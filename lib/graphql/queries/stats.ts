@@ -52,32 +52,47 @@ export interface GetTopMinersData {
 }
 
 // ============================================================================
-// Network Stats Query
+// Network Metrics Query
 // ============================================================================
 
 /**
- * General network statistics
+ * Network metrics with time-range filtering
+ * Backend query: networkMetrics(fromTime, toTime)
  */
-export const GET_NETWORK_STATS = gql`
-  query GetNetworkStats {
-    networkStats {
-      latestBlock
+export const GET_NETWORK_METRICS = gql`
+  query GetNetworkMetrics($fromTime: String!, $toTime: String!) {
+    networkMetrics(fromTime: $fromTime, toTime: $toTime) {
+      tps
+      blockTime
+      totalBlocks
       totalTransactions
-      totalAddresses
-      avgBlockTime
-      hashRate
+      averageBlockSize
+      timePeriod
     }
   }
 `
 
-export interface NetworkStats {
-  latestBlock: string // Block number as string
-  totalTransactions: string // Total transaction count as string
-  totalAddresses: string // Total unique addresses as string
-  avgBlockTime: number // Average block time in seconds
-  hashRate?: string // Network hash rate (optional)
+export interface NetworkMetrics {
+  tps: number
+  blockTime: number
+  totalBlocks: string
+  totalTransactions: string
+  averageBlockSize: string
+  timePeriod: string
 }
 
-export interface GetNetworkStatsData {
-  networkStats: NetworkStats
+export interface GetNetworkMetricsVariables {
+  fromTime: string
+  toTime: string
 }
+
+export interface GetNetworkMetricsData {
+  networkMetrics: NetworkMetrics | null
+}
+
+/**
+ * @deprecated Use GET_NETWORK_METRICS instead. Kept for backward compatibility.
+ */
+export const GET_NETWORK_STATS = GET_NETWORK_METRICS
+export type NetworkStats = NetworkMetrics
+export type GetNetworkStatsData = GetNetworkMetricsData

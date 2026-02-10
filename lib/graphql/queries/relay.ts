@@ -168,22 +168,7 @@ export const GET_CONTRACT_VERIFICATION = gql`
 // Phase 3: Extended API Queries
 // ============================================================================
 
-/**
- * Get network statistics
- * NOTE: networkStats query not available in current schema
- * TODO: Implement when backend adds support
- */
-// export const GET_NETWORK_STATS = gql`
-//   query GetNetworkStatsRelay {
-//     networkStats {
-//       latestBlock
-//       totalTransactions
-//       totalAddresses
-//       avgBlockTime
-//       hashRate
-//     }
-//   }
-// `
+// Network metrics available via GET_NETWORK_METRICS in lib/graphql/queries/stats.ts
 
 /**
  * Get active validators
@@ -300,6 +285,25 @@ export const GET_RECENT_TRANSACTIONS = gql`
         receipt {
           gasUsed
         }
+      }
+    }
+  }
+`
+
+/**
+ * Get token holders for a token contract
+ */
+export const GET_TOKEN_HOLDERS = gql`
+  query GetTokenHoldersRelay($token: String!, $limit: Int, $offset: Int) {
+    tokenHolders(token: $token, pagination: { limit: $limit, offset: $offset }) {
+      nodes {
+        holderAddress
+        balance
+      }
+      totalCount
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
       }
     }
   }
