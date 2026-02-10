@@ -11,8 +11,8 @@ import { gql } from '@apollo/client'
  * Returns overall metrics about fee delegation usage on the network
  */
 export const GET_FEE_DELEGATION_STATS = gql`
-  query GetFeeDelegationStats($fromBlock: String, $toBlock: String) {
-    feeDelegationStats(fromBlock: $fromBlock, toBlock: $toBlock) {
+  query GetFeeDelegationStats($fromBlock: String, $toBlock: String, $fromTime: String, $toTime: String) {
+    feeDelegationStats(fromBlock: $fromBlock, toBlock: $toBlock, fromTime: $fromTime, toTime: $toTime) {
       totalFeeDelegatedTxs
       totalFeesSaved
       adoptionRate

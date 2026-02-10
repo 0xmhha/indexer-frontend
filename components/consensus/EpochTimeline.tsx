@@ -33,12 +33,17 @@ export function EpochTimeline({ className }: EpochTimelineProps) {
   const epochsToDisplay = useMemo((): EpochDataDisplay[] => {
     if (!latestEpochData) return []
 
+    const prevCount = latestEpochData.previousEpochValidatorCount
+    const validatorChange = prevCount != null
+      ? latestEpochData.validatorCount - prevCount
+      : 0
+
     return [{
       epochNumber: latestEpochData.epochNumber,
       blockNumber: latestEpochData.blockNumber ?? '0',
       validatorCount: latestEpochData.validatorCount,
       candidateCount: latestEpochData.candidateCount,
-      validatorChange: 0,
+      validatorChange,
     }]
   }, [latestEpochData])
 

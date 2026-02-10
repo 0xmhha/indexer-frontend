@@ -18,6 +18,7 @@ export type {
   CandidateInfo,
   EpochInfo,
   EpochData,
+  EpochSummary,
   WBFTBlockExtra,
   ValidatorSigningStats,
   ValidatorSigningActivity,
@@ -38,6 +39,7 @@ export {
   useValidatorParticipation,
   useAllValidatorStats,
   useEpochData,
+  useEpochs,
   useLatestEpochData,
   useBlockSigners,
 } from './useConsensusQueries'

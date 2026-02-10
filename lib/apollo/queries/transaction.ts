@@ -83,6 +83,7 @@ export const GET_TRANSACTIONS_BY_ADDRESS = gql`
       nodes {
         hash
         blockNumber
+        blockTimestamp
         from
         to
         contractAddress

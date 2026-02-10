@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import {
@@ -46,9 +46,24 @@ interface FeeDelegationDashboardProps {
 export function FeeDelegationDashboard({ className }: FeeDelegationDashboardProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriodId>('all')
 
-  // Note: Block range filtering can be added when backend supports time-based queries
-  // For now, we fetch all data and the selectedPeriod is just for UI state
-  const { stats, loading, error, isMockData } = useFeeDelegationStats()
+  // Convert selected period to fromTime/toTime timestamps
+  const timeFilter = useMemo(() => {
+    if (selectedPeriod === 'all') return {}
+    const now = Math.floor(Date.now() / 1000)
+    const periods: Record<string, number> = {
+      '24h': 24 * 60 * 60,
+      '7d': 7 * 24 * 60 * 60,
+      '30d': 30 * 24 * 60 * 60,
+    }
+    const seconds = periods[selectedPeriod]
+    if (!seconds) return {}
+    return {
+      fromTime: String(now - seconds),
+      toTime: String(now),
+    }
+  }, [selectedPeriod])
+
+  const { stats, loading, error, isMockData } = useFeeDelegationStats(timeFilter)
 
   if (loading) {
     return (

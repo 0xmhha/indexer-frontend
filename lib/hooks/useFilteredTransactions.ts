@@ -14,6 +14,13 @@ const GET_FILTERED_TRANSACTIONS = gql`
     $maxValue: String
     $txType: Int
     $successOnly: Boolean
+    $isFeeDelegated: Boolean
+    $methodId: String
+    $minGasUsed: String
+    $maxGasUsed: String
+    $direction: TransactionDirection
+    $fromTime: String
+    $toTime: String
     $limit: Int
     $offset: Int
   ) {
@@ -26,6 +33,13 @@ const GET_FILTERED_TRANSACTIONS = gql`
         maxValue: $maxValue
         txType: $txType
         successOnly: $successOnly
+        isFeeDelegated: $isFeeDelegated
+        methodId: $methodId
+        minGasUsed: $minGasUsed
+        maxGasUsed: $maxGasUsed
+        direction: $direction
+        fromTime: $fromTime
+        toTime: $toTime
       }
       pagination: { limit: $limit, offset: $offset }
     ) {
@@ -38,6 +52,7 @@ const GET_FILTERED_TRANSACTIONS = gql`
         gas
         gasPrice
         type
+        blockTimestamp
         receipt {
           status
           gasUsed
@@ -60,6 +75,13 @@ export interface FilteredTransactionsParams {
   maxValue?: string | undefined
   txType?: number | undefined
   successOnly?: boolean | undefined
+  isFeeDelegated?: boolean | undefined
+  methodId?: string | undefined
+  minGasUsed?: string | undefined
+  maxGasUsed?: string | undefined
+  direction?: 'SENT' | 'RECEIVED' | 'ALL' | undefined
+  fromTime?: string | undefined
+  toTime?: string | undefined
   limit?: number
   offset?: number
 }
@@ -76,6 +98,13 @@ export function useFilteredTransactions(params: FilteredTransactionsParams) {
     maxValue,
     txType,
     successOnly,
+    isFeeDelegated,
+    methodId,
+    minGasUsed,
+    maxGasUsed,
+    direction,
+    fromTime,
+    toTime,
     limit = PAGINATION.DEFAULT_PAGE_SIZE,
     offset = 0,
   } = params
@@ -87,8 +116,15 @@ export function useFilteredTransactions(params: FilteredTransactionsParams) {
       toBlock,
       minValue: minValue || undefined,
       maxValue: maxValue || undefined,
-      txType: txType || undefined,
-      successOnly: successOnly || undefined,
+      txType: txType ?? undefined,
+      successOnly: successOnly ?? undefined,
+      isFeeDelegated: isFeeDelegated ?? undefined,
+      methodId: methodId || undefined,
+      minGasUsed: minGasUsed || undefined,
+      maxGasUsed: maxGasUsed || undefined,
+      direction: direction || undefined,
+      fromTime: fromTime || undefined,
+      toTime: toTime || undefined,
       limit,
       offset,
     },

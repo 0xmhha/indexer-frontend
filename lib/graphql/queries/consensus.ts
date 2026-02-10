@@ -100,6 +100,33 @@ export const GET_EPOCH_INFO = gql`
       }
       validators
       blsPublicKeys
+      validatorCount
+      candidateCount
+      previousEpochValidatorCount
+      timestamp
+    }
+  }
+`
+
+/**
+ * Get paginated list of epochs (latest first)
+ * Uses the lightweight EpochSummary type for list queries
+ */
+export const GET_EPOCHS = gql`
+  query GetEpochs($limit: Int, $offset: Int) {
+    epochs(pagination: { limit: $limit, offset: $offset }) {
+      nodes {
+        epochNumber
+        blockNumber
+        validatorCount
+        candidateCount
+        timestamp
+      }
+      totalCount
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+      }
     }
   }
 `
@@ -118,6 +145,10 @@ export const GET_LATEST_EPOCH_INFO = gql`
       }
       validators
       blsPublicKeys
+      validatorCount
+      candidateCount
+      previousEpochValidatorCount
+      timestamp
     }
   }
 `
@@ -149,6 +180,9 @@ export const GET_VALIDATOR_SIGNING_STATS = gql`
       fromBlock
       toBlock
       signingRate
+      blocksProposed
+      totalBlocks
+      proposalRate
     }
   }
 `
@@ -178,6 +212,9 @@ export const GET_ALL_VALIDATORS_SIGNING_STATS = gql`
         fromBlock
         toBlock
         signingRate
+        blocksProposed
+        totalBlocks
+        proposalRate
       }
       totalCount
       pageInfo {

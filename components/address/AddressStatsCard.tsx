@@ -1,18 +1,14 @@
 'use client'
 
-import { useMemo } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { formatNumber, formatCurrency } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
 import { cn } from '@/lib/utils'
-import type { Transaction } from '@/types/graphql'
+import { useAddressStats } from '@/lib/hooks/useAddress'
 
 interface AddressStatsCardProps {
   address: string
-  transactions: Transaction[]
-  totalCount: number
-  loading?: boolean
   className?: string
 }
 
@@ -44,109 +40,14 @@ function StatItem({ label, value, subValue, icon, color = 'text-text-primary' }:
 /**
  * Address Statistics Card
  *
- * Displays comprehensive statistics about an address's activity including:
- * - Total transaction count
- * - First/Last activity dates
- * - Total gas spent
- * - Transaction success rate
- * - Unique interactions
+ * Displays comprehensive statistics about an address's activity
+ * using pre-computed backend stats for efficiency.
  */
 export function AddressStatsCard({
   address,
-  transactions,
-  totalCount,
-  loading = false,
   className,
 }: AddressStatsCardProps) {
-  const stats = useMemo(() => {
-    if (transactions.length === 0) {
-      return null
-    }
-
-    const lowerAddress = address.toLowerCase()
-
-    // Calculate statistics from available transactions
-    let sentCount = 0
-    let receivedCount = 0
-    let successCount = 0
-    let failedCount = 0
-    let totalGasUsed = BigInt(0)
-    let totalGasCost = BigInt(0)
-    let totalValueSent = BigInt(0)
-    let totalValueReceived = BigInt(0)
-    let contractInteractions = 0
-    const uniqueAddresses = new Set<string>()
-
-    // Track first and last tx timestamps
-    let firstTxTimestamp: bigint | null = null
-    let lastTxTimestamp: bigint | null = null
-
-    for (const tx of transactions) {
-      const from = tx.from?.toLowerCase()
-      const to = tx.to?.toLowerCase()
-
-      // Direction
-      if (from === lowerAddress) {
-        sentCount++
-        if (tx.value) {
-          totalValueSent += BigInt(tx.value)
-        }
-      }
-      if (to === lowerAddress) {
-        receivedCount++
-        if (tx.value) {
-          totalValueReceived += BigInt(tx.value)
-        }
-      }
-
-      // Status
-      if (tx.receipt?.status === 1) {
-        successCount++
-      } else if (tx.receipt?.status === 0) {
-        failedCount++
-      }
-
-      // Gas calculations
-      if (tx.receipt?.gasUsed && tx.gasPrice) {
-        const gasUsed = BigInt(tx.receipt.gasUsed)
-        const gasPrice = BigInt(tx.gasPrice)
-        totalGasUsed += gasUsed
-        totalGasCost += gasUsed * gasPrice
-      }
-
-      // Contract interactions (has input data beyond 0x)
-      if (tx.input && tx.input.length > 2) {
-        contractInteractions++
-      }
-
-      // Unique addresses
-      if (from && from !== lowerAddress) uniqueAddresses.add(from)
-      if (to && to !== lowerAddress) uniqueAddresses.add(to)
-
-      // Timestamps - Note: Transaction type may not have blockNumber directly tied to timestamp
-      // This is an approximation based on available data
-    }
-
-    const totalTx = sentCount + receivedCount
-    const successRate = totalTx > 0 ? (successCount / totalTx) * 100 : 0
-
-    return {
-      totalTransactions: totalCount,
-      sentCount,
-      receivedCount,
-      successCount,
-      failedCount,
-      successRate,
-      totalGasUsed,
-      totalGasCost,
-      totalValueSent,
-      totalValueReceived,
-      contractInteractions,
-      uniqueAddressCount: uniqueAddresses.size,
-      firstTxTimestamp,
-      lastTxTimestamp,
-    }
-  }, [address, transactions, totalCount])
+  const { stats, loading, error } = useAddressStats(address)
 
   if (loading) {
     return (
@@ -161,7 +62,7 @@ export function AddressStatsCard({
     )
   }
 
-  if (!stats || totalCount === 0) {
+  if (error || !stats || stats.totalTransactions === 0) {
     return (
       <Card className={cn('mb-6', className)}>
         <CardHeader className="border-b border-bg-tertiary">
@@ -173,6 +74,9 @@ export function AddressStatsCard({
       </Card>
     )
   }
+
+  const totalTx = stats.sentCount + stats.receivedCount
+  const successRate = totalTx > 0 ? (stats.successCount / totalTx) * 100 : 0
 
   return (
     <Card className={cn('mb-6', className)}>
@@ -193,13 +97,13 @@ export function AddressStatsCard({
           {/* Success Rate */}
           <StatItem
             label="Success Rate"
-            value={`${stats.successRate.toFixed(1)}%`}
+            value={`${successRate.toFixed(1)}%`}
             subValue={`${stats.successCount} success / ${stats.failedCount} failed`}
-            icon={stats.successRate >= 95 ? '✅' : stats.successRate >= 80 ? '⚠️' : '❌'}
+            icon={successRate >= 95 ? '✅' : successRate >= 80 ? '⚠️' : '❌'}
             color={
-              stats.successRate >= 95
+              successRate >= 95
                 ? 'text-accent-green'
-                : stats.successRate >= 80
+                : successRate >= 80
                   ? 'text-yellow-500'
                   : 'text-accent-red'
             }
@@ -208,8 +112,8 @@ export function AddressStatsCard({
           {/* Total Gas Spent */}
           <StatItem
             label="Total Gas Spent"
-            value={formatCurrency(stats.totalGasCost, env.currencySymbol)}
-            subValue={`${formatNumber(stats.totalGasUsed)} gas units`}
+            value={formatCurrency(BigInt(stats.totalGasCost || '0'), env.currencySymbol)}
+            subValue={`${formatNumber(BigInt(stats.totalGasUsed || '0'))} gas units`}
             icon="⛽"
             color="text-accent-purple"
           />
@@ -218,7 +122,7 @@ export function AddressStatsCard({
           <StatItem
             label="Unique Addresses"
             value={formatNumber(stats.uniqueAddressCount)}
-            subValue={`${stats.contractInteractions} contract calls`}
+            subValue={`${stats.contractInteractionCount} contract calls`}
             icon="🔗"
             color="text-accent-cyan"
           />
@@ -233,7 +137,7 @@ export function AddressStatsCard({
               <span className="font-mono text-xs text-text-muted">Total Value Sent</span>
             </div>
             <span className="font-mono text-sm font-bold text-accent-red">
-              {formatCurrency(stats.totalValueSent, env.currencySymbol)}
+              {formatCurrency(BigInt(stats.totalValueSent || '0'), env.currencySymbol)}
             </span>
           </div>
 
@@ -244,7 +148,7 @@ export function AddressStatsCard({
               <span className="font-mono text-xs text-text-muted">Total Value Received</span>
             </div>
             <span className="font-mono text-sm font-bold text-accent-green">
-              {formatCurrency(stats.totalValueReceived, env.currencySymbol)}
+              {formatCurrency(BigInt(stats.totalValueReceived || '0'), env.currencySymbol)}
             </span>
           </div>
         </div>
@@ -257,12 +161,12 @@ export function AddressStatsCard({
  * Compact version for sidebars or smaller displays
  */
 export function AddressStatsCompact({
-  totalCount,
-  loading,
+  address,
 }: {
-  totalCount: number
-  loading?: boolean
+  address: string
 }) {
+  const { stats, loading } = useAddressStats(address)
+
   if (loading) {
     return <div className="animate-pulse font-mono text-xs text-text-muted">Loading...</div>
   }
@@ -271,7 +175,7 @@ export function AddressStatsCompact({
     <div className="flex items-center gap-2">
       <span className="font-mono text-xs text-text-muted">Transactions:</span>
       <span className="font-mono text-sm font-bold text-accent-blue">
-        {formatNumber(totalCount)}
+        {formatNumber(stats?.totalTransactions ?? 0)}
       </span>
     </div>
   )

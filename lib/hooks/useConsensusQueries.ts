@@ -16,6 +16,7 @@ import {
   GET_VALIDATOR_SIGNING_ACTIVITY,
   GET_ALL_VALIDATORS_SIGNING_STATS,
   GET_EPOCH_INFO,
+  GET_EPOCHS,
   GET_LATEST_EPOCH_INFO,
   GET_BLOCK_SIGNERS,
 } from '@/lib/graphql/queries/consensus'
@@ -29,6 +30,7 @@ import type {
   ValidatorParticipation,
   EpochInfo,
   EpochData,
+  EpochSummary,
 } from './consensus.types'
 import { isUnsupportedConsensusError } from './consensus.types'
 
@@ -177,8 +179,8 @@ export function useValidatorStats(params: {
   // Transform to legacy ValidatorStats format for backward compatibility
   const validatorStats: ValidatorStats | null = signingStats ? {
     address: signingStats.validatorAddress,
-    totalBlocks: '0', // Not available in signing stats
-    blocksProposed: '0', // Not available in signing stats
+    totalBlocks: signingStats.totalBlocks ?? '0',
+    blocksProposed: signingStats.blocksProposed ?? '0',
     preparesSigned: signingStats.prepareSignCount,
     commitsSigned: signingStats.commitSignCount,
     preparesMissed: signingStats.prepareMissCount,
@@ -296,8 +298,8 @@ export function useAllValidatorStats(params: {
   // Transform to legacy ValidatorStats format
   const stats: ValidatorStats[] = signingStats.map(s => ({
     address: s.validatorAddress,
-    totalBlocks: '0',
-    blocksProposed: '0',
+    totalBlocks: s.totalBlocks ?? '0',
+    blocksProposed: s.blocksProposed ?? '0',
     preparesSigned: s.prepareSignCount,
     commitsSigned: s.commitSignCount,
     preparesMissed: s.prepareMissCount,
@@ -339,11 +341,13 @@ export function useEpochData(epochNumber: string) {
   const epochData: EpochData | null = epochInfo ? {
     epochNumber: epochInfo.epochNumber,
     blockNumber: epochInfo.blockNumber,
-    validatorCount: epochInfo.validators?.length ?? 0,
-    candidateCount: epochInfo.candidates?.length ?? 0,
+    validatorCount: epochInfo.validatorCount ?? epochInfo.validators?.length ?? 0,
+    candidateCount: epochInfo.candidateCount ?? epochInfo.candidates?.length ?? 0,
     validators: epochInfo.validators ?? [],
     blsPublicKeys: epochInfo.blsPublicKeys,
     candidates: epochInfo.candidates ?? [],
+    previousEpochValidatorCount: epochInfo.previousEpochValidatorCount ?? null,
+    timestamp: epochInfo.timestamp ?? null,
   } : null
 
   const isUnsupported = isUnsupportedConsensusError(error)
@@ -377,11 +381,13 @@ export function useLatestEpochData() {
   const latestEpochData: EpochData | null = epochInfo ? {
     epochNumber: epochInfo.epochNumber,
     blockNumber: epochInfo.blockNumber,
-    validatorCount: epochInfo.validators?.length ?? 0,
-    candidateCount: epochInfo.candidates?.length ?? 0,
+    validatorCount: epochInfo.validatorCount ?? epochInfo.validators?.length ?? 0,
+    candidateCount: epochInfo.candidateCount ?? epochInfo.candidates?.length ?? 0,
     validators: epochInfo.validators ?? [],
     blsPublicKeys: epochInfo.blsPublicKeys,
     candidates: epochInfo.candidates ?? [],
+    previousEpochValidatorCount: epochInfo.previousEpochValidatorCount ?? null,
+    timestamp: epochInfo.timestamp ?? null,
   } : null
 
   const isUnsupported = isUnsupportedConsensusError(error)
@@ -392,6 +398,37 @@ export function useLatestEpochData() {
     loading,
     error: isUnsupported ? undefined : error,
     refetch,
+    isSupported: !isUnsupported,
+  }
+}
+
+/**
+ * Hook to fetch paginated list of epochs
+ * Uses the epochs query from backend (returns EpochSummary)
+ */
+export function useEpochs(params: { limit?: number; offset?: number } = {}) {
+  const { limit = PAGINATION.DEFAULT_PAGE_SIZE, offset = 0 } = params
+
+  const { data, loading, error, refetch, fetchMore, previousData } = useQuery(GET_EPOCHS, {
+    variables: { limit, offset },
+    returnPartialData: true,
+    errorPolicy: 'all',
+  })
+
+  const effectiveData = data ?? previousData
+  const epochsData = effectiveData?.epochs
+  const epochs: EpochSummary[] = epochsData?.nodes ?? []
+
+  const isUnsupported = isUnsupportedConsensusError(error)
+
+  return {
+    epochs,
+    totalCount: epochsData?.totalCount ?? 0,
+    pageInfo: epochsData?.pageInfo,
+    loading,
+    error: isUnsupported ? undefined : error,
+    refetch,
+    fetchMore,
     isSupported: !isUnsupported,
   }
 }

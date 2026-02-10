@@ -4,26 +4,31 @@ import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
-import { useLatestEpochData, useEpochData, type EpochData } from '@/lib/hooks/useConsensus'
+import { useLatestEpochData, useEpochs, type EpochData, type EpochSummary } from '@/lib/hooks/useConsensus'
 import { formatNumber } from '@/lib/utils/format'
 import { UI } from '@/lib/config/constants'
+
+const EPOCHS_PAGE_SIZE = 10
 
 /**
  * Epochs List Viewer Component
  *
  * Displays a list of epochs with navigation to view historical epochs.
+ * Uses the paginated epochs query for efficient data loading.
  */
 export function EpochsListViewer() {
-  const { latestEpochData, loading, error } = useLatestEpochData()
+  const { latestEpochData, loading: latestLoading, error: latestError } = useLatestEpochData()
+  const { epochs, totalCount, loading: epochsLoading, error: epochsError } = useEpochs({
+    limit: EPOCHS_PAGE_SIZE,
+    offset: 0,
+  })
+
+  const loading = latestLoading || epochsLoading
+  const error = latestError ?? epochsError
 
   const currentEpochNumber = latestEpochData?.epochNumber
     ? parseInt(latestEpochData.epochNumber)
     : null
-
-  // Generate list of recent epochs to display
-  const epochNumbers = currentEpochNumber
-    ? Array.from({ length: Math.min(10, currentEpochNumber + 1) }, (_, i) => currentEpochNumber - i)
-    : []
 
   if (loading) {
     return (
@@ -59,7 +64,14 @@ export function EpochsListViewer() {
       {/* Epoch List */}
       <Card>
         <CardHeader className="border-b border-bg-tertiary">
-          <CardTitle>EPOCH HISTORY</CardTitle>
+          <div className="flex items-center justify-between">
+            <CardTitle>EPOCH HISTORY</CardTitle>
+            {totalCount > 0 && (
+              <span className="font-mono text-xs text-text-muted">
+                {totalCount} total epochs
+              </span>
+            )}
+          </div>
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
@@ -84,16 +96,17 @@ export function EpochsListViewer() {
                 </tr>
               </thead>
               <tbody>
-                {epochNumbers.map((epochNum) => (
-                  <EpochRow
-                    key={epochNum}
-                    epochNumber={epochNum}
-                    isCurrent={epochNum === currentEpochNumber}
-                    currentEpochData={
-                      epochNum === currentEpochNumber ? latestEpochData ?? undefined : undefined
-                    }
-                  />
-                ))}
+                {epochs.map((epoch) => {
+                  const epochNum = parseInt(epoch.epochNumber)
+                  const isCurrent = epochNum === currentEpochNumber
+                  return (
+                    <EpochRow
+                      key={epoch.epochNumber}
+                      epoch={epoch}
+                      isCurrent={isCurrent}
+                    />
+                  )
+                })}
               </tbody>
             </table>
           </div>
@@ -166,19 +179,12 @@ function CurrentEpochCard({ epochData }: CurrentEpochCardProps) {
 }
 
 interface EpochRowProps {
-  epochNumber: number
+  epoch: EpochSummary
   isCurrent: boolean
-  currentEpochData?: EpochData | undefined
 }
 
-function EpochRow({ epochNumber, isCurrent, currentEpochData }: EpochRowProps) {
-  // For current epoch, use the already fetched data
-  // For other epochs, we'll show a placeholder and load on click
-  const { epochData, loading } = useEpochData(
-    isCurrent ? '' : epochNumber.toString()
-  )
-
-  const data = isCurrent ? currentEpochData : epochData
+function EpochRow({ epoch, isCurrent }: EpochRowProps) {
+  const epochNumber = parseInt(epoch.epochNumber)
 
   return (
     <tr className="border-b border-bg-tertiary hover:bg-bg-secondary">
@@ -198,22 +204,10 @@ function EpochRow({ epochNumber, isCurrent, currentEpochData }: EpochRowProps) {
         </div>
       </td>
       <td className="px-4 py-3 text-center font-mono text-sm text-text-secondary">
-        {loading ? (
-          <span className="text-text-muted">...</span>
-        ) : data ? (
-          data.validatorCount
-        ) : (
-          '-'
-        )}
+        {epoch.validatorCount}
       </td>
       <td className="px-4 py-3 text-center font-mono text-sm text-text-secondary">
-        {loading ? (
-          <span className="text-text-muted">...</span>
-        ) : data ? (
-          data.candidateCount
-        ) : (
-          '-'
-        )}
+        {epoch.candidateCount}
       </td>
       <td className="px-4 py-3 text-center">
         {isCurrent ? (

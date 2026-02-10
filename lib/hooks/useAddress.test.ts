@@ -4,7 +4,7 @@ import {
   useAddressBalance,
   useAddressOverview,
   useTokenBalances,
-  useSetCodeDelegation,
+  useAddressSetCodeInfo,
 } from './useAddress'
 
 // Mock Apollo Client
@@ -21,7 +21,8 @@ vi.mock('@/lib/apollo/queries', () => ({
   GET_TRANSACTIONS_BY_ADDRESS: 'GET_TRANSACTIONS_BY_ADDRESS',
   GET_BALANCE_HISTORY: 'GET_BALANCE_HISTORY',
   GET_TOKEN_BALANCES: 'GET_TOKEN_BALANCES',
-  GET_SETCODE_TRANSACTIONS: 'GET_SETCODE_TRANSACTIONS',
+  GET_ADDRESS_SETCODE_INFO: 'GET_ADDRESS_SETCODE_INFO',
+  GET_ADDRESS_STATS: 'GET_ADDRESS_STATS',
 }))
 
 // Mock constants
@@ -487,7 +488,7 @@ describe('useTokenBalances', () => {
   })
 })
 
-describe('useSetCodeDelegation', () => {
+describe('useAddressSetCodeInfo', () => {
   beforeEach(() => {
     vi.clearAllMocks()
   })
@@ -501,12 +502,12 @@ describe('useSetCodeDelegation', () => {
       previousData: null,
     })
 
-    renderHook(() => useSetCodeDelegation(address))
+    renderHook(() => useAddressSetCodeInfo(address))
 
     expect(mockUseQuery).toHaveBeenCalledWith(
-      'GET_SETCODE_TRANSACTIONS',
+      'GET_ADDRESS_SETCODE_INFO',
       expect.objectContaining({
-        variables: { address, limit: 50, offset: 0 },
+        variables: { address },
         skip: false,
       })
     )
@@ -520,7 +521,7 @@ describe('useSetCodeDelegation', () => {
       previousData: null,
     })
 
-    renderHook(() => useSetCodeDelegation(null))
+    renderHook(() => useAddressSetCodeInfo(null))
 
     expect(mockUseQuery).toHaveBeenCalledWith(
       expect.anything(),
@@ -530,88 +531,100 @@ describe('useSetCodeDelegation', () => {
     )
   })
 
-  it('should identify SetCode transactions (type 4)', () => {
-    const transactions = [
-      { hash: '0xabc', blockNumber: '100', from: '0x1', to: '0x2', type: 2 },
-      { hash: '0xdef', blockNumber: '101', from: '0x1', to: '0x2', type: 4 },
-      { hash: '0xghi', blockNumber: '102', from: '0x1', to: '0x2', type: 4 },
-    ]
+  it('should return delegation info when hasDelegation is true', () => {
+    const info = {
+      address: '0x1234567890123456789012345678901234567890',
+      hasDelegation: true,
+      delegationTarget: '0xabcdef1234567890abcdef1234567890abcdef12',
+      asAuthorityCount: 3,
+      asTargetCount: 1,
+      lastActivityBlock: '12345',
+      lastActivityTimestamp: '1700000000',
+    }
 
     mockUseQuery.mockReturnValue({
-      data: { transactionsByAddress: { nodes: transactions } },
+      data: { addressSetCodeInfo: info },
       loading: false,
       error: undefined,
       previousData: null,
     })
 
     const { result } = renderHook(() =>
-      useSetCodeDelegation('0x1234567890123456789012345678901234567890')
+      useAddressSetCodeInfo('0x1234567890123456789012345678901234567890')
     )
 
     expect(result.current.hasDelegation).toBe(true)
-    expect(result.current.setCodeTransactions.length).toBe(2)
-    expect(result.current.delegationTxHash).toBe('0xdef')
-    expect(result.current.delegationBlockNumber).toBe('101')
+    expect(result.current.delegationTarget).toBe('0xabcdef1234567890abcdef1234567890abcdef12')
+    expect(result.current.info).toEqual(info)
   })
 
-  it('should return hasDelegation false when no SetCode transactions', () => {
-    const transactions = [
-      { hash: '0xabc', blockNumber: '100', from: '0x1', to: '0x2', type: 2 },
-      { hash: '0xdef', blockNumber: '101', from: '0x1', to: '0x2', type: 0 },
-    ]
+  it('should return hasDelegation false when no delegation', () => {
+    const info = {
+      address: '0x1234567890123456789012345678901234567890',
+      hasDelegation: false,
+      delegationTarget: null,
+      asAuthorityCount: 0,
+      asTargetCount: 0,
+      lastActivityBlock: null,
+      lastActivityTimestamp: null,
+    }
 
     mockUseQuery.mockReturnValue({
-      data: { transactionsByAddress: { nodes: transactions } },
+      data: { addressSetCodeInfo: info },
       loading: false,
       error: undefined,
       previousData: null,
     })
 
     const { result } = renderHook(() =>
-      useSetCodeDelegation('0x1234567890123456789012345678901234567890')
+      useAddressSetCodeInfo('0x1234567890123456789012345678901234567890')
     )
 
     expect(result.current.hasDelegation).toBe(false)
-    expect(result.current.delegationTxHash).toBeNull()
-    expect(result.current.delegationBlockNumber).toBeNull()
+    expect(result.current.delegationTarget).toBeNull()
   })
 
-  it('should return null delegation (requires separate fetch)', () => {
+  it('should handle null data gracefully', () => {
     mockUseQuery.mockReturnValue({
-      data: {
-        transactionsByAddress: {
-          nodes: [
-            { hash: '0xabc', blockNumber: '100', from: '0x1', to: '0x2', type: 4 },
-          ],
-        },
-      },
+      data: { addressSetCodeInfo: null },
       loading: false,
       error: undefined,
       previousData: null,
     })
 
     const { result } = renderHook(() =>
-      useSetCodeDelegation('0x1234567890123456789012345678901234567890')
-    )
-
-    // Delegation details require fetching individual tx
-    expect(result.current.delegation).toBeNull()
-  })
-
-  it('should handle empty transaction list', () => {
-    mockUseQuery.mockReturnValue({
-      data: { transactionsByAddress: { nodes: [] } },
-      loading: false,
-      error: undefined,
-      previousData: null,
-    })
-
-    const { result } = renderHook(() =>
-      useSetCodeDelegation('0x1234567890123456789012345678901234567890')
+      useAddressSetCodeInfo('0x1234567890123456789012345678901234567890')
     )
 
     expect(result.current.hasDelegation).toBe(false)
-    expect(result.current.setCodeTransactions).toEqual([])
+    expect(result.current.delegationTarget).toBeNull()
+    expect(result.current.info).toBeNull()
+  })
+
+  it('should use previousData while loading', () => {
+    const info = {
+      address: '0x1234567890123456789012345678901234567890',
+      hasDelegation: true,
+      delegationTarget: '0xabcdef1234567890abcdef1234567890abcdef12',
+      asAuthorityCount: 1,
+      asTargetCount: 0,
+      lastActivityBlock: '100',
+      lastActivityTimestamp: '1700000000',
+    }
+
+    mockUseQuery.mockReturnValue({
+      data: null,
+      loading: true,
+      error: undefined,
+      previousData: { addressSetCodeInfo: info },
+    })
+
+    const { result } = renderHook(() =>
+      useAddressSetCodeInfo('0x1234567890123456789012345678901234567890')
+    )
+
+    expect(result.current.hasDelegation).toBe(true)
+    expect(result.current.info).toEqual(info)
   })
 
   it('should use slower polling', () => {
@@ -623,7 +636,7 @@ describe('useSetCodeDelegation', () => {
     })
 
     renderHook(() =>
-      useSetCodeDelegation('0x1234567890123456789012345678901234567890')
+      useAddressSetCodeInfo('0x1234567890123456789012345678901234567890')
     )
 
     expect(mockUseQuery).toHaveBeenCalledWith(

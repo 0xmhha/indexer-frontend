@@ -29,6 +29,19 @@ export interface EpochInfo {
   candidates: CandidateInfo[]
   validators: number[]  // validator indices
   blsPublicKeys: string[]
+  validatorCount?: number
+  candidateCount?: number
+  previousEpochValidatorCount?: number | null
+  timestamp?: string
+}
+
+// Lightweight epoch summary for list queries
+export interface EpochSummary {
+  epochNumber: string
+  blockNumber: string
+  validatorCount: number
+  candidateCount: number
+  timestamp?: string
 }
 
 // Computed epoch data for UI display
@@ -40,6 +53,8 @@ export interface EpochData {
   validators: number[]
   blsPublicKeys?: string[]
   candidates: CandidateInfo[]
+  previousEpochValidatorCount: number | null
+  timestamp: string | null
 }
 
 // WBFT block extra from backend
@@ -67,6 +82,9 @@ export interface ValidatorSigningStats {
   fromBlock: string
   toBlock: string
   signingRate: number
+  blocksProposed: string
+  totalBlocks: string
+  proposalRate: number | null
 }
 
 // Validator signing activity from backend

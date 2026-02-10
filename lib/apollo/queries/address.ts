@@ -102,6 +102,31 @@ export const GET_TOKEN_BALANCES = gql`
 `
 
 /**
+ * Get aggregated address statistics from backend
+ * Uses pre-computed stats instead of client-side calculation from transactions
+ */
+export const GET_ADDRESS_STATS = gql`
+  query GetAddressStats($address: String!) {
+    addressStats(address: $address) {
+      address
+      totalTransactions
+      sentCount
+      receivedCount
+      successCount
+      failedCount
+      totalGasUsed
+      totalGasCost
+      totalValueSent
+      totalValueReceived
+      contractInteractionCount
+      uniqueAddressCount
+      firstTransactionTimestamp
+      lastTransactionTimestamp
+    }
+  }
+`
+
+/**
  * Get EIP-7702 SetCode delegation info for an address
  */
 export const GET_ADDRESS_SETCODE_INFO = gql`

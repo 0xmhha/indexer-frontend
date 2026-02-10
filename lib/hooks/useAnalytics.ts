@@ -253,6 +253,10 @@ export interface FeeDelegationStatsOptions {
   fromBlock?: string
   /** End block for filtering (BigInt as string) */
   toBlock?: string
+  /** Start time filter (Unix timestamp as string, overrides fromBlock) */
+  fromTime?: string
+  /** End time filter (Unix timestamp as string, overrides toBlock) */
+  toTime?: string
   /** Use mock data instead of API (default: false, auto-fallback on error) */
   useMock?: boolean
 }
@@ -265,7 +269,7 @@ export interface FeeDelegationStatsOptions {
  * @param options - Query options including limit and block range
  */
 export function useFeeDelegationStats(options: FeeDelegationStatsOptions = {}) {
-  const { topPayersLimit = PAGINATION.STATS_LIMIT, fromBlock, toBlock, useMock = false } = options
+  const { topPayersLimit = PAGINATION.STATS_LIMIT, fromBlock, toBlock, fromTime, toTime, useMock = false } = options
 
   // Fetch fee delegation stats
   const {
@@ -275,7 +279,7 @@ export function useFeeDelegationStats(options: FeeDelegationStatsOptions = {}) {
     previousData: statsPrevData,
     refetch: refetchStats,
   } = useQuery<{ feeDelegationStats: RawFeeDelegationStats }>(GET_FEE_DELEGATION_STATS, {
-    variables: { fromBlock, toBlock },
+    variables: { fromBlock, toBlock, fromTime, toTime },
     fetchPolicy: CACHE_POLICIES.DYNAMIC,
     returnPartialData: true,
     skip: useMock,

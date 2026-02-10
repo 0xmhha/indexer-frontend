@@ -158,12 +158,7 @@ function AddressPageContent() {
     <div className="container mx-auto px-4 py-8">
       <AddressHeader address={address} />
       <AddressOverviewCard address={address} balance={balance} loading={balanceLoading} error={balanceError} />
-      <AddressStatsCard
-        address={address}
-        transactions={transactions}
-        totalCount={totalCount}
-        loading={txLoading}
-      />
+      <AddressStatsCard address={address} />
 
       {/* Only show contract-related modules for contract addresses */}
       {!isContractLoading && isContract && (

@@ -2,7 +2,7 @@
 
 import { useRef, useMemo } from 'react'
 import { useQuery } from '@apollo/client'
-import { GET_ADDRESS_BALANCE, GET_ADDRESS_OVERVIEW, GET_TRANSACTIONS_BY_ADDRESS, GET_BALANCE_HISTORY, GET_TOKEN_BALANCES, GET_ADDRESS_SETCODE_INFO } from '@/lib/apollo/queries'
+import { GET_ADDRESS_BALANCE, GET_ADDRESS_OVERVIEW, GET_TRANSACTIONS_BY_ADDRESS, GET_BALANCE_HISTORY, GET_TOKEN_BALANCES, GET_ADDRESS_SETCODE_INFO, GET_ADDRESS_STATS } from '@/lib/apollo/queries'
 import { transformTransactions, type TransformedTransaction } from '@/lib/utils/graphql-transforms'
 import type { TokenBalance } from '@/types/graphql'
 import { PAGINATION, POLLING_INTERVALS } from '@/lib/config/constants'
@@ -418,5 +418,50 @@ export function useAddressSetCodeInfo(address: string | null) {
     delegationTarget: info?.delegationTarget ?? null,
     loading,
     error,
+  }
+}
+
+/**
+ * Backend address stats response shape
+ */
+export interface AddressStats {
+  address: string
+  totalTransactions: number
+  sentCount: number
+  receivedCount: number
+  successCount: number
+  failedCount: number
+  totalGasUsed: string
+  totalGasCost: string
+  totalValueSent: string
+  totalValueReceived: string
+  contractInteractionCount: number
+  uniqueAddressCount: number
+  firstTransactionTimestamp: string | null
+  lastTransactionTimestamp: string | null
+}
+
+/**
+ * Hook to fetch pre-computed address statistics from backend
+ * More efficient than calculating stats client-side from transaction arrays
+ */
+export function useAddressStats(address: string | null) {
+  const { data, loading, error, previousData, refetch } = useQuery<{ addressStats: AddressStats }>(
+    GET_ADDRESS_STATS,
+    {
+      variables: { address: address ?? '' },
+      skip: !address,
+      returnPartialData: true,
+    }
+  )
+
+  const effectiveData = data ?? previousData
+  const stats: AddressStats | null = effectiveData?.addressStats ?? null
+
+  return {
+    stats,
+    loading,
+    error,
+    refetch,
   }
 }
