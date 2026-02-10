@@ -58,11 +58,23 @@ export async function GET(
     )
 
     const totalCount = data.tokenHolders?.totalCount ?? 0
-    const holders: TokenHolderItem[] = (data.tokenHolders?.nodes ?? []).map((node) => ({
-      address: node.holderAddress,
-      balance: node.balance,
-      percentage: totalCount > 0 ? 0 : 0, // Backend doesn't provide percentage
-    }))
+    const nodes = data.tokenHolders?.nodes ?? []
+    const totalBalance = nodes.reduce((sum, node) => {
+      try { return sum + BigInt(node.balance) } catch { return sum }
+    }, 0n)
+    const holders: TokenHolderItem[] = nodes.map((node) => {
+      let percentage = 0
+      if (totalBalance > 0n) {
+        try {
+          percentage = Number((BigInt(node.balance) * 10000n) / totalBalance) / 100
+        } catch { /* keep 0 */ }
+      }
+      return {
+        address: node.holderAddress,
+        balance: node.balance,
+        percentage,
+      }
+    })
 
     return paginatedResponse(holders, page, limit, totalCount)
   } catch (err) {

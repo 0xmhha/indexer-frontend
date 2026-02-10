@@ -93,6 +93,9 @@ export const GAS = {
   FEE_BUFFER_OPTIMAL: 5,
   FEE_BUFFER_CONSERVATIVE: 15,
 
+  /** Default fallback gas price in wei (40 Gwei) */
+  DEFAULT_GAS_PRICE_WEI: '40000000000',
+
   /** Cost comparison warning threshold (e.g., 1.2 = 20% more expensive) */
   COST_WARNING_THRESHOLD: 1.2,
 

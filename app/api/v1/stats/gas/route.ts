@@ -15,6 +15,7 @@ import {
 } from '@/lib/api/errors'
 import { errorLogger } from '@/lib/errors/logger'
 import { GET_RECENT_TRANSACTIONS } from '@/lib/graphql/queries/relay'
+import { GAS } from '@/lib/config/constants'
 import type { GasPriceData } from '@/lib/api/types'
 
 interface RecentTxResponse {
@@ -54,9 +55,9 @@ export async function GET() {
     let standardPrice: bigint
     let fastPrice: bigint
 
+    const defaultGas = BigInt(GAS.DEFAULT_GAS_PRICE_WEI)
+
     if (gasPrices.length === 0) {
-      // Default values if no data
-      const defaultGas = BigInt('40000000000') // 40 Gwei
       slowPrice = defaultGas
       standardPrice = defaultGas
       fastPrice = defaultGas
@@ -66,9 +67,9 @@ export async function GET() {
       const p50Index = Math.floor(gasPrices.length * 0.5)
       const p75Index = Math.floor(gasPrices.length * 0.75)
 
-      slowPrice = gasPrices[p25Index] || gasPrices[0] || BigInt('40000000000')
-      standardPrice = gasPrices[p50Index] || gasPrices[0] || BigInt('40000000000')
-      fastPrice = gasPrices[p75Index] || gasPrices[0] || BigInt('40000000000')
+      slowPrice = gasPrices[p25Index] || gasPrices[0] || defaultGas
+      standardPrice = gasPrices[p50Index] || gasPrices[0] || defaultGas
+      fastPrice = gasPrices[p75Index] || gasPrices[0] || defaultGas
     }
 
     const gasData: GasPriceData = {

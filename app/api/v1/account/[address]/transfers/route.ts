@@ -18,7 +18,7 @@ import {
   IndexerConnectionError,
 } from '@/lib/api/errors'
 import { errorLogger } from '@/lib/errors/logger'
-import { GET_LOGS_BY_ADDRESS } from '@/lib/graphql/queries/relay'
+import { GET_LOGS_BY_ADDRESS, GET_BLOCK_TIMESTAMP } from '@/lib/graphql/queries/relay'
 import type { LogsResponse, TokenTransferInList } from '@/lib/api/types'
 
 // ERC20 Transfer event topic
@@ -107,7 +107,28 @@ export async function GET(
       })
       .slice(0, limit) // Limit after filtering
 
-    return paginatedResponse(transfers, page, limit, totalCount)
+    // Batch-fetch block timestamps for unique block numbers
+    const uniqueBlocks = [...new Set(transfers.map((t) => t.blockNumber))]
+    const timestampMap = new Map<number, string>()
+    const blockResults = await Promise.all(
+      uniqueBlocks.map((num) =>
+        queryIndexer<{ block: { number: string; timestamp: string } | null }>(
+          GET_BLOCK_TIMESTAMP,
+          { number: String(num) }
+        ).catch(() => null)
+      )
+    )
+    blockResults.forEach((result) => {
+      if (result?.block) {
+        timestampMap.set(parseInt(result.block.number, 10), result.block.timestamp)
+      }
+    })
+    const transfersWithTimestamp = transfers.map((t) => ({
+      ...t,
+      timestamp: timestampMap.get(t.blockNumber) ?? null,
+    }))
+
+    return paginatedResponse(transfersWithTimestamp, page, limit, totalCount)
   } catch (error) {
     errorLogger.error(error, { component: 'api/v1/account/[address]/transfers', action: 'fetch-transfers' })
 

@@ -22,6 +22,7 @@ import {
   GET_CONTRACT_CREATION,
   GET_ACCOUNT_TX_COUNT,
 } from '@/lib/graphql/queries/relay'
+import { GET_ADDRESS_STATS } from '@/lib/apollo/queries/address'
 import type {
   AddressBalanceResponse,
   ContractCreationResponse,
@@ -32,6 +33,13 @@ interface TxCountResponse {
   transactionsByAddress: {
     totalCount: number
   }
+}
+
+interface AddressStatsResponse {
+  addressStats: {
+    firstTransactionTimestamp: string | null
+    lastTransactionTimestamp: string | null
+  } | null
 }
 
 export const dynamic = 'force-dynamic'
@@ -51,23 +59,25 @@ export async function GET(
   }
 
   try {
-    const [balanceData, contractData, txCountData] = await queryIndexerParallel<
-      [AddressBalanceResponse, ContractCreationResponse, TxCountResponse]
+    const [balanceData, contractData, txCountData, statsData] = await queryIndexerParallel<
+      [AddressBalanceResponse, ContractCreationResponse, TxCountResponse, AddressStatsResponse]
     >([
       { query: GET_ADDRESS_BALANCE, variables: { address } },
       { query: GET_CONTRACT_CREATION, variables: { address } },
       { query: GET_ACCOUNT_TX_COUNT, variables: { address } },
+      { query: GET_ADDRESS_STATS, variables: { address } },
     ])
 
     const isContract = contractData.contractCreation !== null
+    const addrStats = statsData.addressStats
 
     const summary: AccountSummaryData = {
       address: address.toLowerCase(),
       balance: balanceData.addressBalance || '0',
       transactionCount: txCountData.transactionsByAddress?.totalCount || 0,
       isContract,
-      firstSeen: null,
-      lastSeen: null,
+      firstSeen: addrStats?.firstTransactionTimestamp ?? null,
+      lastSeen: addrStats?.lastTransactionTimestamp ?? null,
     }
 
     return successResponse(summary)
