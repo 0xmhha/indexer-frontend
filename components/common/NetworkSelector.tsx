@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useCallback } from 'react'
+import { useClickOutside } from '@/lib/hooks/useClickOutside'
 import Link from 'next/link'
 import { useNetworkStore, selectCurrentNetwork, selectConnectionStatus } from '@/stores/networkStore'
 import { PRESET_NETWORKS, NETWORK_TYPE_LABELS, NETWORK_TYPE_ORDER } from '@/config/networks.config'
@@ -176,18 +177,7 @@ export function NetworkSelector() {
   const allNetworks = [...PRESET_NETWORKS, ...customNetworks]
   const groupedNetworks = groupNetworksByType(allNetworks)
 
-  useEffect(() => {
-    if (!isOpen) {
-      return undefined
-    }
-    function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [isOpen])
+  useClickOutside(dropdownRef, useCallback(() => setIsOpen(false), []), isOpen)
 
   const handleSelectNetwork = (networkId: string) => {
     selectNetwork(networkId)

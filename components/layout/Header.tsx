@@ -1,8 +1,9 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { UI } from '@/lib/config/constants'
+import { useClickOutside } from '@/lib/hooks/useClickOutside'
 import { SearchBar } from '@/components/common/SearchBar'
 import { ThemeToggle } from '@/components/common/ThemeToggle'
 import { NetworkSelector } from '@/components/common/NetworkSelector'
@@ -16,18 +17,7 @@ export function Header() {
   const currentNetwork = useNetworkStore(selectCurrentNetwork)
 
   // Close dropdown when clicking outside
-  useEffect(() => {
-    if (!showMoreMenu) {return}
-
-    function handleClickOutside(event: MouseEvent) {
-      if (moreMenuRef.current && !moreMenuRef.current.contains(event.target as Node)) {
-        setShowMoreMenu(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [showMoreMenu])
+  useClickOutside(moreMenuRef, useCallback(() => setShowMoreMenu(false), []), showMoreMenu)
 
   // Close mobile menu when window is resized to desktop
   useEffect(() => {

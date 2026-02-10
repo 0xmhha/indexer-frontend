@@ -1,6 +1,7 @@
 'use client'
 
-import { useState, FormEvent, useEffect, useRef, useCallback } from 'react'
+import { useState, FormEvent, useRef, useCallback } from 'react'
+import { useClickOutside } from '@/lib/hooks/useClickOutside'
 import { useRouter } from 'next/navigation'
 import { detectInputType } from '@/lib/utils/validation'
 import { useLatestHeight } from '@/lib/hooks/useLatestHeight'
@@ -230,20 +231,7 @@ export function SearchBar() {
   )
 
   // Click outside handler
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node
-      const isOutsideSuggestions = suggestionsRef.current && !suggestionsRef.current.contains(target)
-      const isOutsideInput = inputRef.current && !inputRef.current.contains(target)
-
-      if (isOutsideSuggestions && isOutsideInput) {
-        setShowSuggestions(false)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
+  useClickOutside([inputRef, suggestionsRef], useCallback(() => setShowSuggestions(false), []))
 
   const activeDescendant = selectedIndex >= 0 ? `search-suggestion-${selectedIndex}` : undefined
 
