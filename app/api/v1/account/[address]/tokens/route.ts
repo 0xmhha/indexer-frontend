@@ -5,6 +5,7 @@
 
 import { NextRequest } from 'next/server'
 import { queryIndexer } from '@/lib/api/relay'
+import { GET_CONTRACT_VERIFICATION } from '@/lib/graphql/queries/relay'
 import {
   paginatedResponse,
   apiErrorResponse,
@@ -45,16 +46,40 @@ export async function GET(
     })
 
     // Filter for ERC20 tokens only
-    const erc20Tokens = (data.tokenBalances || [])
+    const rawErc20 = (data.tokenBalances || [])
       .filter((token) => token.tokenType.toUpperCase() === 'ERC20')
-      .map((token): TokenInBalance => ({
+
+    // Batch-fetch contract verification for token names
+    const uniqueAddresses = [...new Set(rawErc20.map((t) => t.contractAddress))]
+    const verificationMap = new Map<string, { name: string | null }>()
+    const verResults = await Promise.all(
+      uniqueAddresses.map((addr) =>
+        queryIndexer<{ contractVerification: { address: string; name: string | null } | null }>(
+          GET_CONTRACT_VERIFICATION,
+          { address: addr }
+        ).catch(() => null)
+      )
+    )
+    verResults.forEach((result) => {
+      if (result?.contractVerification) {
+        verificationMap.set(
+          result.contractVerification.address.toLowerCase(),
+          { name: result.contractVerification.name }
+        )
+      }
+    })
+
+    const erc20Tokens = rawErc20.map((token): TokenInBalance => {
+      const meta = verificationMap.get(token.contractAddress.toLowerCase())
+      return {
         contractAddress: token.contractAddress,
-        name: null,
+        name: meta?.name ?? null,
         symbol: null,
         decimals: null,
         balance: token.balance,
         type: 'ERC20',
-      }))
+      }
+    })
 
     const totalCount = erc20Tokens.length
     const paginatedTokens = erc20Tokens.slice(offset, offset + limit)

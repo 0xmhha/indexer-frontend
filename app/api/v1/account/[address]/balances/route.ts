@@ -4,7 +4,7 @@
  */
 
 import { NextRequest } from 'next/server'
-import { queryIndexerParallel } from '@/lib/api/relay'
+import { queryIndexer, queryIndexerParallel } from '@/lib/api/relay'
 import {
   successResponse,
   apiErrorResponse,
@@ -20,6 +20,7 @@ import { errorLogger } from '@/lib/errors/logger'
 import {
   GET_ADDRESS_BALANCE,
   GET_TOKEN_BALANCES,
+  GET_CONTRACT_VERIFICATION,
 } from '@/lib/graphql/queries/relay'
 import { env } from '@/lib/config/env'
 import type {
@@ -55,15 +56,39 @@ export async function GET(
       { query: GET_TOKEN_BALANCES, variables: { address } },
     ])
 
+    // Batch-fetch contract verification for token metadata
+    const rawTokens = tokenData.tokenBalances || []
+    const uniqueAddresses = [...new Set(rawTokens.map((t) => t.contractAddress))]
+    const verificationMap = new Map<string, { name: string | null }>()
+    const verResults = await Promise.all(
+      uniqueAddresses.map((addr) =>
+        queryIndexer<{ contractVerification: { address: string; name: string | null } | null }>(
+          GET_CONTRACT_VERIFICATION,
+          { address: addr }
+        ).catch(() => null)
+      )
+    )
+    verResults.forEach((result) => {
+      if (result?.contractVerification) {
+        verificationMap.set(
+          result.contractVerification.address.toLowerCase(),
+          { name: result.contractVerification.name }
+        )
+      }
+    })
+
     // Transform token balances to API format
-    const tokens: TokenInBalance[] = (tokenData.tokenBalances || []).map((token) => ({
-      contractAddress: token.contractAddress,
-      name: null, // Token name not available from tokenBalances query
-      symbol: null,
-      decimals: null,
-      balance: token.balance,
-      type: mapTokenType(token.tokenType),
-    }))
+    const tokens: TokenInBalance[] = rawTokens.map((token) => {
+      const meta = verificationMap.get(token.contractAddress.toLowerCase())
+      return {
+        contractAddress: token.contractAddress,
+        name: meta?.name ?? null,
+        symbol: null,
+        decimals: null,
+        balance: token.balance,
+        type: mapTokenType(token.tokenType),
+      }
+    })
 
     // Filter out zero balances unless include_zero is true
     const includeZero = request.nextUrl.searchParams.get('include_zero') === 'true'

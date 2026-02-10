@@ -3,7 +3,7 @@
  * Returns network statistics
  */
 
-import { queryIndexer } from '@/lib/api/relay'
+import { queryIndexerParallel } from '@/lib/api/relay'
 import {
   successResponse,
   apiErrorResponse,
@@ -15,11 +15,13 @@ import {
 } from '@/lib/api/errors'
 import { errorLogger } from '@/lib/errors/logger'
 import { GET_LATEST_HEIGHT } from '@/lib/graphql/queries/relay'
-// Note: GET_NETWORK_STATS not available in current schema, using fallback
+import { GET_NETWORK_METRICS } from '@/lib/graphql/queries/stats'
 import type {
   LatestHeightResponse,
   NetworkStatsData,
 } from '@/lib/api/types'
+import type { GetNetworkMetricsData } from '@/lib/graphql/queries/stats'
+import { FORMATTING } from '@/lib/config/constants'
 
 export const dynamic = 'force-dynamic'
 
@@ -29,9 +31,27 @@ export async function OPTIONS() {
 
 export async function GET() {
   try {
-    // Note: GET_NETWORK_STATS query not available in current schema
-    // Using fallback stats based on latestHeight
-    const statsData = await getFallbackStats()
+    const now = Math.floor(Date.now() / 1000)
+    const fromTime = String(now - FORMATTING.SECONDS_PER_DAY)
+    const toTime = String(now)
+
+    const [heightData, metricsData] = await queryIndexerParallel<
+      [LatestHeightResponse, GetNetworkMetricsData]
+    >([
+      { query: GET_LATEST_HEIGHT },
+      { query: GET_NETWORK_METRICS, variables: { fromTime, toTime } },
+    ])
+
+    const metrics = metricsData.networkMetrics
+
+    const statsData: NetworkStatsData = {
+      latestBlock: parseInt(heightData.latestHeight, 10),
+      totalTransactions: metrics ? parseInt(metrics.totalTransactions, 10) : 0,
+      totalAddresses: 0, // Not available from networkMetrics
+      totalContracts: null,
+      avgBlockTime: metrics?.blockTime ?? 2.0,
+      tps: metrics?.tps ?? null,
+    }
 
     return successResponse(statsData)
   } catch (error) {
@@ -44,21 +64,5 @@ export async function GET() {
     return apiErrorResponse(
       new IndexerConnectionError(error instanceof Error ? error : undefined)
     )
-  }
-}
-
-/**
- * Fallback stats when networkStats query is not available
- */
-async function getFallbackStats(): Promise<NetworkStatsData> {
-  const heightData = await queryIndexer<LatestHeightResponse>(GET_LATEST_HEIGHT)
-
-  return {
-    latestBlock: parseInt(heightData.latestHeight, 10),
-    totalTransactions: 0,
-    totalAddresses: 0,
-    totalContracts: null,
-    avgBlockTime: 2.0, // Default estimate
-    tps: null,
   }
 }

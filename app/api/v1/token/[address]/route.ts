@@ -4,7 +4,7 @@
  */
 
 import { NextRequest } from 'next/server'
-import { queryIndexer } from '@/lib/api/relay'
+import { queryIndexerParallel } from '@/lib/api/relay'
 import {
   successResponse,
   apiErrorResponse,
@@ -19,7 +19,8 @@ import {
 } from '@/lib/api/errors'
 import { errorLogger } from '@/lib/errors/logger'
 import { gql } from '@apollo/client'
-import type { TokenInfoData } from '@/lib/api/types'
+import { GET_CONTRACT_VERIFICATION } from '@/lib/graphql/queries/relay'
+import type { ContractVerificationResponse, TokenInfoData } from '@/lib/api/types'
 
 // Query for token info - checks if address has token balances to determine if it's a token
 const GET_TOKEN_INFO = gql`
@@ -58,25 +59,27 @@ export async function GET(
   }
 
   try {
-    // Query token transfer count
-    const data = await queryIndexer<TokenInfoResponse>(GET_TOKEN_INFO, {
-      address,
-    })
+    // Query token transfer count and contract verification in parallel
+    const [logData, verificationData] = await queryIndexerParallel<
+      [TokenInfoResponse, ContractVerificationResponse]
+    >([
+      { query: GET_TOKEN_INFO, variables: { address } },
+      { query: GET_CONTRACT_VERIFICATION, variables: { address } },
+    ])
 
-    const transfersCount = data.logs?.totalCount || 0
+    const transfersCount = logData.logs?.totalCount || 0
+    const verification = verificationData.contractVerification
 
-    // If no transfers found, this might not be a token contract
-    // We still return info but with limited data
     const tokenInfo: TokenInfoData = {
       address: address.toLowerCase(),
-      name: null, // Token metadata not available from indexer
+      name: verification?.name ?? null,
       symbol: null,
       decimals: null,
       totalSupply: null,
-      type: 'ERC20', // Default to ERC20, could be detected from events
+      type: 'ERC20',
       holdersCount: null,
       transfersCount,
-      verified: false, // Would need contract verification check
+      verified: verification?.isVerified ?? false,
       logoUrl: null,
     }
 

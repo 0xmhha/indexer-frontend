@@ -18,7 +18,7 @@ import {
   IndexerConnectionError,
 } from '@/lib/api/errors'
 import { errorLogger } from '@/lib/errors/logger'
-import { GET_TRANSACTIONS_BY_ADDRESS } from '@/lib/graphql/queries/relay'
+import { GET_TRANSACTIONS_BY_ADDRESS, GET_BLOCK_TIMESTAMP } from '@/lib/graphql/queries/relay'
 import type { TransactionsResponse, TransactionInList } from '@/lib/api/types'
 
 export const dynamic = 'force-dynamic'
@@ -57,12 +57,29 @@ export async function GET(
 
     const { nodes, totalCount } = data.transactionsByAddress
 
+    // Batch-fetch block timestamps for unique block numbers
+    const uniqueBlocks = [...new Set(nodes.map((tx) => tx.blockNumber))]
+    const timestampMap = new Map<string, string>()
+    const blockResults = await Promise.all(
+      uniqueBlocks.map((num) =>
+        queryIndexer<{ block: { number: string; timestamp: string } | null }>(
+          GET_BLOCK_TIMESTAMP,
+          { number: num }
+        ).catch(() => null)
+      )
+    )
+    blockResults.forEach((result) => {
+      if (result?.block) {
+        timestampMap.set(result.block.number, result.block.timestamp)
+      }
+    })
+
     // Transform to API format and apply filter
     const transactions: TransactionInList[] = nodes
       .map((tx) => ({
         hash: tx.hash,
         blockNumber: parseInt(tx.blockNumber, 10),
-        timestamp: null, // Timestamp not directly available, would need block lookup
+        timestamp: timestampMap.get(tx.blockNumber) ?? null,
         from: tx.from,
         to: tx.to,
         value: tx.value,
