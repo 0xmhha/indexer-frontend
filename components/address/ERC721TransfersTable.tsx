@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useERC721TransfersByAddress } from '@/lib/hooks/useAddressIndexing'
 import { useMergedTransfers } from '@/lib/hooks/useMergedTransfers'
@@ -15,8 +15,10 @@ import {
 import { Button } from '@/components/ui/Button'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
+import { AddressLink } from '@/components/common/AddressLink'
 import { formatHash, formatNumber, formatDate } from '@/lib/utils/format'
 import { PAGINATION, getSystemContractInfo } from '@/lib/config/constants'
+import { useContractDetection } from '@/lib/hooks/useContractDetection'
 import type { ERC721Transfer } from '@/types/address-indexing'
 
 interface ERC721TransfersTableProps {
@@ -34,6 +36,19 @@ export function ERC721TransfersTable({ address, limit = PAGINATION.DEFAULT_PAGE_
     { transfers: fromResult.erc721Transfers, totalCount: fromResult.totalCount, pageInfo: fromResult.pageInfo, loading: fromResult.loading, error: fromResult.error, loadMore: fromResult.loadMore },
     { transfers: toResult.erc721Transfers, totalCount: toResult.totalCount, pageInfo: toResult.pageInfo, loading: toResult.loading, error: toResult.error, loadMore: toResult.loadMore },
   )
+
+  // Collect unique addresses for batch contract detection
+  const allAddresses = useMemo(() => {
+    const set = new Set<string>()
+    for (const t of erc721Transfers) {
+      if (t.from) set.add(t.from)
+      if (t.to) set.add(t.to)
+      if (t.contractAddress) set.add(t.contractAddress)
+    }
+    return [...set]
+  }, [erc721Transfers])
+
+  const contractMap = useContractDetection(allAddresses)
 
   const handleLoadMore = () => {
     if (pageInfo.hasNextPage) {
@@ -125,24 +140,14 @@ export function ERC721TransfersTable({ address, limit = PAGINATION.DEFAULT_PAGE_
                   {transfer.from === address ? (
                     <span className="font-mono text-text-secondary">Self</span>
                   ) : (
-                    <Link
-                      href={`/address/${transfer.from}`}
-                      className="font-mono text-accent-blue hover:text-accent-cyan"
-                    >
-                      {formatHash(transfer.from, true)}
-                    </Link>
+                    <AddressLink address={transfer.from} isContract={contractMap.get(transfer.from.toLowerCase())} />
                   )}
                 </TableCell>
                 <TableCell>
                   {transfer.to === address ? (
                     <span className="font-mono text-text-secondary">Self</span>
                   ) : (
-                    <Link
-                      href={`/address/${transfer.to}`}
-                      className="font-mono text-accent-blue hover:text-accent-cyan"
-                    >
-                      {formatHash(transfer.to, true)}
-                    </Link>
+                    <AddressLink address={transfer.to} isContract={contractMap.get(transfer.to.toLowerCase())} />
                   )}
                 </TableCell>
                 <TableCell>

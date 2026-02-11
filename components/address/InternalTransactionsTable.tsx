@@ -14,9 +14,11 @@ import {
 import { Button } from '@/components/ui/Button'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
+import { AddressLink } from '@/components/common/AddressLink'
 import { formatCurrency, formatHash, formatNumber } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
 import { PAGINATION } from '@/lib/config/constants'
+import { useContractDetection } from '@/lib/hooks/useContractDetection'
 import type { InternalTransaction } from '@/types/address-indexing'
 
 interface InternalTransactionsTableProps {
@@ -73,6 +75,18 @@ export function InternalTransactionsTable({ address, limit = PAGINATION.DEFAULT_
     // Sort by block number descending
     return merged.sort((a, b) => Number(b.blockNumber - a.blockNumber))
   }, [fromTransactions, toTransactions])
+
+  // Collect unique addresses for batch contract detection
+  const allAddresses = useMemo(() => {
+    const set = new Set<string>()
+    for (const tx of internalTransactions) {
+      if (tx.from) set.add(tx.from)
+      if (tx.to) set.add(tx.to)
+    }
+    return [...set]
+  }, [internalTransactions])
+
+  const contractMap = useContractDetection(allAddresses)
 
   const totalCount = fromTotalCount + toTotalCount
   const loading = fromLoading || toLoading
@@ -150,12 +164,7 @@ export function InternalTransactionsTable({ address, limit = PAGINATION.DEFAULT_
                   {tx.from === address ? (
                     <span className="font-mono text-text-secondary">Self</span>
                   ) : (
-                    <Link
-                      href={`/address/${tx.from}`}
-                      className="font-mono text-accent-blue hover:text-accent-cyan"
-                    >
-                      {formatHash(tx.from, true)}
-                    </Link>
+                    <AddressLink address={tx.from} isContract={contractMap.get(tx.from.toLowerCase())} />
                   )}
                 </TableCell>
                 <TableCell>
@@ -164,22 +173,12 @@ export function InternalTransactionsTable({ address, limit = PAGINATION.DEFAULT_
                   ) : tx.type.startsWith('CREATE') ? (
                     <span className="inline-flex items-center gap-1">
                       <span className="text-accent-orange">[Created]</span>
-                      <Link
-                        href={`/address/${tx.to}`}
-                        className="font-mono text-accent-blue hover:text-accent-cyan"
-                      >
-                        {formatHash(tx.to, true)}
-                      </Link>
+                      <AddressLink address={tx.to} isContract={true} />
                     </span>
                   ) : tx.to === address ? (
                     <span className="font-mono text-text-secondary">Self</span>
                   ) : (
-                    <Link
-                      href={`/address/${tx.to}`}
-                      className="font-mono text-accent-blue hover:text-accent-cyan"
-                    >
-                      {formatHash(tx.to, true)}
-                    </Link>
+                    <AddressLink address={tx.to} isContract={contractMap.get(tx.to.toLowerCase())} />
                   )}
                 </TableCell>
                 <TableCell className="text-right font-mono">

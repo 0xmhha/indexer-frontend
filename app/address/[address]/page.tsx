@@ -25,18 +25,31 @@ import { ContractLogsSection } from '@/components/address/ContractLogsSection'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs'
 import { isValidAddress } from '@/lib/utils/validation'
 import { CopyButton } from '@/components/common/CopyButton'
+import { ContractIcon } from '@/components/common/ContractIcon'
 
 // ============================================================
 // Sub-Components
 // ============================================================
 
-function AddressHeader({ address }: { address: string }) {
+function AddressHeader({ address, isContract, isContractLoading }: { address: string; isContract: boolean; isContractLoading: boolean }) {
   return (
     <div className="mb-8">
       <div className="annotation mb-2">ADDRESS</div>
       <div className="flex items-center gap-2">
         <h1 className="break-all font-mono text-xl font-bold text-accent-blue">{address}</h1>
         <CopyButton text={address} size="md" />
+        {!isContractLoading && (
+          isContract ? (
+            <span className="inline-flex items-center gap-1 rounded bg-accent-cyan/20 px-2 py-0.5 text-xs text-accent-cyan">
+              <ContractIcon size="xs" />
+              Contract
+            </span>
+          ) : (
+            <span className="rounded bg-bg-tertiary px-2 py-0.5 text-xs text-text-secondary">
+              EOA
+            </span>
+          )
+        )}
       </div>
     </div>
   )
@@ -156,7 +169,7 @@ function AddressPageContent() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <AddressHeader address={address} />
+      <AddressHeader address={address} isContract={isContract} isContractLoading={isContractLoading} />
       <AddressOverviewCard address={address} balance={balance} loading={balanceLoading} error={balanceError} />
       <AddressStatsCard address={address} />
 

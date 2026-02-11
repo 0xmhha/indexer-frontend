@@ -4,11 +4,15 @@ import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Table, TableBody, TableRow, TableCell } from '@/components/ui/Table'
 import { CopyButton } from '@/components/common/CopyButton'
+import { AddressLink } from '@/components/common/AddressLink'
 import { formatNumber, formatCurrency } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
+import { useAddressOverview } from '@/lib/hooks/useAddress'
 import type { TransactionData } from './types'
 
 export function TxInfoCard({ tx, status }: { tx: TransactionData; status: string }) {
+  const { isContract: fromIsContract } = useAddressOverview(tx.from)
+  const { isContract: toIsContract } = useAddressOverview(tx.to ?? null)
   return (
     <Card className="mb-6">
       <CardHeader className="border-b border-bg-tertiary">
@@ -59,12 +63,7 @@ export function TxInfoCard({ tx, status }: { tx: TransactionData; status: string
               <TableCell className="font-bold">From</TableCell>
               <TableCell>
                 <span className="inline-flex items-center gap-1">
-                  <Link
-                    href={`/address/${tx.from}`}
-                    className="font-mono text-accent-blue hover:text-accent-cyan"
-                  >
-                    {tx.from}
-                  </Link>
+                  <AddressLink address={tx.from} truncate={false} isContract={fromIsContract} textSize="text-sm" />
                   <CopyButton text={tx.from} />
                 </span>
               </TableCell>
@@ -74,23 +73,13 @@ export function TxInfoCard({ tx, status }: { tx: TransactionData; status: string
               <TableCell>
                 {tx.to ? (
                   <span className="inline-flex items-center gap-1">
-                    <Link
-                      href={`/address/${tx.to}`}
-                      className="font-mono text-accent-blue hover:text-accent-cyan"
-                    >
-                      {tx.to}
-                    </Link>
+                    <AddressLink address={tx.to} truncate={false} isContract={toIsContract} textSize="text-sm" />
                     <CopyButton text={tx.to} />
                   </span>
                 ) : tx.receipt?.contractAddress ? (
                   <span className="inline-flex items-center gap-1">
                     <span className="text-accent-orange">[Contract Creation]</span>
-                    <Link
-                      href={`/address/${tx.receipt.contractAddress}`}
-                      className="font-mono text-accent-blue hover:text-accent-cyan"
-                    >
-                      {tx.receipt.contractAddress}
-                    </Link>
+                    <AddressLink address={tx.receipt.contractAddress} truncate={false} isContract={true} textSize="text-sm" />
                     <CopyButton text={tx.receipt.contractAddress} />
                   </span>
                 ) : (

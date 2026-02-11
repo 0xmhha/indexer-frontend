@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { formatHash, formatNumber, formatCurrency } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
 import { TransactionTypeBadge } from './TransactionTypeBadge'
+import { AddressLink } from '@/components/common/AddressLink'
 import { TableRow, TableCell } from '@/components/ui/Table'
 import type { Transaction } from '@/types/graphql'
 
@@ -15,6 +16,8 @@ interface TransactionRowProps {
   showStatus?: boolean | undefined
   /** Show age column */
   showAge?: boolean | undefined
+  /** Map of lowercase address -> isContract */
+  contractMap?: Map<string, boolean> | undefined
 }
 
 /**
@@ -25,11 +28,13 @@ function AddressDisplay({
   currentAddress,
   contractAddress,
   isRecipient = false,
+  isContract,
 }: {
   address: string | null | undefined
   currentAddress?: string | undefined
   contractAddress?: string | null | undefined
   isRecipient?: boolean | undefined
+  isContract?: boolean | undefined
 }) {
   // Self transaction
   if (address && currentAddress && address.toLowerCase() === currentAddress.toLowerCase()) {
@@ -41,12 +46,7 @@ function AddressDisplay({
     return (
       <span className="inline-flex items-center gap-1">
         <span className="text-xs text-accent-orange">[Created]</span>
-        <Link
-          href={`/address/${contractAddress}`}
-          className="font-mono text-xs text-accent-blue hover:text-accent-cyan"
-        >
-          {formatHash(contractAddress, true)}
-        </Link>
+        <AddressLink address={contractAddress} isContract={true} />
       </span>
     )
   }
@@ -62,14 +62,7 @@ function AddressDisplay({
   }
 
   // Normal address
-  return (
-    <Link
-      href={`/address/${address}`}
-      className="font-mono text-xs text-accent-blue hover:text-accent-cyan"
-    >
-      {formatHash(address, true)}
-    </Link>
-  )
+  return <AddressLink address={address} isContract={isContract} />
 }
 
 /**
@@ -94,9 +87,13 @@ export function TransactionRow({
   currentAddress,
   showStatus = false,
   showAge = false,
+  contractMap,
 }: TransactionRowProps) {
   const value = BigInt(tx.value ?? '0')
   const isHighValue = value > BigInt('1000000000000000000') // > 1 ETH
+
+  const fromIsContract = tx.from ? contractMap?.get(tx.from.toLowerCase()) : undefined
+  const toIsContract = tx.to ? contractMap?.get(tx.to.toLowerCase()) : undefined
 
   return (
     <TableRow>
@@ -132,6 +129,7 @@ export function TransactionRow({
         <AddressDisplay
           address={tx.from}
           currentAddress={currentAddress}
+          isContract={fromIsContract}
         />
       </TableCell>
 
@@ -142,6 +140,7 @@ export function TransactionRow({
           currentAddress={currentAddress}
           contractAddress={tx.contractAddress}
           isRecipient
+          isContract={toIsContract}
         />
       </TableCell>
 

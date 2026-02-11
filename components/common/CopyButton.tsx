@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react'
 import { UI, FORMATTING } from '@/lib/config/constants'
+import { ContractIcon } from './ContractIcon'
 
 interface CopyButtonProps {
   /** Text to copy to clipboard */
@@ -119,6 +120,8 @@ interface AddressWithCopyProps {
   className?: string
   /** Show full address on hover */
   showFullOnHover?: boolean
+  /** Show contract icon when true */
+  isContract?: boolean
 }
 
 export function AddressWithCopy({
@@ -127,6 +130,7 @@ export function AddressWithCopy({
   href,
   className = '',
   showFullOnHover = true,
+  isContract,
 }: AddressWithCopyProps) {
   const displayAddress = truncate
     ? `${address.slice(0, FORMATTING.ADDRESS_START_CHARS)}...${address.slice(-FORMATTING.ADDRESS_END_CHARS)}`
@@ -143,6 +147,7 @@ export function AddressWithCopy({
 
   return (
     <span className="inline-flex items-center gap-1">
+      {isContract === true && <ContractIcon size="xs" />}
       {href ? (
         <a
           href={href}

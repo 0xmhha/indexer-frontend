@@ -9,6 +9,10 @@
 export { CopyButton } from './CopyButton'
 export { ExportButton } from './ExportButton'
 
+// Address display
+export { AddressLink } from './AddressLink'
+export { ContractIcon } from './ContractIcon'
+
 // Loading & Error states
 export { ErrorBoundary } from './ErrorBoundary'
 export { LoadingSpinner } from './LoadingSpinner'

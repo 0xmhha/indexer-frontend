@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import {
   Table,
   TableHeader,
@@ -8,6 +9,7 @@ import {
   TableHead,
 } from '@/components/ui/Table'
 import { TransactionRow } from './TransactionRow'
+import { useContractDetection } from '@/lib/hooks/useContractDetection'
 import type { Transaction } from '@/types/graphql'
 
 interface TransactionTableProps {
@@ -76,6 +78,18 @@ export function TransactionTable({
   sortColumn,
   sortDirection,
 }: TransactionTableProps) {
+  // Collect unique addresses from all transactions for batch contract detection
+  const allAddresses = useMemo(() => {
+    const set = new Set<string>()
+    for (const tx of transactions) {
+      if (tx.from) set.add(tx.from)
+      if (tx.to) set.add(tx.to)
+    }
+    return [...set]
+  }, [transactions])
+
+  const contractMap = useContractDetection(allAddresses)
+
   if (transactions.length === 0) {
     return (
       <div className="p-8 text-center">
@@ -123,6 +137,7 @@ export function TransactionTable({
             currentAddress={currentAddress}
             showStatus={showStatus}
             showAge={showAge}
+            contractMap={contractMap}
           />
         ))}
       </TableBody>
