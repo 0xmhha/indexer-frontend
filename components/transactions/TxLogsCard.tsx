@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
-import Link from 'next/link'
+import { useState, useMemo } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Table, TableBody, TableRow, TableCell } from '@/components/ui/Table'
 import { CopyButton } from '@/components/common/CopyButton'
+import { AddressLink } from '@/components/common/AddressLink'
+import { useContractDetection } from '@/lib/hooks/useContractDetection'
 import { FORMATTING } from '@/lib/config/constants'
 import { decodeEventLog, formatTokenAmount } from '@/lib/utils/eventDecoder'
 import type { Log, DecodedLog } from '@/types/graphql'
@@ -16,7 +17,15 @@ import type { Log, DecodedLog } from '@/types/graphql'
 /**
  * Display decoded event parameters in a readable format
  */
-function DecodedLogView({ decoded, contractAddress }: { decoded: DecodedLog; contractAddress: string }) {
+function DecodedLogView({
+  decoded,
+  contractAddress,
+  contractMap,
+}: {
+  decoded: DecodedLog
+  contractAddress: string
+  contractMap: Map<string, boolean>
+}) {
   return (
     <div className="space-y-3">
       {/* Event Name Badge */}
@@ -32,9 +41,11 @@ function DecodedLogView({ decoded, contractAddress }: { decoded: DecodedLog; con
       {/* Contract Address */}
       <div className="flex items-center gap-2 text-xs">
         <span className="text-text-muted">Contract:</span>
-        <Link href={`/address/${contractAddress}`} className="font-mono text-accent-blue hover:text-accent-cyan">
-          {contractAddress}
-        </Link>
+        <AddressLink
+          address={contractAddress}
+          truncate={false}
+          isContract={contractMap.get(contractAddress.toLowerCase())}
+        />
         <CopyButton text={contractAddress} size="sm" />
       </div>
 
@@ -52,7 +63,7 @@ function DecodedLogView({ decoded, contractAddress }: { decoded: DecodedLog; con
                   {param.type}
                 </TableCell>
                 <TableCell className="py-2 font-mono text-xs">
-                  <ParamValue param={param} />
+                  <ParamValue param={param} contractMap={contractMap} />
                 </TableCell>
               </TableRow>
             ))}
@@ -66,16 +77,24 @@ function DecodedLogView({ decoded, contractAddress }: { decoded: DecodedLog; con
 /**
  * Display a single parameter value with appropriate formatting
  */
-function ParamValue({ param }: { param: { name: string; type: string; value: string } }) {
+function ParamValue({
+  param,
+  contractMap,
+}: {
+  param: { name: string; type: string; value: string }
+  contractMap: Map<string, boolean>
+}) {
   const { type, value, name } = param
 
-  // Address type - show as link
+  // Address type - show as link with contract icon
   if (type === 'address') {
     return (
       <span className="flex items-center gap-1">
-        <Link href={`/address/${value}`} className="text-accent-blue hover:text-accent-cyan">
-          {value}
-        </Link>
+        <AddressLink
+          address={value}
+          truncate={false}
+          isContract={contractMap.get(value.toLowerCase())}
+        />
         <CopyButton text={value} size="sm" />
       </span>
     )
@@ -105,14 +124,23 @@ function ParamValue({ param }: { param: { name: string; type: string; value: str
 /**
  * Display raw log data (topics and data)
  */
-function RawLogView({ log }: { log: Log }) {
+function RawLogView({
+  log,
+  contractMap,
+}: {
+  log: Log
+  contractMap: Map<string, boolean>
+}) {
   return (
     <div className="space-y-2 text-xs">
-      <div>
+      <div className="flex items-center gap-1">
         <span className="text-text-muted">Address:</span>
-        <Link href={`/address/${log.address}`} className="ml-2 font-mono text-accent-blue hover:text-accent-cyan">
-          {log.address}
-        </Link>
+        <AddressLink
+          address={log.address}
+          truncate={false}
+          isContract={contractMap.get(log.address.toLowerCase())}
+          className="ml-1"
+        />
       </div>
       <div>
         <span className="text-text-muted">Topics:</span>
@@ -130,7 +158,7 @@ function RawLogView({ log }: { log: Log }) {
         <div>
           <span className="text-text-muted">Data:</span>
           <div className="mt-1 flex items-start gap-1">
-            <div className="max-h-24 flex-1 overflow-auto rounded bg-bg-primary p-2 font-mono text-text-secondary break-all">
+            <div className="max-h-24 flex-1 overflow-auto break-all rounded bg-bg-primary p-2 font-mono text-text-secondary">
               {log.data}
             </div>
             <CopyButton text={log.data} size="sm" />
@@ -144,7 +172,15 @@ function RawLogView({ log }: { log: Log }) {
 /**
  * Single log entry with toggle between decoded and raw views
  */
-function LogEntry({ log }: { log: Log }) {
+function LogEntry({
+  log,
+  index,
+  contractMap,
+}: {
+  log: Log
+  index: number
+  contractMap: Map<string, boolean>
+}) {
   const [showRaw, setShowRaw] = useState(false)
 
   // Priority: 1. Backend decoded, 2. Frontend decoded, 3. Raw
@@ -158,7 +194,7 @@ function LogEntry({ log }: { log: Log }) {
     <div className="rounded border border-bg-tertiary p-4">
       <div className="mb-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="annotation">LOG #{log.logIndex}</span>
+          <span className="annotation">LOG #{index}</span>
           {canDecode && (
             <span className={`rounded px-1.5 py-0.5 text-xs ${
               isBackendDecoded ? 'bg-success/20 text-success' : 'bg-accent-cyan/20 text-accent-cyan'
@@ -170,17 +206,17 @@ function LogEntry({ log }: { log: Log }) {
         {canDecode && (
           <button
             onClick={() => setShowRaw(!showRaw)}
-            className="font-mono text-xs text-text-muted hover:text-accent-blue transition-colors"
+            className="font-mono text-xs text-text-muted transition-colors hover:text-accent-blue"
           >
-            {showRaw ? '← Decoded' : 'Raw →'}
+            {showRaw ? '\u2190 Decoded' : 'Raw \u2192'}
           </button>
         )}
       </div>
 
       {canDecode && !showRaw ? (
-        <DecodedLogView decoded={decoded} contractAddress={log.address} />
+        <DecodedLogView decoded={decoded} contractAddress={log.address} contractMap={contractMap} />
       ) : (
-        <RawLogView log={log} />
+        <RawLogView log={log} contractMap={contractMap} />
       )}
     </div>
   )
@@ -194,6 +230,27 @@ function LogEntry({ log }: { log: Log }) {
  * Transaction logs card displaying decoded event logs
  */
 export function TxLogsCard({ logs }: { logs: Log[] }) {
+  // Collect all unique addresses from logs (contract addresses + address-type params)
+  const allAddresses = useMemo(() => {
+    const set = new Set<string>()
+    if (!logs) return []
+    for (const log of logs) {
+      set.add(log.address)
+      // Also collect address-type param values from decoded logs
+      const decoded = log.decoded
+      if (decoded) {
+        for (const param of decoded.params) {
+          if (param.type === 'address' && param.value) {
+            set.add(param.value)
+          }
+        }
+      }
+    }
+    return [...set]
+  }, [logs])
+
+  const contractMap = useContractDetection(allAddresses)
+
   if (!logs || logs.length === 0) { return null }
 
   return (
@@ -204,7 +261,7 @@ export function TxLogsCard({ logs }: { logs: Log[] }) {
       <CardContent className="p-4">
         <div className="space-y-4">
           {logs.map((log, index) => (
-            <LogEntry key={index} log={log} />
+            <LogEntry key={index} log={log} index={index} contractMap={contractMap} />
           ))}
         </div>
       </CardContent>
