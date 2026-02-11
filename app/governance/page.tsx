@@ -3,7 +3,7 @@ import { GovernanceDashboard } from '@/components/governance/GovernanceDashboard
 import { ProposalsListViewer } from '@/components/governance/ProposalsListViewer'
 
 export const metadata: Metadata = {
-  title: 'Governance | Stable-One Explorer',
+  title: 'Governance | StableNet Explorer',
   description: 'View governance proposals, votes, and validator information',
 }
 

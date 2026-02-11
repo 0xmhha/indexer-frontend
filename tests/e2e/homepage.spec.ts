@@ -7,14 +7,14 @@ test.describe('Homepage', () => {
 
   test('should display page title and header', async ({ page }) => {
     // Check page title
-    await expect(page).toHaveTitle(/Stable-One Explorer/)
+    await expect(page).toHaveTitle(/StableNet Explorer/)
 
     // Check header is visible
     const header = page.locator('header')
     await expect(header).toBeVisible()
 
     // Check logo and site name
-    await expect(page.getByText('STABLE-ONE EXPLORER')).toBeVisible()
+    await expect(page.getByText('STABLENET EXPLORER')).toBeVisible()
   })
 
   test('should display navigation menu', async ({ page }) => {
@@ -107,7 +107,7 @@ test.describe('Homepage', () => {
     await page.setViewportSize({ width: 375, height: 667 })
 
     // Check that page still loads properly
-    await expect(page.getByText('STABLE-ONE EXPLORER')).toBeVisible()
+    await expect(page.getByText('STABLENET EXPLORER')).toBeVisible()
 
     // Mobile menu might be different, just check header exists
     const header = page.locator('header')

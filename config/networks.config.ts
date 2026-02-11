@@ -10,7 +10,7 @@ import type { NetworkConfig } from '@/lib/config/networks.types'
 /**
  * Default network ID to use when none is selected
  */
-export const DEFAULT_NETWORK_ID = 'stable-one-local'
+export const DEFAULT_NETWORK_ID = 'stablenet-local'
 
 /**
  * Maximum number of custom networks allowed
@@ -46,8 +46,8 @@ export const PRESET_NETWORKS: NetworkConfig[] = [
     description: 'Local Anvil development chain',
   },
   {
-    id: 'stable-one-local',
-    name: 'Stable-One Local',
+    id: 'stablenet-local',
+    name: 'StableNet Local',
     type: 'devnet',
     endpoints: {
       graphqlEndpoint: 'http://localhost:8080/graphql',
@@ -55,11 +55,11 @@ export const PRESET_NETWORKS: NetworkConfig[] = [
       jsonRpcEndpoint: 'http://localhost:8080/rpc',
     },
     chain: {
-      name: 'Stable-One',
+      name: 'StableNet',
       id: '8283',
-      currencySymbol: 'STABLEONE',
+      currencySymbol: 'WKRC',
     },
-    description: 'Local Stable-One development chain',
+    description: 'Local StableNet development chain',
   },
 
   // ============================================================================

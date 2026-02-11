@@ -90,9 +90,9 @@ describe('formatValue', () => {
 })
 
 describe('formatCurrency', () => {
-  it('should format value with default WEMIX symbol', () => {
+  it('should format value with default WKRC symbol', () => {
     const value = BigInt('1000000000000000000')
-    expect(formatCurrency(value)).toBe('1 WEMIX')
+    expect(formatCurrency(value)).toBe('1 WKRC')
   })
 
   it('should format value with custom symbol', () => {

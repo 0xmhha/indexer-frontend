@@ -6,8 +6,8 @@ import { Providers } from '@/lib/providers/Providers'
 import { WebSiteJsonLd } from '@/components/seo/JsonLd'
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'
-const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'Stable-One Explorer'
-const siteDescription = 'Real-time blockchain explorer for Stable-One chain. View blocks, transactions, addresses, and smart contracts.'
+const siteName = process.env.NEXT_PUBLIC_SITE_NAME || 'StableNet Explorer'
+const siteDescription = 'Real-time blockchain explorer for StableNet chain. View blocks, transactions, addresses, and smart contracts.'
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -16,33 +16,33 @@ export const metadata: Metadata = {
     template: `%s | ${siteName}`,
   },
   description:
-    'Crystalline Infrastructure - Production-ready blockchain explorer for Stable-One (Ethereum-based) chain. Real-time blockchain data, transactions, blocks, and smart contracts.',
+    'Crystalline Infrastructure - Production-ready blockchain explorer for StableNet (Ethereum-based) chain. Real-time blockchain data, transactions, blocks, and smart contracts.',
   keywords: [
     'blockchain',
     'explorer',
     'ethereum',
-    'stable-one',
+    'stablenet',
     'indexer',
     'crypto',
     'transactions',
     'blocks',
     'smart contracts',
   ],
-  authors: [{ name: 'Stable-One Team' }],
+  authors: [{ name: 'StableNet Team' }],
   openGraph: {
     type: 'website',
     locale: 'en_US',
     url: siteUrl,
     title: `${siteName} | Blockchain Indexer`,
     description:
-      'Real-time blockchain explorer for Stable-One chain. View blocks, transactions, addresses, and smart contracts.',
+      'Real-time blockchain explorer for StableNet chain. View blocks, transactions, addresses, and smart contracts.',
     siteName: siteName,
   },
   twitter: {
     card: 'summary_large_image',
     title: `${siteName} | Blockchain Indexer`,
     description:
-      'Real-time blockchain explorer for Stable-One chain. View blocks, transactions, addresses, and smart contracts.',
+      'Real-time blockchain explorer for StableNet chain. View blocks, transactions, addresses, and smart contracts.',
   },
   robots: {
     index: true,

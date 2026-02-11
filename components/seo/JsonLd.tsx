@@ -94,7 +94,7 @@ export function TransactionJsonLd({
     amount: {
       '@type': 'MonetaryAmount',
       value,
-      currency: 'STABLEONE',
+      currency: 'WKRC',
     },
     provider: {
       '@type': 'Organization',
@@ -132,7 +132,7 @@ export function AddressJsonLd({ address, balance, url }: AddressJsonLdProps) {
     accountMinimumInflow: {
       '@type': 'MonetaryAmount',
       value: balance,
-      currency: 'STABLEONE',
+      currency: 'WKRC',
     },
   }
 

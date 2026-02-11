@@ -151,9 +151,9 @@ export const NETWORK_PRESETS: Record<string, NetworkPreset> = {
     description: 'Foundry Anvil Local Development',
     isCustom: false,
   },
-  'stable-one-local': {
-    id: 'stable-one-local',
-    name: 'Stable-One (Local)',
+  'stablenet-local': {
+    id: 'stablenet-local',
+    name: 'StableNet (Local)',
     type: 'devnet',
     endpoints: {
       graphqlEndpoint: 'http://localhost:8080/graphql',
@@ -161,11 +161,11 @@ export const NETWORK_PRESETS: Record<string, NetworkPreset> = {
       jsonRpcEndpoint: 'http://localhost:8080/rpc',
     },
     chain: {
-      name: 'Stable-One',
+      name: 'StableNet',
       id: '8283',
-      currencySymbol: 'STABLEONE',
+      currencySymbol: 'WKRC',
     },
-    description: 'Stable-One Local Development',
+    description: 'StableNet Local Development',
     isCustom: false,
   },
   'stablenet-testnet': {
@@ -204,7 +204,7 @@ export const NETWORK_PRESETS: Record<string, NetworkPreset> = {
   },
 }
 
-export const DEFAULT_NETWORK_ID = 'stable-one-local'
+export const DEFAULT_NETWORK_ID = 'stablenet-local'
 
 export function getNetworkPresets(): NetworkPreset[] {
   return Object.values(NETWORK_PRESETS)

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { ConsensusDashboard } from '@/components/consensus/ConsensusDashboard'
 
 export const metadata: Metadata = {
-  title: 'Consensus | Stable-One Explorer',
+  title: 'Consensus | StableNet Explorer',
   description: 'View consensus data, validator participation, and epoch information',
 }
 

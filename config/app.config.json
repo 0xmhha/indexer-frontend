@@ -1,6 +1,6 @@
 {
   "chain": {
-    "name": "Stable-One",
+    "name": "StableNet",
     "id": "8283",
     "currencySymbol": "WKRC"
   },
@@ -11,6 +11,6 @@
   },
   "site": {
     "url": "http://localhost:3000",
-    "name": "Stable-One Explorer"
+    "name": "StableNet Explorer"
   }
 }

@@ -8,7 +8,7 @@ interface EpochDetailPageProps {
 export async function generateMetadata({ params }: EpochDetailPageProps): Promise<Metadata> {
   const { number } = await params
   return {
-    title: `Epoch #${number} | Stable-One Explorer`,
+    title: `Epoch #${number} | StableNet Explorer`,
     description: `View detailed information for epoch ${number} including validators and candidates`,
   }
 }

@@ -8,7 +8,7 @@ interface ValidatorDetailPageProps {
 export async function generateMetadata({ params }: ValidatorDetailPageProps): Promise<Metadata> {
   const { address } = await params
   return {
-    title: `Validator ${address.slice(0, 10)}... | Stable-One Explorer`,
+    title: `Validator ${address.slice(0, 10)}... | StableNet Explorer`,
     description: `View detailed statistics and participation data for validator ${address}`,
   }
 }

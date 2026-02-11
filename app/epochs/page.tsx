@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { EpochsListViewer } from '@/components/epochs/EpochsListViewer'
 
 export const metadata: Metadata = {
-  title: 'Epochs | Stable-One Explorer',
+  title: 'Epochs | StableNet Explorer',
   description: 'View epoch history and validator set changes',
 }
 

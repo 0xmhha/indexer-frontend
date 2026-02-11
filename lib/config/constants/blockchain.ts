@@ -154,7 +154,7 @@ export const FORMATTING = {
   /** Random ID substring length */
   RANDOM_ID_LENGTH: 9,
 
-  /** Default token decimals (ETH/WEMIX) */
+  /** Default token decimals (ETH/WKRC) */
   DEFAULT_DECIMALS: 18,
   /** Gwei decimals */
   GWEI_DECIMALS: 9,

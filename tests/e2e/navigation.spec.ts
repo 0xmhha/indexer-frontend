@@ -5,7 +5,7 @@ test.describe('Navigation Flow', () => {
     test('should navigate from homepage to block to transaction to address', async ({ page }) => {
       // Step 1: Start at homepage
       await page.goto('/')
-      await expect(page.getByText('STABLE-ONE EXPLORER')).toBeVisible()
+      await expect(page.getByText('STABLENET EXPLORER')).toBeVisible()
 
       // Step 2: Wait for blocks to load and click first block
       await page.waitForSelector('[data-testid="block-item"], .block-row', {
@@ -83,7 +83,7 @@ test.describe('Navigation Flow', () => {
       await page.goto('/blocks')
 
       // Click logo/site name
-      const logo = page.getByText('STABLE-ONE EXPLORER').first()
+      const logo = page.getByText('STABLENET EXPLORER').first()
 
       if (await logo.isVisible()) {
         await logo.click()

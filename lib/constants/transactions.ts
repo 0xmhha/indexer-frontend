@@ -1,7 +1,7 @@
 /**
  * Transaction Type Constants and Utilities
  *
- * Stable-One chain supports multiple transaction types including:
+ * StableNet chain supports multiple transaction types including:
  * - Legacy (0x00)
  * - EIP-2930 Access List (0x01)
  * - EIP-1559 Dynamic Fee (0x02)

@@ -4,7 +4,7 @@ import { BlacklistViewer } from '@/components/validators/BlacklistViewer'
 import { ValidatorSigningStatsDashboard } from '@/components/validators/ValidatorSigningStats'
 
 export const metadata: Metadata = {
-  title: 'Validators | Stable-One Explorer',
+  title: 'Validators | StableNet Explorer',
   description: 'View validators, their signing performance, and blacklisted addresses',
 }
 

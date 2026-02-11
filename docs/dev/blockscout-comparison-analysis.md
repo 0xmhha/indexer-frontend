@@ -1,7 +1,7 @@
 # Blockscout Frontend 참조 분석 및 개선 계획
 
 > **작성일**: 2026-02-08
-> **분석 대상**: Blockscout Frontend vs Indexer-Frontend (Stable-One Explorer)
+> **분석 대상**: Blockscout Frontend vs Indexer-Frontend (StableNet Explorer)
 > **목적**: 오픈소스 참조를 통한 기능 개선 및 신규 기능 도출
 > **라이센스**: ⚠️ Blockscout는 GPL-v3 - 코드 복사 금지, 개념만 참조
 
@@ -61,11 +61,11 @@ Blockscout 프론트엔드는 **GPL-v3** 라이센스입니다. 이 라이센스
 
 ## 2. 프로젝트 특성 및 적합성 분석
 
-### 2.1 Indexer-Frontend (Stable-One Explorer) 특성
+### 2.1 Indexer-Frontend (StableNet Explorer) 특성
 
 | 특성 | 설명 |
 |------|------|
-| **블록체인** | Stable-One (EVM 호환 L1) |
+| **블록체인** | StableNet (EVM 호환 L1) |
 | **합의 알고리즘** | WBFT (Weighted Byzantine Fault Tolerance) |
 | **특수 기능** | Fee Delegation (Type 0x16), 거버넌스, Epoch 시스템 |
 | **백엔드 통신** | GraphQL (Apollo Client) |
@@ -93,7 +93,7 @@ Blockscout 프론트엔드는 **GPL-v3** 라이센스입니다. 이 라이센스
 
 | 기능 | 적합성 | 이유 |
 |------|--------|------|
-| L2 Rollup (Arbitrum/Optimism) | ❌ 불필요 | Stable-One은 L1 |
+| L2 Rollup (Arbitrum/Optimism) | ❌ 불필요 | StableNet은 L1 |
 | Deposits/Withdrawals | ❌ 불필요 | L2 브릿지 기능 |
 | Output Roots | ❌ 불필요 | Rollup 전용 |
 | Dispute Games | ❌ 불필요 | Optimistic Rollup 전용 |

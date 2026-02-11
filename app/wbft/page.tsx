@@ -3,7 +3,7 @@ import { WBFTBlockViewer } from '@/components/wbft/WBFTBlockViewer'
 import { EpochViewer } from '@/components/wbft/EpochViewer'
 
 export const metadata: Metadata = {
-  title: 'WBFT Consensus | Stable-One Explorer',
+  title: 'WBFT Consensus | StableNet Explorer',
   description: 'View WBFT consensus metadata, block information, and epoch details',
 }
 

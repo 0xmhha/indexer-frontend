@@ -11,7 +11,7 @@ interface ProposalPageProps {
 export async function generateMetadata({ params }: ProposalPageProps): Promise<Metadata> {
   const { proposalId } = await params
   return {
-    title: `Proposal #${proposalId} | Stable-One Explorer`,
+    title: `Proposal #${proposalId} | StableNet Explorer`,
     description: `View details for governance proposal #${proposalId}`,
   }
 }

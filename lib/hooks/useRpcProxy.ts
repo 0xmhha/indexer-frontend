@@ -263,7 +263,7 @@ export function useTokenInfo(tokenAddress: string) {
 
 /**
  * Hook for fetching token balance via balanceOf call
- * Uses the NativeCoinAdapter (0x1000) for native STABLEONE balance
+ * Uses the NativeCoinAdapter (0x1000) for native WKRC balance
  */
 export function useTokenBalance(tokenAddress: string, walletAddress: string) {
   const { result, loading, error, refetch } = useContractCall(

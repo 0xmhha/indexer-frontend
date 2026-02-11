@@ -1,5 +1,5 @@
 /**
- * System Contract Addresses for Stable-One Chain
+ * System Contract Addresses for StableNet Chain
  */
 export const SYSTEM_CONTRACTS = {
   NativeCoinAdapter: '0x0000000000000000000000000000000000001000',

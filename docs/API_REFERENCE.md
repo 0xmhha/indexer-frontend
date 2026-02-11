@@ -280,7 +280,7 @@ Returns native and token balances for an address.
     "address": "0x...",
     "native": {
       "balance": "10000000000000000000",
-      "symbol": "STABLEONE",
+      "symbol": "WKRC",
       "decimals": 18
     },
     "tokens": [

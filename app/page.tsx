@@ -16,7 +16,7 @@ export default function HomePage() {
       {/* Hero Section */}
       <div className="mb-12 text-center">
         <div className="annotation mb-4">CRYSTALLINE INFRASTRUCTURE v0.2.0</div>
-        <h1 className="mb-4 font-mono text-4xl font-bold text-accent-blue">STABLE-ONE EXPLORER</h1>
+        <h1 className="mb-4 font-mono text-4xl font-bold text-accent-blue">STABLENET EXPLORER</h1>
         <p className="mb-6 text-sm text-text-secondary">
           BLOCKCHAIN INDEXER • REAL-TIME SYNC • GRAPHQL API
         </p>

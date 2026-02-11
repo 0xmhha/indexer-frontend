@@ -1,6 +1,6 @@
-# Stable-One Explorer Frontend
+# StableNet Explorer Frontend
 
-> **Crystalline Infrastructure** - Production-ready blockchain explorer for Stable-One (Ethereum-based) chain
+> **Crystalline Infrastructure** - Production-ready blockchain explorer for StableNet (Ethereum-based) chain
 
 A modern, high-performance blockchain explorer frontend built with Next.js 14+, TypeScript, and GraphQL. Features real-time updates, comprehensive blockchain data visualization, and a sophisticated technical aesthetic.
 
@@ -107,9 +107,9 @@ http://localhost:8080/rpc
 | `NEXT_PUBLIC_GRAPHQL_ENDPOINT`   | GraphQL API endpoint     | `http://localhost:8080/graphql` |
 | `NEXT_PUBLIC_WS_ENDPOINT`        | WebSocket endpoint       | `ws://localhost:8080/ws`        |
 | `NEXT_PUBLIC_JSONRPC_ENDPOINT`   | JSON-RPC endpoint        | `http://localhost:8080/rpc`     |
-| `NEXT_PUBLIC_CHAIN_NAME`         | Blockchain name          | `Stable-One`                    |
+| `NEXT_PUBLIC_CHAIN_NAME`         | Blockchain name          | `StableNet`                     |
 | `NEXT_PUBLIC_CHAIN_ID`           | Chain identifier         | `111133`                        |
-| `NEXT_PUBLIC_CURRENCY_SYMBOL`    | Native currency symbol   | `WEMIX`                         |
+| `NEXT_PUBLIC_CURRENCY_SYMBOL`    | Native currency symbol   | `WKRC`                          |
 
 > 기본값은 `config/app.config.json`에서 관리됩니다. 환경 변수를 지정하면 해당 값이 우선합니다.
 
@@ -171,4 +171,4 @@ Apache 2.0 - See [LICENSE](LICENSE) for details.
 
 ---
 
-**CRYSTALLINE INFRASTRUCTURE** • Stable-One Explorer
+**CRYSTALLINE INFRASTRUCTURE** • StableNet Explorer

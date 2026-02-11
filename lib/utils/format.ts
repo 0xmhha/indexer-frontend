@@ -79,11 +79,11 @@ export function formatValueFull(value: bigint | string, decimals: number = FORMA
 /**
  * Format value with currency symbol (full decimal places)
  * @param value - BigInt value
- * @param symbol - Currency symbol (default WEMIX)
+ * @param symbol - Currency symbol (default WKRC)
  * @param decimals - Number of decimals
  * @returns Formatted value with symbol and all decimal places
  */
-export function formatCurrencyFull(value: bigint | string, symbol = 'WEMIX', decimals: number = FORMATTING.DEFAULT_DECIMALS): string {
+export function formatCurrencyFull(value: bigint | string, symbol = 'WKRC', decimals: number = FORMATTING.DEFAULT_DECIMALS): string {
   const formatted = formatValueFull(value, decimals)
   return `${formatted} ${symbol}`
 }
@@ -91,11 +91,11 @@ export function formatCurrencyFull(value: bigint | string, symbol = 'WEMIX', dec
 /**
  * Format value with currency symbol
  * @param value - BigInt value
- * @param symbol - Currency symbol (default WEMIX)
+ * @param symbol - Currency symbol (default WKRC)
  * @param decimals - Number of decimals
  * @returns Formatted value with symbol
  */
-export function formatCurrency(value: bigint | string, symbol = 'WEMIX', decimals: number = FORMATTING.DEFAULT_DECIMALS): string {
+export function formatCurrency(value: bigint | string, symbol = 'WKRC', decimals: number = FORMATTING.DEFAULT_DECIMALS): string {
   const formatted = formatValue(value, decimals)
   return `${formatted} ${symbol}`
 }

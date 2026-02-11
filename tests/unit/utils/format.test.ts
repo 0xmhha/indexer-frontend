@@ -72,7 +72,7 @@ describe('formatValue', () => {
 
 describe('formatCurrency', () => {
   it('should format value with default symbol', () => {
-    expect(formatCurrency(BigInt('1000000000000000000'))).toBe('1 WEMIX')
+    expect(formatCurrency(BigInt('1000000000000000000'))).toBe('1 WKRC')
   })
 
   it('should format value with custom symbol', () => {

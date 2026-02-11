@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Build a production-ready blockchain explorer frontend for Stable-One (Ethereum-based) chain using Next.js 14+, TypeScript, and modern React patterns. This frontend consumes GraphQL/JSON-RPC APIs from the indexer-go backend and provides users with comprehensive blockchain data visualization similar to Etherscan.
+Build a production-ready blockchain explorer frontend for StableNet (Ethereum-based) chain using Next.js 14+, TypeScript, and modern React patterns. This frontend consumes GraphQL/JSON-RPC APIs from the indexer-go backend and provides users with comprehensive blockchain data visualization similar to Etherscan.
 
 ---
 
@@ -972,9 +972,9 @@ frontend/
 NEXT_PUBLIC_GRAPHQL_ENDPOINT=http://localhost:8080/graphql
 NEXT_PUBLIC_WS_ENDPOINT=ws://localhost:8080/ws
 NEXT_PUBLIC_JSONRPC_ENDPOINT=http://localhost:8080/rpc
-NEXT_PUBLIC_CHAIN_NAME=Stable-One
+NEXT_PUBLIC_CHAIN_NAME=StableNet
 NEXT_PUBLIC_CHAIN_ID=111133
-NEXT_PUBLIC_CURRENCY_SYMBOL=WEMIX
+NEXT_PUBLIC_CURRENCY_SYMBOL=WKRC
 
 # Optional: Price API for fiat conversion
 NEXT_PUBLIC_PRICE_API_URL=https://api.coingecko.com/api/v3

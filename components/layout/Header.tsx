@@ -46,13 +46,13 @@ export function Header() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between gap-4">
           {/* Logo and Title */}
-          <Link href="/" className="flex items-center gap-3 flex-shrink-0" aria-label="Stable-One Explorer Home">
+          <Link href="/" className="flex items-center gap-3 flex-shrink-0" aria-label="StableNet Explorer Home">
             <div className="flex h-8 w-8 items-center justify-center border border-accent-blue bg-accent-blue/10" aria-hidden="true">
               <span className="font-mono text-xs font-bold text-accent-blue">SI</span>
             </div>
             <div className="hidden sm:flex flex-col">
               <span className="font-mono text-sm font-bold text-accent-blue">
-                {(currentNetwork?.chain.name ?? 'STABLE-ONE').toUpperCase()}
+                {(currentNetwork?.chain.name ?? 'STABLENET').toUpperCase()}
               </span>
               <span className="annotation">EXPLORER</span>
             </div>
