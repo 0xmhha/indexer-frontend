@@ -47,6 +47,7 @@ interface TabsListProps {
 export function TabsList({ children, className }: TabsListProps) {
   return (
     <div
+      role="tablist"
       className={cn(
         'inline-flex h-10 items-center justify-start rounded-lg border border-bg-tertiary bg-bg-secondary p-1',
         className
@@ -66,10 +67,17 @@ interface TabsTriggerProps {
 export function TabsTrigger({ value, children, className }: TabsTriggerProps) {
   const { value: selectedValue, onChange } = useTabsContext()
   const isSelected = selectedValue === value
+  const tabId = `tab-${value}`
+  const panelId = `tabpanel-${value}`
 
   return (
     <button
       type="button"
+      role="tab"
+      id={tabId}
+      aria-selected={isSelected}
+      aria-controls={panelId}
+      tabIndex={isSelected ? 0 : -1}
       onClick={() => onChange(value)}
       className={cn(
         'inline-flex items-center justify-center whitespace-nowrap px-4 py-2 font-mono text-xs uppercase tracking-wider transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
@@ -92,10 +100,22 @@ interface TabsContentProps {
 
 export function TabsContent({ value, children, className }: TabsContentProps) {
   const { value: selectedValue } = useTabsContext()
+  const tabId = `tab-${value}`
+  const panelId = `tabpanel-${value}`
 
   if (selectedValue !== value) {
     return null
   }
 
-  return <div className={cn('mt-2', className)}>{children}</div>
+  return (
+    <div
+      role="tabpanel"
+      id={panelId}
+      aria-labelledby={tabId}
+      tabIndex={0}
+      className={cn('mt-2', className)}
+    >
+      {children}
+    </div>
+  )
 }

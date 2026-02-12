@@ -32,10 +32,10 @@ interface PageButtonProps {
 // ============================================================
 
 const navButtonClasses =
-  'flex h-9 items-center gap-1.5 rounded border border-bg-tertiary bg-bg-secondary px-3 py-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-text-secondary shadow-sm transition-all hover:border-accent-blue hover:bg-bg-tertiary hover:text-accent-blue hover:shadow-md focus:outline-none focus:ring-2 focus:ring-accent-blue/20 disabled:cursor-not-allowed disabled:opacity-40'
+  'flex h-11 min-h-[44px] items-center gap-1.5 rounded border border-bg-tertiary bg-bg-secondary px-3 py-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-text-secondary shadow-sm transition-all hover:border-accent-blue hover:bg-bg-tertiary hover:text-accent-blue hover:shadow-md focus:outline-none focus:ring-2 focus:ring-accent-blue/20 disabled:cursor-not-allowed disabled:opacity-60'
 
 const pageButtonBaseClasses =
-  'flex h-9 min-w-[36px] items-center justify-center rounded border px-3 py-2 font-mono text-xs shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-accent-blue/20'
+  'flex h-11 min-h-[44px] min-w-[44px] items-center justify-center rounded border px-3 py-2 font-mono text-xs shadow-sm transition-all focus:outline-none focus:ring-2 focus:ring-accent-blue/20'
 
 const pageButtonCurrentClasses =
   'border-accent-blue bg-accent-blue text-bg-primary shadow-md shadow-accent-blue/20'

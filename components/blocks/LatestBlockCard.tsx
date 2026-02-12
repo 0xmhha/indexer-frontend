@@ -44,7 +44,7 @@ export function LatestBlockCard() {
           </div>
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-6">
+      <CardContent className="p-6" aria-live="polite" aria-atomic="true">
         <div className="space-y-4">
           <div>
             <div className="annotation mb-2">BLOCK NUMBER</div>

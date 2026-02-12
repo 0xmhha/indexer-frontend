@@ -139,10 +139,11 @@ function BlocksListContent() {
                       <button
                         onClick={() => handleSort('number')}
                         className="flex items-center gap-1 hover:text-accent-blue"
+                        aria-label={`Sort by block number${orderBy === 'number' ? `, currently ${orderDirection === 'asc' ? 'ascending' : 'descending'}` : ''}`}
                       >
                         BLOCK
                         {orderBy === 'number' && (
-                          <span className="text-accent-blue">
+                          <span className="text-accent-blue" aria-hidden="true">
                             {orderDirection === 'asc' ? '↑' : '↓'}
                           </span>
                         )}
@@ -152,10 +153,11 @@ function BlocksListContent() {
                       <button
                         onClick={() => handleSort('timestamp')}
                         className="flex items-center gap-1 hover:text-accent-blue"
+                        aria-label={`Sort by age${orderBy === 'timestamp' ? `, currently ${orderDirection === 'asc' ? 'ascending' : 'descending'}` : ''}`}
                       >
                         AGE
                         {orderBy === 'timestamp' && (
-                          <span className="text-accent-blue">
+                          <span className="text-accent-blue" aria-hidden="true">
                             {orderDirection === 'asc' ? '↑' : '↓'}
                           </span>
                         )}

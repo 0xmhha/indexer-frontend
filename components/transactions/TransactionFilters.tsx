@@ -72,11 +72,13 @@ export function TransactionFilters({
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className="flex items-center gap-2 hover:text-accent-blue"
+            aria-expanded={isExpanded}
+            aria-controls="transaction-filters-panel"
           >
             <span>FILTERS</span>
-            <span className="text-xs">{isExpanded ? '▼' : '▶'}</span>
+            <span className="text-xs" aria-hidden="true">{isExpanded ? '▼' : '▶'}</span>
             {hasActiveFilters && (
-              <span className="ml-2 h-2 w-2 rounded-full bg-accent-blue" />
+              <span className="ml-2 h-2 w-2 rounded-full bg-accent-blue" aria-label="Filters active" />
             )}
           </button>
           {hasActiveFilters && (
@@ -88,7 +90,7 @@ export function TransactionFilters({
       </CardHeader>
 
       {isExpanded && (
-        <CardContent className="p-6">
+        <CardContent id="transaction-filters-panel" className="p-6">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {/* Block Range */}
             <div className="space-y-2">

@@ -22,7 +22,7 @@
     --secondary-foreground: 230 237 243; /* #E6EDF3 */
 
     --muted: 33 38 45; /* #21262D */
-    --muted-foreground: 139 148 158; /* #8B949E */
+    --muted-foreground: 156 163 175; /* #9CA3AF */
 
     --accent: 0 212 255; /* #00D4FF */
     --accent-foreground: 10 14 20; /* #0A0E14 */
@@ -42,7 +42,7 @@
     --bg-tertiary: #21262D;
     --text-primary: #E6EDF3;
     --text-secondary: #8B949E;
-    --text-muted: #6E7681;
+    --text-muted: #8B949E;
   }
 
   /* Light theme */
@@ -83,7 +83,7 @@
     --bg-tertiary: #EAEEF2;
     --text-primary: #24292E;
     --text-secondary: #57606A;
-    --text-muted: #6E7681;
+    --text-muted: #636C76;
   }
 }
 

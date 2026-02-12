@@ -55,8 +55,8 @@ export function CopyButton({
   }, [text])
 
   const sizeClasses = size === 'sm'
-    ? 'h-5 w-5 p-0.5'
-    : 'h-6 w-6 p-1'
+    ? 'h-7 w-7 min-h-[44px] min-w-[44px] p-0.5'
+    : 'h-6 w-6 min-h-[44px] min-w-[44px] p-1'
 
   const iconSize = size === 'sm' ? UI.ICON_SIZE_SM : UI.ICON_SIZE_MD
 

@@ -54,7 +54,7 @@ export function PendingTransactionsPanel({
           </div>
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-0">
+      <CardContent className="p-0" aria-live="polite">
         {loading && pendingTransactions.length === 0 ? (
           <div className="flex h-64 items-center justify-center">
             <LoadingSpinner />

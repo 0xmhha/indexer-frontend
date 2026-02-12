@@ -36,7 +36,7 @@ export function FormInput({
           error ? 'border-error' : 'border-bg-tertiary focus:border-accent-blue'
         }`}
       />
-      {error && <p className="font-mono text-xs text-error">{error}</p>}
+      {error && <p className="font-mono text-xs text-error" role="alert">{error}</p>}
     </div>
   )
 }

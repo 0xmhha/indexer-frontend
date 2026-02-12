@@ -28,7 +28,7 @@ export function RecentBlocksList() {
       <CardHeader className="border-b border-bg-tertiary">
         <CardTitle>RECENT BLOCKS</CardTitle>
       </CardHeader>
-      <CardContent className="p-4">
+      <CardContent className="p-4" aria-live="polite">
         <div className="space-y-3">
           {blocks.slice(0, UI.MAX_LIST_PREVIEW).map((block) => (
             <BlockCard key={block.hash} block={block} />

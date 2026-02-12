@@ -59,7 +59,7 @@ function ResultsInfo({
   totalCount: number
 }) {
   return (
-    <div className="flex items-center gap-2 font-mono text-xs text-text-secondary">
+    <div className="flex items-center gap-2 font-mono text-xs text-text-secondary" role="status" aria-live="polite" aria-atomic="true">
       <span>Showing</span>
       <span className="rounded bg-bg-tertiary px-2 py-0.5 font-semibold text-accent-blue">
         {showingStart}
