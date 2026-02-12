@@ -18,6 +18,7 @@ import {
   IndexerConnectionError,
 } from '@/lib/api/errors'
 import { errorLogger } from '@/lib/errors/logger'
+import { FORMATTING } from '@/lib/config/constants'
 import { GET_TRANSACTIONS_BY_ADDRESS, GET_BLOCK_TIMESTAMP } from '@/lib/graphql/queries/relay'
 import type { TransactionsResponse, TransactionInList } from '@/lib/api/types'
 
@@ -137,8 +138,8 @@ function mapTransactionStatus(
  * Returns first 10 characters (4 bytes) of input or null
  */
 function extractMethod(input: string): string | null {
-  if (!input || input === '0x' || input.length < 10) {
+  if (!input || input === '0x' || input.length < FORMATTING.METHOD_SELECTOR_HEX_LENGTH) {
     return null
   }
-  return input.slice(0, 10)
+  return input.slice(0, FORMATTING.METHOD_SELECTOR_HEX_LENGTH)
 }

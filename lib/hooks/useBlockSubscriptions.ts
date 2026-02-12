@@ -27,7 +27,24 @@ import {
   selectRecentTransactions,
   selectPendingTransactions,
   selectIsConnected,
+  type RealtimeBlock,
 } from '@/stores/realtimeStore'
+
+/**
+ * Convert RealtimeBlock to RawBlock for transformation.
+ * RealtimeBlock is a subset of RawBlock - all extra RawBlock fields are optional
+ * and handled with defaults by transformBlock.
+ */
+function toRawBlock(block: RealtimeBlock): RawBlock {
+  return {
+    number: block.number,
+    hash: block.hash,
+    ...(block.parentHash != null && { parentHash: block.parentHash }),
+    timestamp: block.timestamp,
+    ...(block.miner != null && { miner: block.miner }),
+    ...(block.transactionCount != null && { transactionCount: block.transactionCount }),
+  }
+}
 
 /**
  * Transaction filter options for subscription
@@ -127,7 +144,7 @@ export function useNewBlocks(maxBlocks: number = REALTIME.MAX_BLOCKS) {
   }, [heightData, initialized, maxBlocks])
 
   const blocks = useMemo(() => {
-    const realtimeTransformed = realtimeBlocks.map((b) => transformBlock(b as unknown as RawBlock))
+    const realtimeTransformed = realtimeBlocks.map((b) => transformBlock(toRawBlock(b)))
     const merged = [...realtimeTransformed]
 
     initialBlocks.forEach((block) => {
@@ -143,7 +160,7 @@ export function useNewBlocks(maxBlocks: number = REALTIME.MAX_BLOCKS) {
 
   const latestBlock = useMemo(() => {
     if (realtimeLatestBlock) {
-      return transformBlock(realtimeLatestBlock as unknown as RawBlock)
+      return transformBlock(toRawBlock(realtimeLatestBlock))
     }
     return blocks[0] ?? null
   }, [realtimeLatestBlock, blocks])

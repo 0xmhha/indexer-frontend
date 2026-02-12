@@ -2,6 +2,8 @@
  * Validation utilities for blockchain data
  */
 
+import { PAGINATION } from '@/lib/config/constants'
+
 /**
  * Check if string is valid Ethereum address
  * @param address - Address to validate
@@ -95,8 +97,8 @@ export function validatePagination(
   error?: string
 } {
   if (limit !== undefined) {
-    if (limit < 1 || limit > 100) {
-      return { valid: false, error: 'Limit must be between 1 and 100' }
+    if (limit < PAGINATION.MIN_LIMIT || limit > PAGINATION.MAX_LIMIT) {
+      return { valid: false, error: `Limit must be between ${PAGINATION.MIN_LIMIT} and ${PAGINATION.MAX_LIMIT}` }
     }
   }
 

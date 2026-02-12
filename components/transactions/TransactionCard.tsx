@@ -2,6 +2,7 @@ import { memo } from 'react'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/Card'
 import { formatHash, formatCurrency } from '@/lib/utils/format'
+import { FORMATTING } from '@/lib/config/constants'
 import { env } from '@/lib/config/env'
 
 interface Transaction {
@@ -43,7 +44,7 @@ export const TransactionCard = memo(function TransactionCard({ transaction }: Tr
                   href={`/address/${transaction.from}`}
                   className="font-mono text-accent-blue hover:text-accent-cyan"
                 >
-                  {transaction.from.slice(0, 10)}...
+                  {transaction.from.slice(0, FORMATTING.ADDRESS_PREVIEW_LENGTH)}...
                 </Link>
               </div>
               <div className="flex items-center gap-2 text-text-muted">
@@ -53,7 +54,7 @@ export const TransactionCard = memo(function TransactionCard({ transaction }: Tr
                     href={`/address/${transaction.to}`}
                     className="font-mono text-accent-blue hover:text-accent-cyan"
                   >
-                    {transaction.to.slice(0, 10)}...
+                    {transaction.to.slice(0, FORMATTING.ADDRESS_PREVIEW_LENGTH)}...
                   </Link>
                 ) : transaction.contractAddress ? (
                   <span className="inline-flex items-center gap-1">
@@ -62,7 +63,7 @@ export const TransactionCard = memo(function TransactionCard({ transaction }: Tr
                       href={`/address/${transaction.contractAddress}`}
                       className="font-mono text-accent-blue hover:text-accent-cyan"
                     >
-                      {transaction.contractAddress.slice(0, 10)}...
+                      {transaction.contractAddress.slice(0, FORMATTING.ADDRESS_PREVIEW_LENGTH)}...
                     </Link>
                   </span>
                 ) : (

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
@@ -87,7 +87,7 @@ export function ValidatorsListViewer() {
   )
 }
 
-function ValidatorCard({ validator }: { validator: Validator }) {
+const ValidatorCard = memo(function ValidatorCard({ validator }: { validator: Validator }) {
   return (
     <div className="p-4 transition-colors hover:bg-bg-secondary">
       <div className="flex items-center justify-between">
@@ -114,4 +114,4 @@ function ValidatorCard({ validator }: { validator: Validator }) {
       </div>
     </div>
   )
-}
+})

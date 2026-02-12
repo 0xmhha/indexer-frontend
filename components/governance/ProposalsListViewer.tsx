@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, memo } from 'react'
 import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
@@ -149,7 +149,7 @@ export function ProposalsListViewer({ maxProposals = UI.MAX_VIEWER_ITEMS, contra
   )
 }
 
-function ProposalCard({ proposal }: { proposal: Proposal }) {
+const ProposalCard = memo(function ProposalCard({ proposal }: { proposal: Proposal }) {
   const approvalPercentage =
     proposal.requiredApprovals > 0
       ? Math.round((proposal.approved / proposal.requiredApprovals) * 100)
@@ -242,7 +242,7 @@ function ProposalCard({ proposal }: { proposal: Proposal }) {
       </div>
     </Link>
   )
-}
+})
 
 function getStatusStyles(status: string): {
   badge: string

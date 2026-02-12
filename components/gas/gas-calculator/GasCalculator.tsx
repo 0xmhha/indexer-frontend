@@ -14,6 +14,7 @@ import { formatCurrency } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
 import { useGasTracker } from '@/lib/hooks/useGasTracker'
 import { cn } from '@/lib/utils'
+import { THRESHOLDS } from '@/lib/config/constants'
 import { TX_PRESETS, type TxPresetId } from './types'
 import { ResultItem } from './ResultItem'
 
@@ -161,8 +162,8 @@ export function GasCalculator({
               <div className="font-mono text-xs text-text-muted">Network Priority Fees (Gwei)</div>
               <div className="font-mono text-xs text-text-muted">
                 Utilization: <span className={cn(
-                  networkComparison.utilization > 80 ? 'text-accent-red' :
-                  networkComparison.utilization > 50 ? 'text-accent-yellow' : 'text-accent-green'
+                  networkComparison.utilization > THRESHOLDS.NETWORK_UTILIZATION_HIGH ? 'text-accent-red' :
+                  networkComparison.utilization > THRESHOLDS.NETWORK_UTILIZATION_MEDIUM ? 'text-accent-yellow' : 'text-accent-green'
                 )}>{networkComparison.utilization}%</span>
               </div>
             </div>

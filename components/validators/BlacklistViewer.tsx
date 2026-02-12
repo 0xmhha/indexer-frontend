@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
@@ -54,7 +55,7 @@ export function BlacklistViewer() {
   )
 }
 
-function BlacklistItem({ address, index }: { address: string; index: number }) {
+const BlacklistItem = memo(function BlacklistItem({ address, index }: { address: string; index: number }) {
   const handleCopy = () => {
     navigator.clipboard.writeText(address)
   }
@@ -88,4 +89,4 @@ function BlacklistItem({ address, index }: { address: string; index: number }) {
       </div>
     </div>
   )
-}
+})

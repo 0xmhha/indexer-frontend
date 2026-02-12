@@ -79,6 +79,9 @@ export const UI = {
   /** Mobile breakpoint for responsive design (px) */
   MOBILE_BREAKPOINT: 768,
 
+  /** Default collapsed list items count */
+  DEFAULT_COLLAPSED_ITEMS: 10,
+
   /** Default page size options for pagination */
   DEFAULT_PAGE_SIZE_OPTIONS: [10, 20, 50, 100] as const,
 } as const

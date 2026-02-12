@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { ethers, BrowserProvider } from 'ethers'
+import { TIMING } from '@/lib/config/constants'
 
 // ============================================================
 // Types
@@ -76,7 +77,7 @@ export function useWalletConnection(): UseWalletConnectionResult {
     }
 
     // Delay check to allow MetaMask to fully initialize
-    const timer = setTimeout(checkConnection, 500)
+    const timer = setTimeout(checkConnection, TIMING.WALLET_CONNECTION_DELAY)
     return () => clearTimeout(timer)
   }, [])
 

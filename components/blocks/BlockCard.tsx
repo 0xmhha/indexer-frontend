@@ -2,6 +2,7 @@ import { memo } from 'react'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/Card'
 import { formatTimeAgo, formatNumber } from '@/lib/utils/format'
+import { FORMATTING } from '@/lib/config/constants'
 import type { Block } from '@/types/graphql'
 
 interface BlockCardProps {
@@ -39,7 +40,7 @@ export const BlockCard = memo(function BlockCard({ block }: BlockCardProps) {
                     href={`/address/${block.miner}`}
                     className="font-mono text-accent-blue hover:text-accent-cyan"
                   >
-                    {block.miner.slice(0, 10)}...
+                    {block.miner.slice(0, FORMATTING.ADDRESS_PREVIEW_LENGTH)}...
                   </Link>
                 ) : (
                   <span className="text-text-muted">N/A</span>

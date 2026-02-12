@@ -167,6 +167,12 @@ export const FORMATTING = {
   DECIMAL_PLACES_PRECISE: 8,
   DECIMAL_PLACES_PERCENTAGE: 2,
 
+  /** Address preview length for compact display (includes 0x prefix) */
+  ADDRESS_PREVIEW_LENGTH: 10,
+
+  /** Method selector hex length (0x + 8 hex chars) */
+  METHOD_SELECTOR_HEX_LENGTH: 10,
+
   /** Default max length for hex truncation */
   HEX_MAX_LENGTH: 20,
 

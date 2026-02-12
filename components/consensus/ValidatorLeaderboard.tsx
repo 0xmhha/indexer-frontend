@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
@@ -149,7 +150,7 @@ const RANK_FIRST = 1
 const RANK_SECOND = 2
 const RANK_THIRD = 3
 
-function ValidatorRow({ validator, rank }: ValidatorRowProps) {
+const ValidatorRow = memo(function ValidatorRow({ validator, rank }: ValidatorRowProps) {
   const getRankBadge = () => {
     if (rank === RANK_FIRST) {
       return (
@@ -241,4 +242,4 @@ function ValidatorRow({ validator, rank }: ValidatorRowProps) {
       </td>
     </tr>
   )
-}
+})

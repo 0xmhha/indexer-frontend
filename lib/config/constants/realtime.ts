@@ -141,6 +141,12 @@ export const TIMING = {
 
   /** Mock API delay (ms) - for simulating API calls */
   MOCK_API_DELAY: 500,
+
+  /** Wallet connection check delay (ms) - allows MetaMask to initialize */
+  WALLET_CONNECTION_DELAY: 500,
+
+  /** Export loading state display delay (ms) */
+  EXPORT_LOADING_DELAY: 100,
 } as const
 
 // ============================================================================

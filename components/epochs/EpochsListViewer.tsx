@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
@@ -183,7 +184,7 @@ interface EpochRowProps {
   isCurrent: boolean
 }
 
-function EpochRow({ epoch, isCurrent }: EpochRowProps) {
+const EpochRow = memo(function EpochRow({ epoch, isCurrent }: EpochRowProps) {
   const epochNumber = parseInt(epoch.epochNumber)
 
   return (
@@ -230,4 +231,4 @@ function EpochRow({ epoch, isCurrent }: EpochRowProps) {
       </td>
     </tr>
   )
-}
+})

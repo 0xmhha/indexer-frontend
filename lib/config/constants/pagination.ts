@@ -23,6 +23,12 @@ export const PAGINATION = {
 
   /** Default limit for balance history */
   BALANCE_HISTORY_LIMIT: 100,
+
+  /** Maximum pagination limit for API validation */
+  MAX_LIMIT: 100,
+
+  /** Minimum pagination limit */
+  MIN_LIMIT: 1,
 } as const
 
 export type PaginationLimit = (typeof PAGINATION)[keyof typeof PAGINATION]

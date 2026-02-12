@@ -387,7 +387,7 @@ export const useConsensusStore = create<ConsensusState>()(
         // Only persist minimal data to localStorage
         partialize: (state) => ({
           // Persist only recent data for session recovery
-          recentBlocks: state.recentBlocks.slice(0, 10),
+          recentBlocks: state.recentBlocks.slice(0, CONSENSUS.MAX_PERSISTED_RECENT_BLOCKS),
           stats: state.stats,
         }),
         // Skip hydration on server to avoid SSR issues

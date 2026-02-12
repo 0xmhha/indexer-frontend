@@ -2,6 +2,7 @@
 
 import type { AdvancedTransactionFilterValues } from './types'
 import { TX_TYPE_OPTIONS } from './types'
+import { FORMATTING } from '@/lib/config/constants'
 
 /**
  * Compact filter summary component
@@ -38,7 +39,7 @@ export function FilterSummary({
     activeFilters.push(`Fee Delegated: ${filters.feeDelegated}`)
   }
   if (filters.methodId) {
-    activeFilters.push(`Method: ${filters.methodId.slice(0, 10)}...`)
+    activeFilters.push(`Method: ${filters.methodId.slice(0, FORMATTING.METHOD_SELECTOR_HEX_LENGTH)}...`)
   }
 
   if (activeFilters.length === 0) return null

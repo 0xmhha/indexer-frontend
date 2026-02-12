@@ -17,6 +17,7 @@ import {
   IndexerConnectionError,
   NotFoundError,
 } from '@/lib/api/errors'
+import { FORMATTING } from '@/lib/config/constants'
 import { errorLogger } from '@/lib/errors/logger'
 import { GET_TRANSACTION } from '@/lib/graphql/queries/relay'
 import type { TransactionResponse, TransactionData } from '@/lib/api/types'
@@ -87,8 +88,8 @@ function mapStatus(status: number | undefined | null): 'success' | 'failed' | 'p
 }
 
 function decodeInput(input: string): { method: string | null; params: unknown[] | null } {
-  if (!input || input === '0x' || input.length < 10) {
+  if (!input || input === '0x' || input.length < FORMATTING.METHOD_SELECTOR_HEX_LENGTH) {
     return { method: null, params: null }
   }
-  return { method: input.slice(0, 10), params: null }
+  return { method: input.slice(0, FORMATTING.METHOD_SELECTOR_HEX_LENGTH), params: null }
 }

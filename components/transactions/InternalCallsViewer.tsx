@@ -8,6 +8,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { useInternalTransactionsRPCLazy, type InternalTransactionRPC } from '@/lib/hooks/useRpcProxy'
 import { formatHash, formatCurrency } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
+import { UI } from '@/lib/config/constants'
 
 // ============================================================================
 // Types
@@ -198,8 +199,8 @@ export function InternalCallsViewer({ txHash }: InternalCallsViewerProps) {
   // Transform RPC response to display format
   const internalCalls: DisplayInternalCall[] = internalTransactions.map(transformToDisplayCall)
 
-  const displayedCalls = expanded ? internalCalls : internalCalls.slice(0, 10)
-  const hasMoreCalls = internalCalls.length > 10
+  const displayedCalls = expanded ? internalCalls : internalCalls.slice(0, UI.DEFAULT_COLLAPSED_ITEMS)
+  const hasMoreCalls = internalCalls.length > UI.DEFAULT_COLLAPSED_ITEMS
 
   const loadTrace = useCallback(async () => {
     setHasBeenRequested(true)

@@ -59,6 +59,9 @@ export const CONSENSUS = {
   /** Default values */
   DEFAULT_PARTICIPATION_RATE: 100,
   MINIMUM_HEALTHY_SCORE: 60,
+
+  /** Maximum recent blocks to persist to localStorage */
+  MAX_PERSISTED_RECENT_BLOCKS: 10,
 } as const
 
 // ============================================================================
@@ -109,4 +112,16 @@ export const THRESHOLDS = {
   SIGNING_EXCELLENT: 95,
   SIGNING_GOOD: 80,
   SIGNING_FAIR: 60,
+
+  /** Proposal rate heatmap thresholds */
+  PROPOSAL_RATE_EXCELLENT: 20,
+  PROPOSAL_RATE_GOOD: 10,
+  PROPOSAL_RATE_FAIR: 5,
+
+  /** Network utilization thresholds (%) */
+  NETWORK_UTILIZATION_HIGH: 80,
+  NETWORK_UTILIZATION_MEDIUM: 50,
+
+  /** Participation rate fallback threshold (%) */
+  PARTICIPATION_FALLBACK: 50,
 } as const

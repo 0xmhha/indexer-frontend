@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Download } from 'lucide-react'
 import { exportData, type ExportFormat } from '@/lib/utils/export'
 import { errorLogger } from '@/lib/errors/logger'
+import { TIMING } from '@/lib/config/constants'
 
 export interface ExportButtonProps<T extends Record<string, unknown>> {
   data: T[]
@@ -30,7 +31,7 @@ export function ExportButton<T extends Record<string, unknown>>({
     setIsExporting(format)
     try {
       // Small delay to show loading state
-      await new Promise((resolve) => setTimeout(resolve, 100))
+      await new Promise((resolve) => setTimeout(resolve, TIMING.EXPORT_LOADING_DELAY))
       exportData(data, filename, format, headers)
     } catch (error) {
       errorLogger.error(error, { component: 'ExportButton', action: 'export' })

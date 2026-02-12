@@ -20,7 +20,7 @@ import { ListPageSkeleton } from '@/components/skeletons/ListPageSkeleton'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { formatNumber, formatTimeAgo } from '@/lib/utils/format'
 import type { Block } from '@/types/graphql'
-import { PAGINATION, BLOCKCHAIN } from '@/lib/config/constants'
+import { PAGINATION, BLOCKCHAIN, FORMATTING } from '@/lib/config/constants'
 
 function BlocksListContent() {
   const searchParams = useSearchParams()
@@ -193,7 +193,7 @@ function BlocksListContent() {
                             href={`/address/${block.miner}`}
                             className="font-mono text-xs text-accent-blue hover:text-accent-cyan"
                           >
-                            {block.miner.slice(0, 10)}...
+                            {block.miner.slice(0, FORMATTING.ADDRESS_PREVIEW_LENGTH)}...
                           </Link>
                         </TableCell>
                         <TableCell className="text-right font-mono text-xs">

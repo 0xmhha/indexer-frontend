@@ -158,9 +158,9 @@ function HeatmapCell({ value, label, isProposal = false }: HeatmapCellProps) {
   const getHeatColor = () => {
     if (isProposal) {
       // Proposal rate is typically much lower, use different scale
-      if (value > 20) return 'bg-accent-green'
-      if (value > 10) return 'bg-accent-cyan'
-      if (value > 5) return 'bg-accent-blue'
+      if (value > THRESHOLDS.PROPOSAL_RATE_EXCELLENT) return 'bg-accent-green'
+      if (value > THRESHOLDS.PROPOSAL_RATE_GOOD) return 'bg-accent-cyan'
+      if (value > THRESHOLDS.PROPOSAL_RATE_FAIR) return 'bg-accent-blue'
       if (value > 0) return 'bg-yellow-500'
       return 'bg-bg-tertiary'
     }
@@ -169,7 +169,7 @@ function HeatmapCell({ value, label, isProposal = false }: HeatmapCellProps) {
     if (value >= THRESHOLDS.PARTICIPATION_EXCELLENT) return 'bg-accent-green'
     if (value >= THRESHOLDS.PARTICIPATION_GOOD) return 'bg-accent-cyan'
     if (value >= THRESHOLDS.PARTICIPATION_MINIMUM) return 'bg-yellow-500'
-    if (value >= 50) return 'bg-orange-500'
+    if (value >= THRESHOLDS.PARTICIPATION_FALLBACK) return 'bg-orange-500'
     return 'bg-accent-red'
   }
 
