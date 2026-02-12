@@ -1,6 +1,6 @@
 # Backend Integration Status
 
-> **Last Updated**: 2026-02-12
+> **Last Updated**: 2026-02-13
 > **Project**: indexer-frontend ↔ indexer-go
 > **Purpose**: 백엔드 연동 현황의 단일 진실 공급원 (Single Source of Truth)
 
@@ -55,6 +55,17 @@
 | `useBurnHistory` | `burnEvents` 쿼리 올바르게 사용 | ✅ Fixed |
 | `useDepositMintProposals` | 잘못된 기본 status 값 제거 | ✅ Fixed |
 
+### 1.4 백엔드 커밋으로 해결된 이슈
+
+| 이슈 | 해결 커밋 | 상태 |
+|------|-----------|------|
+| Blocks pagination offset 버그 | `24089f5` fix(graphql): resolve blocks pagination bug | ✅ Resolved |
+| `Transaction.blockTimestamp` 누락 | `70d703d` feat(graphql): add blockTimestamp field | ✅ Resolved |
+| `isFeeDelegated` 필터 누락 | `e68f649` + `99566a7` + `d57457f` fee delegation 구현 | ✅ Resolved |
+| `authorizedAccounts` 쿼리 누락 | `f0c191e` feat: implement authorized accounts persistence | ✅ Resolved |
+| 동적 컨트랙트/거버넌스 쿼리 | `e25d565` feat(graphql): add dynamic contract and governance queries | ✅ Resolved |
+| 컨센서스 쿼리 동기화 & 필드 별칭 | `a0d05e7` feat(graphql): sync consensus queries and add frontend field aliases | ⚠️ 확인 필요 |
+
 ---
 
 ## 2. 미해결 이슈 (Open Issues) - 우선순위별
@@ -73,10 +84,7 @@
 - **영향**: 전체 제안 목록 조회 시 에러 (계약 주소 없이 조회 불가)
 - **필요 조치**: `ProposalFilter.contract`를 `String!` → `String`으로 변경
 
-#### Issue: Blocks Pagination Empty with Offset
-- **증상**: offset > 0일 때 빈 결과 및 `totalCount: 0` 반환
-- **영향**: 블록 목록 2페이지 이상 조회 불가
-- **필요 조치**: 백엔드 blocks 쿼리 페이지네이션 수정
+#### ~~Issue: Blocks Pagination Empty with Offset~~ → ✅ `24089f5`에서 해결
 
 ### 2.2 High Priority
 
@@ -91,13 +99,15 @@
 | `EpochInfo` | `timestamp` (BigInt) | 에포크 시작 타임스탬프 | EpochTimeline |
 | `EpochInfo` | `validatorCount` (Int!) | 검증자 수 | EpochTimeline |
 | `EpochInfo` | `candidateCount` (Int!) | 후보자 수 | EpochTimeline |
-| `Transaction` | `blockTimestamp` (BigInt) | 블록 타임스탬프 | TX 목록 시간 표시 |
+| `Transaction` | `blockTimestamp` (BigInt) | 블록 타임스탬프 | ~~TX 목록 시간 표시~~ ✅ `70d703d` |
+
+> **Note**: `a0d05e7`에서 컨센서스 쿼리 동기화 및 필드 별칭이 추가됨. 위 ValidatorSigningStats/EpochInfo 필드 중 일부가 해결되었을 수 있으므로 스키마 확인 필요.
 
 #### 누락된 필터 확장
 
 | 필터 | 설명 | 우선순위 |
 |------|------|----------|
-| `HistoricalTransactionFilter.isFeeDelegated` (Boolean) | Fee Delegation 필터 | **High** |
+| ~~`HistoricalTransactionFilter.isFeeDelegated` (Boolean)~~ | ~~Fee Delegation 필터~~ | ✅ `e68f649` 해결 |
 | `HistoricalTransactionFilter.methodId` (String) | 함수 셀렉터 필터 | Medium |
 | `HistoricalTransactionFilter.minGasUsed/maxGasUsed` (BigInt) | 가스 사용량 범위 | Medium |
 | `HistoricalTransactionFilter.direction` (TransactionDirection) | SENT/RECEIVED/ALL | Medium |
@@ -116,7 +126,7 @@
 | `validatorStats` | 개별 검증자 상세 통계 | storage에 구현됨, GraphQL 미노출 |
 | `validatorParticipation` | 검증자 참여 상세 | storage에 구현됨, GraphQL 미노출 |
 | `minterConfigHistory` | 민터 설정 이력 | ❌ 스키마 미등록 |
-| `authorizedAccounts` | GovCouncil 인가 계정 | ❌ 스키마 미등록 |
+| ~~`authorizedAccounts`~~ | ~~GovCouncil 인가 계정~~ | ✅ `f0c191e` 해결 |
 | `activeMinterAddresses` | 활성 민터 주소 (단순화) | ❌ 스키마 미등록 |
 | `activeValidatorAddresses` | 활성 검증자 주소 (단순화) | ❌ 스키마 미등록 |
 | `blockByTimestamp` | 타임스탬프→블록 변환 | ❌ 스키마 미등록 |
@@ -132,13 +142,15 @@
 
 #### 필드 별칭 (호환성)
 
+> **Note**: `a0d05e7` 커밋에서 "frontend field aliases"가 추가됨. 아래 항목 중 일부가 해결되었을 수 있으므로 백엔드 스키마 확인 필요.
+
 | 타입 | 별칭 필드 | 원본 필드 | 프론트엔드 상태 |
 |------|-----------|-----------|----------------|
-| `MintEvent` | `txHash` | `transactionHash` | ❌ 누락 |
-| `BurnEvent` | `txHash` | `transactionHash` | ❌ 누락 |
-| `BurnEvent` | `burnTxId` | `withdrawalId` | ❌ 누락 |
-| `MinterConfigEvent` | `txHash` | `transactionHash` | ❌ 누락 |
-| `MinterConfigEvent` | `isActive` | action 파생 | ❌ 누락 |
+| `MintEvent` | `txHash` | `transactionHash` | ⚠️ `a0d05e7` 확인 필요 |
+| `BurnEvent` | `txHash` | `transactionHash` | ⚠️ `a0d05e7` 확인 필요 |
+| `BurnEvent` | `burnTxId` | `withdrawalId` | ⚠️ `a0d05e7` 확인 필요 |
+| `MinterConfigEvent` | `txHash` | `transactionHash` | ⚠️ `a0d05e7` 확인 필요 |
+| `MinterConfigEvent` | `isActive` | action 파생 | ⚠️ `a0d05e7` 확인 필요 |
 
 ### 2.4 확인 필요 (Clarification Needed)
 
@@ -289,30 +301,36 @@ query GetValidatorParticipation(
 #### P1 - 즉시 (Blocking Issues)
 - [ ] Consensus storage 활성화
 - [ ] `ProposalFilter.contract`를 nullable로 변경 (`String!` → `String`)
-- [ ] Blocks pagination offset 버그 수정
-- [ ] `blocksProposed`, `totalBlocks` 필드를 `ValidatorSigningStats`에 추가
-- [ ] `isFeeDelegated` 필터를 `HistoricalTransactionFilter`에 추가
+- [x] ~~Blocks pagination offset 버그 수정~~ → `24089f5`
+- [ ] `blocksProposed`, `totalBlocks` 필드를 `ValidatorSigningStats`에 추가 (⚠️ `a0d05e7`에서 부분 해결 가능성 - 확인 필요)
+- [x] ~~`isFeeDelegated` 필터를 `HistoricalTransactionFilter`에 추가~~ → `e68f649`
 
 #### P2 - 다음 스프린트
 - [ ] `epochs` paginated 쿼리 추가
 - [ ] Fee Delegation 쿼리에 `fromTime`/`toTime` 파라미터 추가
-- [ ] `EpochInfo`에 `previousEpochValidatorCount`, `timestamp` 추가
+- [ ] `EpochInfo`에 `previousEpochValidatorCount`, `timestamp` 추가 (⚠️ `a0d05e7`에서 부분 해결 가능성)
 - [ ] `consensusData`, `validatorStats`, `validatorParticipation` GraphQL resolver 추가
-- [ ] `Transaction.blockTimestamp` 필드 추가
+- [x] ~~`Transaction.blockTimestamp` 필드 추가~~ → `70d703d`
 
 #### P3 - 향후
 - [ ] `addressStats` dedicated 쿼리 추가
 - [ ] `blockByTimestamp` helper 쿼리 추가
 - [ ] `minterConfigHistory` 쿼리 추가
-- [ ] `authorizedAccounts` 쿼리 추가
+- [x] ~~`authorizedAccounts` 쿼리 추가~~ → `f0c191e`
 - [ ] `activeMinterAddresses`, `activeValidatorAddresses` 단순화 쿼리 추가
-- [ ] MintEvent/BurnEvent 별칭 필드(`txHash`, `burnTxId`) 추가
+- [ ] MintEvent/BurnEvent 별칭 필드(`txHash`, `burnTxId`) 추가 (⚠️ `a0d05e7`에서 부분 해결 가능성)
 
-### 프론트엔드 팀 Action Items (백엔드 완료 후)
+### 프론트엔드 팀 Action Items
 
-- [ ] GraphQL codegen 재실행 (`pnpm codegen`)
+#### 즉시 (백엔드 이미 완료)
+- [ ] GraphQL codegen 재실행 (`pnpm codegen`) — 새 필드 반영
+- [ ] `Transaction.blockTimestamp` 필드 활용하여 TX 목록 시간 표시 개선
+- [ ] `isFeeDelegated` 필터 연동 (AdvancedTransactionFilters에 이미 UI 존재)
+- [ ] `authorizedAccounts` 쿼리 연동 (useGovernance.ts)
+- [ ] `a0d05e7` 커밋의 필드 별칭 반영 확인 후 프론트엔드 업데이트
+
+#### 백엔드 완료 후
 - [ ] `minterConfigHistory` → `minterHistory` 쿼리명 수정 (useGovernance.ts)
-- [ ] `authorizedAccounts` 누락 쿼리 처리 (graceful handling)
 - [ ] 컨센서스 쿼리 BigInt/String 파라미터 호환성 확인 후 수정
 - [ ] 새 필드/쿼리 추가 시 관련 컴포넌트 업데이트
 - [ ] Contract Verification API Mock → 실제 API 교체
