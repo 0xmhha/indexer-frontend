@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import Link from 'next/link'
 import { formatHash, formatNumber, formatCurrency } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
@@ -82,7 +83,7 @@ function StatusBadge({ status }: { status?: number | undefined }) {
  * Shared transaction row component
  * Used in /txs page, address transactions, and block transactions
  */
-export function TransactionRow({
+export const TransactionRow = memo(function TransactionRow({
   tx,
   currentAddress,
   showStatus = false,
@@ -166,4 +167,4 @@ export function TransactionRow({
       )}
     </TableRow>
   )
-}
+})

@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import Link from 'next/link'
 import { formatHash, formatNumber } from '@/lib/utils/format'
 import type { SearchResult, SearchResultType } from '@/lib/graphql/queries/search'
@@ -170,7 +171,7 @@ function AddressResultCard({ result }: { result: SearchResult }) {
 /**
  * Render a search result card based on type (SRP: Only renders single result)
  */
-export function SearchResultCard({ result }: { result: SearchResult }) {
+export const SearchResultCard = memo(function SearchResultCard({ result }: { result: SearchResult }) {
   switch (result.type) {
     case 'block':
       return <BlockResultCard result={result} />
@@ -182,4 +183,4 @@ export function SearchResultCard({ result }: { result: SearchResult }) {
     default:
       return null
   }
-}
+})

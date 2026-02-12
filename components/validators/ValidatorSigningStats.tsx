@@ -183,7 +183,7 @@ function StatCard({
             <div className="annotation mb-2 flex items-center gap-1">
               {label}
               {tooltip && (
-                <span className="cursor-help text-text-muted">ⓘ</span>
+                <span className="cursor-help text-text-muted" role="img" aria-label={tooltip}>ⓘ</span>
               )}
             </div>
             <div className="font-mono text-2xl font-bold text-accent-blue">{value}</div>

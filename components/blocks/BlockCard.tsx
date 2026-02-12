@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/Card'
 import { formatTimeAgo, formatNumber } from '@/lib/utils/format'
@@ -7,7 +8,7 @@ interface BlockCardProps {
   block: Block
 }
 
-export function BlockCard({ block }: BlockCardProps) {
+export const BlockCard = memo(function BlockCard({ block }: BlockCardProps) {
   const blockNumber = block.number
   const timestamp = block.timestamp
 
@@ -58,4 +59,4 @@ export function BlockCard({ block }: BlockCardProps) {
       </CardContent>
     </Card>
   )
-}
+})

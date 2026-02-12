@@ -151,6 +151,8 @@ export function TransactionSimulator({ className }: TransactionSimulatorProps) {
                   <button
                     key={type.value}
                     onClick={() => setTxType(type.value)}
+                    aria-pressed={txType === type.value}
+                    aria-label={`Select ${type.label} transaction type`}
                     className={`rounded border px-4 py-3 font-mono text-xs transition-colors ${
                       txType === type.value
                         ? 'border-accent-blue bg-accent-blue/10 text-accent-blue'
@@ -184,6 +186,8 @@ export function TransactionSimulator({ className }: TransactionSimulatorProps) {
                   <button
                     key={condition.value}
                     onClick={() => setNetworkCondition(condition.value)}
+                    aria-pressed={networkCondition === condition.value}
+                    aria-label={`Select ${condition.label} network condition`}
                     className={`w-full rounded border px-4 py-2 text-left font-mono text-xs transition-colors ${
                       networkCondition === condition.value
                         ? `border-${condition.color} bg-${condition.color}/10 text-${condition.color}`

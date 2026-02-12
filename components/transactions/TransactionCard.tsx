@@ -1,3 +1,4 @@
+import { memo } from 'react'
 import Link from 'next/link'
 import { Card, CardContent } from '@/components/ui/Card'
 import { formatHash, formatCurrency } from '@/lib/utils/format'
@@ -16,7 +17,7 @@ interface TransactionCardProps {
   transaction: Transaction
 }
 
-export function TransactionCard({ transaction }: TransactionCardProps) {
+export const TransactionCard = memo(function TransactionCard({ transaction }: TransactionCardProps) {
   const value = BigInt(transaction.value)
   const isHighValue = value > BigInt('1000000000000000000') // > 1 ETH
 
@@ -88,4 +89,4 @@ export function TransactionCard({ transaction }: TransactionCardProps) {
       </CardContent>
     </Card>
   )
-}
+})
