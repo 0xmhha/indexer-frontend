@@ -3,7 +3,7 @@
  * Hooks for ERC20 token transfer tracking
  */
 
-import { useQuery, type ApolloError } from '@apollo/client'
+import { useQuery } from '@apollo/client'
 import {
   GET_ERC20_TRANSFER,
   GET_ERC20_TRANSFERS_BY_TOKEN,
@@ -15,23 +15,11 @@ import type {
   PaginationInput,
   RawERC20Transfer,
 } from '@/types/address-indexing'
-import { PAGINATION } from '@/lib/config/constants'
-
-// ============================================================================
-// Helper Functions
-// ============================================================================
-
-function isAddressIndexingNotSupportedError(error: ApolloError | undefined): boolean {
-  if (!error) {return false}
-  return error.message.includes('does not support address indexing')
-}
-
-function filterAddressIndexingError(error: ApolloError | undefined): ApolloError | undefined {
-  if (isAddressIndexingNotSupportedError(error)) {
-    return undefined
-  }
-  return error
-}
+import {
+  isAddressIndexingNotSupportedError,
+  filterAddressIndexingError,
+  createLoadMore,
+} from '@/lib/utils/address-indexing'
 
 // ============================================================================
 // Transform Functions
@@ -95,19 +83,6 @@ export function useERC20TransfersByToken(
   const totalCount = rawData?.totalCount || 0
   const pageInfo = rawData?.pageInfo || { hasNextPage: false, hasPreviousPage: false }
 
-  const loadMore = () => {
-    if (!pageInfo.hasNextPage) {return}
-
-    return fetchMore({
-      variables: {
-        pagination: {
-          limit: pagination?.limit || PAGINATION.DEFAULT_PAGE_SIZE,
-          offset: (pagination?.offset || 0) + (pagination?.limit || PAGINATION.DEFAULT_PAGE_SIZE),
-        },
-      },
-    })
-  }
-
   return {
     erc20Transfers,
     totalCount,
@@ -115,7 +90,7 @@ export function useERC20TransfersByToken(
     loading,
     error,
     refetch,
-    loadMore,
+    loadMore: createLoadMore(fetchMore, pageInfo, pagination),
   }
 }
 
@@ -143,19 +118,6 @@ export function useERC20TransfersByAddress(
   const totalCount = rawData?.totalCount || 0
   const pageInfo = rawData?.pageInfo || { hasNextPage: false, hasPreviousPage: false }
 
-  const loadMore = () => {
-    if (!pageInfo.hasNextPage) {return}
-
-    return fetchMore({
-      variables: {
-        pagination: {
-          limit: pagination?.limit || PAGINATION.DEFAULT_PAGE_SIZE,
-          offset: (pagination?.offset || 0) + (pagination?.limit || PAGINATION.DEFAULT_PAGE_SIZE),
-        },
-      },
-    })
-  }
-
   return {
     erc20Transfers,
     totalCount,
@@ -163,7 +125,7 @@ export function useERC20TransfersByAddress(
     loading,
     error: filterAddressIndexingError(error),
     refetch,
-    loadMore,
+    loadMore: createLoadMore(fetchMore, pageInfo, pagination),
     isFeatureAvailable: !isAddressIndexingNotSupportedError(error),
   }
 }

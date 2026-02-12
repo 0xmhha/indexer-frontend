@@ -89,9 +89,9 @@ export function useRealtimeTransactions(
         // eslint-disable-next-line react-hooks/set-state-in-effect
         setLatestTransaction(transformedTransaction)
 
-        // Invalidate related queries to refetch data
-        queryClient.invalidateQueries({ queryKey: ['transactions'] })
-        queryClient.invalidateQueries({ queryKey: ['networkMetrics'] })
+        // Invalidate only active (mounted) queries to avoid unnecessary refetches
+        queryClient.invalidateQueries({ queryKey: ['transactions'], refetchType: 'active' })
+        queryClient.invalidateQueries({ queryKey: ['networkMetrics'], refetchType: 'active' })
 
         // Call user callback using ref to avoid dependency
         if (onNewTransactionRef.current) {

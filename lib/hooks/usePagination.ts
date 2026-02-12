@@ -98,30 +98,28 @@ export function usePagination(options: UsePaginationOptions): UsePaginationResul
   // Use last valid totalPages if totalCount temporarily becomes 0 (during loading)
   const calculatedTotalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage))
 
-  // Only update lastValidTotalPages when we have actual data
-  if (totalCount > 0) {
-    lastValidTotalPagesRef.current = calculatedTotalPages
-    lastValidTotalCountRef.current = totalCount
-  }
-
   // Use the stable totalPages value to prevent pagination from jumping
   const totalPages = totalCount > 0 ? calculatedTotalPages : lastValidTotalPagesRef.current
+
+  // Update lastValidTotalPages in effect to avoid ref mutation during render
+  useEffect(() => {
+    if (totalCount > 0) {
+      lastValidTotalPagesRef.current = calculatedTotalPages
+      lastValidTotalCountRef.current = totalCount
+    }
+  }, [totalCount, calculatedTotalPages])
   const offset = (currentPage - 1) * itemsPerPage
   const canGoNext = currentPage < totalPages
   const canGoPrevious = currentPage > 1
 
-  // Sync with URL on mount and URL changes
-  // Note: We intentionally exclude currentPage and itemsPerPage from dependencies
-  // to prevent infinite loops. We only want to sync FROM URL TO state.
+  // Sync state from URL on mount and URL changes
   useEffect(() => {
     const urlPage = getPageFromURL()
     const urlLimit = getItemsPerPageFromURL()
 
-     
     setCurrentPage(urlPage)
     setItemsPerPageState(urlLimit)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchParams])
+  }, [searchParams, getPageFromURL, getItemsPerPageFromURL])
 
   // Update URL with new query params
   const updateURL = useCallback(

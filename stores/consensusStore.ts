@@ -75,25 +75,32 @@ function computeStats(
   recentErrors: ConsensusErrorEvent[]
 ): ConsensusStats {
   const totalBlocks = recentBlocks.length
-  const roundChanges = recentBlocks.filter((b) => b.roundChanged).length
-  const averageParticipation =
-    totalBlocks > 0
-      ? recentBlocks.reduce((sum, b) => sum + b.participationRate, 0) / totalBlocks
-      : 0
 
-  const errorsBySeverity = {
-    critical: recentErrors.filter((e) => e.severity === 'critical').length,
-    high: recentErrors.filter((e) => e.severity === 'high').length,
-    medium: recentErrors.filter((e) => e.severity === 'medium').length,
-    low: recentErrors.filter((e) => e.severity === 'low').length,
+  // Single pass over blocks (replaces separate filter + reduce)
+  let roundChanges = 0
+  let participationSum = 0
+  for (const b of recentBlocks) {
+    if (b.roundChanged) roundChanges++
+    participationSum += b.participationRate
+  }
+
+  // Single pass over errors (replaces 4 separate filters)
+  let critical = 0, high = 0, medium = 0, low = 0
+  for (const e of recentErrors) {
+    switch (e.severity) {
+      case 'critical': critical++; break
+      case 'high': high++; break
+      case 'medium': medium++; break
+      case 'low': low++; break
+    }
   }
 
   return {
     totalBlocks,
     roundChanges,
-    averageParticipation,
+    averageParticipation: totalBlocks > 0 ? participationSum / totalBlocks : 0,
     errorCount: recentErrors.length,
-    errorsBySeverity,
+    errorsBySeverity: { critical, high, medium, low },
     lastUpdated: new Date().toISOString(),
   }
 }

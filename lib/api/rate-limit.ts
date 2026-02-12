@@ -176,6 +176,13 @@ export class RateLimiter {
   }
 
   /**
+   * Clean up resources (cleanup interval)
+   */
+  destroy(): void {
+    this.store.destroy()
+  }
+
+  /**
    * Generate rate limit headers
    */
   getHeaders(result: RateLimitResult): Record<string, string> {
