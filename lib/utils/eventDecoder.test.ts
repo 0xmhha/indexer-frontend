@@ -12,10 +12,10 @@ const APPROVAL_SIG = '0x8c5be1e5ebec7d5bd14f71427d1e84f3dd0314c0f7b2291e5b200ac8
 const OWNERSHIP_SIG = '0x8be0079c531659141344cd1fd0a4f28419497f9722a3daafe3b4186f6b6457e0'
 
 const padAddress = (addr: string) =>
-  '0x' + addr.replace('0x', '').padStart(64, '0')
+  `0x${addr.replace('0x', '').padStart(64, '0')}`
 
 const padUint256 = (value: bigint) =>
-  '0x' + value.toString(16).padStart(64, '0')
+  `0x${value.toString(16).padStart(64, '0')}`
 
 describe('decodeEventLog', () => {
   it('decodes an ERC20 Transfer event (3 topics)', () => {
