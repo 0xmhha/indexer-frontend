@@ -1,5 +1,3 @@
-'use client'
-
 interface RoundIndicatorProps {
   round: number
   size?: 'sm' | 'md' | 'lg'

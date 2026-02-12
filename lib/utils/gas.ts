@@ -83,17 +83,6 @@ export function calculatePriorityFee(
 }
 
 /**
- * Format gas price to Gwei string
- *
- * @param wei - Gas price in wei
- * @returns Formatted string in Gwei (e.g., "25.5 Gwei")
- */
-export function formatGasPrice(wei: bigint): string {
-  const gwei = Number(wei) / FORMATTING.WEI_PER_GWEI
-  return `${gwei.toFixed(2)} Gwei`
-}
-
-/**
  * Convert wei to Gwei
  *
  * @param wei - Amount in wei

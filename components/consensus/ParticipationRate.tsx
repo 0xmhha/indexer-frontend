@@ -1,5 +1,3 @@
-'use client'
-
 import { THRESHOLDS } from '@/lib/config/constants'
 
 interface ParticipationRateProps {

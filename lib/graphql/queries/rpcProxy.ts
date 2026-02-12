@@ -88,14 +88,3 @@ export const RPC_PROXY_METRICS = gql`
   }
 `
 
-/**
- * Native Balance - Get native coin balance via eth_getBalance RPC
- * Returns the balance in wei as a string
- * NOTE: ethGetBalance query not available in current schema
- * TODO: Use addressBalance query or liveBalance subscription instead
- */
-// export const ETH_GET_BALANCE = gql`
-//   query EthGetBalance($address: String!, $blockNumber: BigInt) {
-//     ethGetBalance(address: $address, blockNumber: $blockNumber)
-//   }
-// `

@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
@@ -199,36 +200,14 @@ export function EpochDetail({ epochNumber }: EpochDetailProps) {
                 </tr>
               </thead>
               <tbody>
-                {epochData.validators.map((validatorIndex, idx) => {
-                  const blsPubKey = epochData.blsPublicKeys?.[idx]
-                  return (
-                    <tr
-                      key={`validator-${validatorIndex}-${idx}`}
-                      className="border-b border-bg-tertiary hover:bg-bg-secondary"
-                    >
-                      <td className="px-4 py-3">
-                        <span className="font-mono text-xs text-text-muted">
-                          {idx + 1}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span className="rounded bg-bg-tertiary px-2 py-0.5 font-mono text-sm text-text-primary">
-                          {validatorIndex}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className="font-mono text-xs text-text-secondary"
-                          title={blsPubKey}
-                        >
-                          {blsPubKey
-                            ? `${blsPubKey.slice(0, FORMATTING.BLS_KEY_START_CHARS)}...${blsPubKey.slice(-FORMATTING.BLS_KEY_END_CHARS)}`
-                            : '-'}
-                        </span>
-                      </td>
-                    </tr>
-                  )
-                })}
+                {epochData.validators.map((validatorIndex, idx) => (
+                  <ValidatorRow
+                    key={`validator-${validatorIndex}-${idx}`}
+                    index={idx + 1}
+                    validatorIndex={validatorIndex}
+                    blsPubKey={epochData.blsPublicKeys?.[idx]}
+                  />
+                ))}
               </tbody>
             </table>
           </div>
@@ -258,48 +237,9 @@ export function EpochDetail({ epochNumber }: EpochDetailProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  {epochData.candidates.map((candidate) => {
-                    const diligence = parseFloat(candidate.diligence) * BLOCKCHAIN.PERCENTAGE_MULTIPLIER
-                    return (
-                      <tr
-                        key={candidate.address}
-                        className="border-b border-bg-tertiary hover:bg-bg-secondary"
-                      >
-                        <td className="px-4 py-3">
-                          <Link
-                            href={`/address/${candidate.address}`}
-                            className="font-mono text-sm text-accent-blue hover:underline"
-                            title={candidate.address}
-                          >
-                            {truncateAddress(candidate.address)}
-                          </Link>
-                        </td>
-                        <td className="px-4 py-3 text-center">
-                          <span
-                            className={`font-mono text-sm ${
-                              diligence >= THRESHOLDS.PARTICIPATION_EXCELLENT
-                                ? 'text-accent-green'
-                                : diligence >= THRESHOLDS.PARTICIPATION_GOOD
-                                  ? 'text-accent-cyan'
-                                  : diligence >= THRESHOLDS.PARTICIPATION_MINIMUM
-                                    ? 'text-yellow-500'
-                                    : 'text-accent-red'
-                            }`}
-                          >
-                            {diligence.toFixed(2)}%
-                          </span>
-                        </td>
-                        <td className="px-4 py-3 text-right">
-                          <Link
-                            href={`/address/${candidate.address}`}
-                            className="font-mono text-xs text-accent-blue hover:underline"
-                          >
-                            View Address →
-                          </Link>
-                        </td>
-                      </tr>
-                    )
-                  })}
+                  {epochData.candidates.map((candidate) => (
+                    <CandidateRow key={candidate.address} candidate={candidate} />
+                  ))}
                 </tbody>
               </table>
             </div>
@@ -309,3 +249,78 @@ export function EpochDetail({ epochNumber }: EpochDetailProps) {
     </div>
   )
 }
+
+const ValidatorRow = memo(function ValidatorRow({
+  index,
+  validatorIndex,
+  blsPubKey,
+}: {
+  index: number
+  validatorIndex: number
+  blsPubKey?: string | undefined
+}) {
+  return (
+    <tr className="border-b border-bg-tertiary hover:bg-bg-secondary">
+      <td className="px-4 py-3">
+        <span className="font-mono text-xs text-text-muted">{index}</span>
+      </td>
+      <td className="px-4 py-3">
+        <span className="rounded bg-bg-tertiary px-2 py-0.5 font-mono text-sm text-text-primary">
+          {validatorIndex}
+        </span>
+      </td>
+      <td className="px-4 py-3">
+        <span className="font-mono text-xs text-text-secondary" title={blsPubKey}>
+          {blsPubKey
+            ? `${blsPubKey.slice(0, FORMATTING.BLS_KEY_START_CHARS)}...${blsPubKey.slice(-FORMATTING.BLS_KEY_END_CHARS)}`
+            : '-'}
+        </span>
+      </td>
+    </tr>
+  )
+})
+
+const CandidateRow = memo(function CandidateRow({
+  candidate,
+}: {
+  candidate: { address: string; diligence: string }
+}) {
+  const diligence = parseFloat(candidate.diligence) * BLOCKCHAIN.PERCENTAGE_MULTIPLIER
+
+  return (
+    <tr className="border-b border-bg-tertiary hover:bg-bg-secondary">
+      <td className="px-4 py-3">
+        <Link
+          href={`/address/${candidate.address}`}
+          className="font-mono text-sm text-accent-blue hover:underline"
+          title={candidate.address}
+        >
+          {truncateAddress(candidate.address)}
+        </Link>
+      </td>
+      <td className="px-4 py-3 text-center">
+        <span
+          className={`font-mono text-sm ${
+            diligence >= THRESHOLDS.PARTICIPATION_EXCELLENT
+              ? 'text-accent-green'
+              : diligence >= THRESHOLDS.PARTICIPATION_GOOD
+                ? 'text-accent-cyan'
+                : diligence >= THRESHOLDS.PARTICIPATION_MINIMUM
+                  ? 'text-yellow-500'
+                  : 'text-accent-red'
+          }`}
+        >
+          {diligence.toFixed(2)}%
+        </span>
+      </td>
+      <td className="px-4 py-3 text-right">
+        <Link
+          href={`/address/${candidate.address}`}
+          className="font-mono text-xs text-accent-blue hover:underline"
+        >
+          View Address →
+        </Link>
+      </td>
+    </tr>
+  )
+})

@@ -1,10 +1,11 @@
 'use client'
 
+import { memo } from 'react'
 import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
-import { useActiveMinters } from '@/lib/hooks/useNativeCoinAdapter'
+import { useActiveMinters, type MinterInfo } from '@/lib/hooks/useNativeCoinAdapter'
 import { formatNumber, truncateAddress } from '@/lib/utils/format'
 
 /**
@@ -60,35 +61,7 @@ export function ActiveMintersPanel() {
         ) : (
           <div className="divide-y divide-bg-tertiary">
             {minterInfos.map((minter, idx) => (
-              <div key={`${minter.address}-${idx}`} className="p-4 transition-colors hover:bg-bg-secondary">
-                <div className="flex items-center justify-between">
-                  {/* Address */}
-                  <div className="flex items-center gap-3">
-                    <div className={`h-2 w-2 rounded-full ${minter.isActive ? 'bg-accent-green' : 'bg-accent-red'}`} title={minter.isActive ? 'Active' : 'Inactive'} />
-                    <Link
-                      href={`/address/${minter.address}`}
-                      className="font-mono text-sm text-accent-blue hover:underline"
-                      title={minter.address}
-                    >
-                      {truncateAddress(minter.address)}
-                    </Link>
-                  </div>
-
-                  {/* Allowance & Status */}
-                  <div className="flex items-center gap-3">
-                    {minter.allowance && minter.allowance !== '0' && (
-                      <span className="font-mono text-xs text-text-secondary">
-                        Allowance: {formatNumber(BigInt(minter.allowance))}
-                      </span>
-                    )}
-                    <div className={`rounded border px-3 py-1 ${minter.isActive ? 'border-accent-green/30 bg-accent-green/10' : 'border-accent-red/30 bg-accent-red/10'}`}>
-                      <span className={`font-mono text-xs ${minter.isActive ? 'text-accent-green' : 'text-accent-red'}`}>
-                        {minter.isActive ? 'Active Minter' : 'Inactive'}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <MinterItem key={`${minter.address}-${idx}`} minter={minter} />
             ))}
           </div>
         )}
@@ -96,3 +69,34 @@ export function ActiveMintersPanel() {
     </Card>
   )
 }
+
+const MinterItem = memo(function MinterItem({ minter }: { minter: MinterInfo }) {
+  return (
+    <div className="p-4 transition-colors hover:bg-bg-secondary">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <div className={`h-2 w-2 rounded-full ${minter.isActive ? 'bg-accent-green' : 'bg-accent-red'}`} title={minter.isActive ? 'Active' : 'Inactive'} />
+          <Link
+            href={`/address/${minter.address}`}
+            className="font-mono text-sm text-accent-blue hover:underline"
+            title={minter.address}
+          >
+            {truncateAddress(minter.address)}
+          </Link>
+        </div>
+        <div className="flex items-center gap-3">
+          {minter.allowance && minter.allowance !== '0' && (
+            <span className="font-mono text-xs text-text-secondary">
+              Allowance: {formatNumber(BigInt(minter.allowance))}
+            </span>
+          )}
+          <div className={`rounded border px-3 py-1 ${minter.isActive ? 'border-accent-green/30 bg-accent-green/10' : 'border-accent-red/30 bg-accent-red/10'}`}>
+            <span className={`font-mono text-xs ${minter.isActive ? 'text-accent-green' : 'text-accent-red'}`}>
+              {minter.isActive ? 'Active Minter' : 'Inactive'}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+})

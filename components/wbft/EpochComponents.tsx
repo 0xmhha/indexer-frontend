@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { truncateAddress } from '@/lib/utils/format'
 import type { ValidatorDisplayInfo, Epoch } from '@/lib/hooks/useWBFT'
@@ -160,7 +161,7 @@ export function EpochInfoGrid({ epoch }: { epoch: Epoch }) {
 // Validator Item
 // ============================================================
 
-function ValidatorItem({ validator }: { validator: ValidatorDisplayInfo }) {
+const ValidatorItem = memo(function ValidatorItem({ validator }: { validator: ValidatorDisplayInfo }) {
   return (
     <div className="p-4 transition-colors hover:bg-bg-secondary">
       <div className="grid gap-4 sm:grid-cols-3">
@@ -184,7 +185,7 @@ function ValidatorItem({ validator }: { validator: ValidatorDisplayInfo }) {
       </div>
     </div>
   )
-}
+})
 
 // ============================================================
 // Validators List
