@@ -1,7 +1,7 @@
 # Error Monitoring Guide
 
-> **Version**: 1.1.0
-> **Last Updated**: 2026-02-12
+> **Version**: 1.2.0
+> **Last Updated**: 2025-02-13
 
 ## Overview
 
@@ -12,34 +12,64 @@ This application implements a **free error monitoring solution** that doesn't re
 - **Production-Ready**: SSR-safe with graceful degradation
 - **Zero Cost**: No external services required
 
-### Current Implementation Status (2026-02-12)
+### Current Implementation Status (2025-02-13)
 
 | 항목 | 상태 |
 |------|------|
+| **Logging** | |
 | `errorLogger` singleton | ✅ 구현 완료 (`lib/errors/logger.ts`) |
 | `useErrorLogger` React hook | ✅ 구현 완료 |
 | `withErrorLogging` decorator | ✅ 구현 완료 |
 | localStorage 저장 | ✅ 구현 완료 (최대 50개) |
 | Batch API 전송 | ✅ 구현 완료 (선택적) |
-| console.log → errorLogger 마이그레이션 | ✅ 완료 (45+ 파일, 2026-02-06) |
-| Sentry/외부 서비스 통합 | ❌ 미구현 (향후 계획) |
-| Admin Dashboard | ❌ 미구현 (향후 계획) |
+| console.log → errorLogger 마이그레이션 | ✅ 완료 (45+ 파일) |
+| **Error Types** | |
+| `AppError` 계층 (6종) | ✅ 구현 완료 (`lib/errors/types.ts`) |
+| Type guards (`isAppError`, `isNetworkError`, `isRetryableError`) | ✅ 구현 완료 |
+| **Recovery** | |
+| `withRetry` (exponential backoff) | ✅ 구현 완료 (`lib/errors/recovery.ts`) |
+| `withTimeout` | ✅ 구현 완료 |
+| `withFallback` / `withParallelFallback` | ✅ 구현 완료 |
+| `CircuitBreaker` | ✅ 구현 완료 |
+| **Testing** | |
+| logger.test.ts | ✅ 533줄 |
+| recovery.test.ts | ✅ 326줄 |
+| types.test.ts | ✅ 27 테스트 |
+| **미구현** | |
+| Sentry/외부 서비스 통합 | ❌ 향후 계획 |
+| Admin Dashboard | ❌ 향후 계획 |
 
 ---
 
 ## Architecture
 
+### Module Structure
+
+```
+lib/errors/
+├── index.ts          # Centralized re-exports
+├── types.ts          # Error classes & type guards
+├── logger.ts         # ErrorLogger singleton, hook, decorator
+├── recovery.ts       # Retry, timeout, fallback, circuit breaker
+├── logger.test.ts    # Logger tests (533 lines)
+├── recovery.test.ts  # Recovery tests (326 lines)
+└── types.test.ts     # Type tests (27 tests)
+```
+
 ### Core Components
 
 ```typescript
-// Singleton error logger instance
-import { errorLogger } from '@/lib/errors/logger'
+// Error types
+import { AppError, NetworkError, GraphQLError, ValidationError, NotFoundError, TimeoutError, Web3Error } from '@/lib/errors'
 
-// React hook for components
-import { useErrorLogger } from '@/lib/errors/logger'
+// Type guards
+import { isAppError, isNetworkError, isRetryableError, getErrorMessage } from '@/lib/errors'
 
-// Decorator for async functions
-import { withErrorLogging } from '@/lib/errors/logger'
+// Logging
+import { errorLogger, useErrorLogger, withErrorLogging } from '@/lib/errors'
+
+// Recovery
+import { withRetry, withTimeout, withFallback, CircuitBreaker } from '@/lib/errors'
 ```
 
 ### Error Flow
@@ -197,6 +227,130 @@ NEXT_PUBLIC_ERROR_API_ENDPOINT=https://your-api.com/api/errors
 private readonly BATCH_DELAY = 5000 // 5 seconds
 private readonly MAX_BATCH_SIZE = 10
 private readonly MAX_STORED_ERRORS = 50
+```
+
+---
+
+## Error Types
+
+The system provides a hierarchy of typed errors extending `AppError`:
+
+| Error Class | Code | HTTP Status | Use Case |
+|-------------|------|-------------|----------|
+| `AppError` | (custom) | (custom) | Base class |
+| `NetworkError` | `NETWORK_ERROR` | 599 | Fetch/connection failures |
+| `GraphQLError` | `GRAPHQL_ERROR` | 400 | GraphQL API errors |
+| `ValidationError` | `VALIDATION_ERROR` | 400 | Input validation failures |
+| `NotFoundError` | `NOT_FOUND` | 404 | Resource not found |
+| `TimeoutError` | `TIMEOUT` | 408 | Operation timeout |
+| `Web3Error` | `WEB3_ERROR` | 400 | Wallet/contract errors |
+
+### Type Guards
+
+```typescript
+import { isAppError, isNetworkError, isRetryableError, getErrorMessage } from '@/lib/errors'
+
+// Check error type
+if (isAppError(error)) {
+  console.log(error.code, error.statusCode)
+}
+
+// Check if network-related
+if (isNetworkError(error)) {
+  showOfflineToast()
+}
+
+// Check if retryable (network, timeout, 429, 503)
+if (isRetryableError(error)) {
+  await withRetry(() => fetchData())
+}
+
+// Safe message extraction from unknown errors
+const message = getErrorMessage(error) // never throws
+```
+
+---
+
+## Error Recovery
+
+### withRetry — Exponential Backoff
+
+```typescript
+import { withRetry } from '@/lib/errors'
+
+const data = await withRetry(() => fetchData(), {
+  maxRetries: 3,       // default: 3
+  delayMs: 1000,       // default: 1000ms
+  backoffMultiplier: 2, // default: 2 (1s → 2s → 4s)
+  onRetry: (error, attempt) => console.log(`Retry ${attempt}`),
+})
+```
+
+Only retryable errors (network, timeout, 429, 503) are retried. Non-retryable errors throw immediately.
+
+### withTimeout
+
+```typescript
+import { withTimeout } from '@/lib/errors'
+
+const result = await withTimeout(
+  () => slowOperation(),
+  5000,          // timeout in ms
+  'SlowOperation' // operation name for error message
+)
+// Throws TimeoutError if exceeded
+```
+
+### withRetryAndTimeout (Combined)
+
+```typescript
+import { withRetryAndTimeout } from '@/lib/errors'
+
+const data = await withRetryAndTimeout(() => fetchData(), {
+  maxRetries: 3,
+  timeoutMs: 30000,
+  operation: 'FetchData',
+})
+```
+
+### withFallback
+
+```typescript
+import { withFallback } from '@/lib/errors'
+
+// Returns fallback value on any error
+const data = await withFallback(() => fetchData(), defaultData)
+
+// With parallel sources — first successful result wins
+import { withParallelFallback } from '@/lib/errors'
+const result = await withParallelFallback(
+  [() => fetchFromPrimary(), () => fetchFromSecondary()],
+  fallbackValue
+)
+```
+
+### CircuitBreaker
+
+Prevents cascading failures by stopping calls after repeated failures:
+
+```typescript
+import { CircuitBreaker } from '@/lib/errors'
+
+const breaker = new CircuitBreaker(
+  5,     // threshold: open after 5 failures
+  60000  // timeout: try again after 60s
+)
+
+// States: closed → open → half-open → closed
+try {
+  const result = await breaker.execute(() => callExternalAPI())
+} catch (error) {
+  // Error('Circuit breaker is open') when circuit is open
+}
+
+// Inspect state
+breaker.getState() // { state: 'closed', failureCount: 0, lastFailureTime: 0 }
+breaker.reset()    // Force reset to closed
 ```
 
 ---
@@ -526,7 +680,7 @@ Potential improvements for the error monitoring system:
 For questions or issues:
 
 - Check [BACKEND_INTEGRATION_STATUS.md](./BACKEND_INTEGRATION_STATUS.md) for API integration details
-- Review test files in `lib/errors/logger.test.ts` for usage examples
+- Review test files in `lib/errors/` for usage examples (`logger.test.ts`, `recovery.test.ts`, `types.test.ts`)
 - Consult the team for custom backend endpoint setup
 
 ---
