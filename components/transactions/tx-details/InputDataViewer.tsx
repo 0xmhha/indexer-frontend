@@ -38,7 +38,7 @@ const COLLAPSE_THRESHOLD_PX = 320
  */
 function hexToUtf8(hex: string): string {
   const cleaned = hex.startsWith('0x') ? hex.slice(2) : hex
-  if (cleaned.length === 0) return ''
+  if (cleaned.length === 0) {return ''}
 
   try {
     const bytes: number[] = []
@@ -62,7 +62,7 @@ function decodeInputData(input: string): DecodedInputData | null {
   const cleaned = input.startsWith('0x') ? input.slice(2) : input
 
   // Must have at least a function selector (4 bytes = 8 hex chars)
-  if (cleaned.length < FUNCTION_SELECTOR_HEX_LENGTH) return null
+  if (cleaned.length < FUNCTION_SELECTOR_HEX_LENGTH) {return null}
 
   const methodId = `0x${cleaned.slice(0, FUNCTION_SELECTOR_HEX_LENGTH)}`
   const paramData = cleaned.slice(FUNCTION_SELECTOR_HEX_LENGTH)
@@ -119,7 +119,7 @@ function CollapsibleContent({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const el = contentRef.current
-    if (!el) return
+    if (!el) {return}
     setNeedsCollapse(el.scrollHeight > COLLAPSE_THRESHOLD_PX)
   }, [children])
 

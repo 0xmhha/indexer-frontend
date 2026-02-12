@@ -42,7 +42,7 @@ export function FilterSummary({
     activeFilters.push(`Method: ${filters.methodId.slice(0, FORMATTING.METHOD_SELECTOR_HEX_LENGTH)}...`)
   }
 
-  if (activeFilters.length === 0) return null
+  if (activeFilters.length === 0) {return null}
 
   return (
     <div className="mb-4 flex flex-wrap items-center gap-2">

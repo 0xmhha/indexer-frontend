@@ -15,6 +15,8 @@
  * ```
  */
 
+import { TIMING } from '@/lib/config/constants'
+
 /**
  * Cache entry with expiration
  */
@@ -47,7 +49,7 @@ class MemoryCache implements CacheStore {
     if (typeof window === 'undefined') {
       this.cleanupInterval = setInterval(() => {
         this.cleanup()
-      }, 60000)
+      }, TIMING.CLEANUP_INTERVAL)
     }
   }
 

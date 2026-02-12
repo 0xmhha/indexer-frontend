@@ -76,6 +76,7 @@ export function AdvancedTransactionFilters({
       case 'eip-7702':
         newFilters.eipType = 4
         break
+      // no default
     }
 
     setFilters(newFilters)
@@ -105,18 +106,18 @@ export function AdvancedTransactionFilters({
 
   const activeFiltersCount = useMemo(() => {
     let count = 0
-    if (filters.fromBlock || filters.toBlock) count++
-    if (filters.minValue || filters.maxValue) count++
-    if (filters.direction !== 'all') count++
-    if (filters.status !== 'all') count++
-    if (filters.eipType !== -1) count++
-    if (filters.contractInteraction !== 'all') count++
-    if (filters.feeDelegated !== 'all') count++
-    if (filters.fromAddress) count++
-    if (filters.toAddress) count++
-    if (filters.methodId) count++
-    if (filters.minGasUsed || filters.maxGasUsed) count++
-    if (filters.timeRange !== 'all') count++
+    if (filters.fromBlock || filters.toBlock) {count++}
+    if (filters.minValue || filters.maxValue) {count++}
+    if (filters.direction !== 'all') {count++}
+    if (filters.status !== 'all') {count++}
+    if (filters.eipType !== -1) {count++}
+    if (filters.contractInteraction !== 'all') {count++}
+    if (filters.feeDelegated !== 'all') {count++}
+    if (filters.fromAddress) {count++}
+    if (filters.toAddress) {count++}
+    if (filters.methodId) {count++}
+    if (filters.minGasUsed || filters.maxGasUsed) {count++}
+    if (filters.timeRange !== 'all') {count++}
     return count
   }, [filters])
 

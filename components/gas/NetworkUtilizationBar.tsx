@@ -3,6 +3,7 @@
 import { Card } from '@/components/ui/Card'
 import { formatNumber } from '@/lib/utils/format'
 import { cn } from '@/lib/utils'
+import { THRESHOLDS } from '@/lib/config/constants'
 
 interface NetworkUtilizationBarProps {
   utilization: number
@@ -24,23 +25,23 @@ export function NetworkUtilizationBar({
 }: NetworkUtilizationBarProps) {
   // Determine color based on utilization level
   const getUtilizationColor = (util: number) => {
-    if (util >= 90) return 'bg-accent-red'
-    if (util >= 70) return 'bg-accent-orange'
-    if (util >= 50) return 'bg-accent-yellow'
+    if (util >= THRESHOLDS.UTILIZATION_CONGESTED) {return 'bg-accent-red'}
+    if (util >= THRESHOLDS.UTILIZATION_BUSY) {return 'bg-accent-orange'}
+    if (util >= THRESHOLDS.UTILIZATION_MODERATE) {return 'bg-accent-yellow'}
     return 'bg-accent-green'
   }
 
   const getUtilizationText = (util: number) => {
-    if (util >= 90) return 'text-accent-red'
-    if (util >= 70) return 'text-accent-orange'
-    if (util >= 50) return 'text-accent-yellow'
+    if (util >= THRESHOLDS.UTILIZATION_CONGESTED) {return 'text-accent-red'}
+    if (util >= THRESHOLDS.UTILIZATION_BUSY) {return 'text-accent-orange'}
+    if (util >= THRESHOLDS.UTILIZATION_MODERATE) {return 'text-accent-yellow'}
     return 'text-accent-green'
   }
 
   const getNetworkStatus = (util: number) => {
-    if (util >= 90) return 'CONGESTED'
-    if (util >= 70) return 'BUSY'
-    if (util >= 50) return 'MODERATE'
+    if (util >= THRESHOLDS.UTILIZATION_CONGESTED) {return 'CONGESTED'}
+    if (util >= THRESHOLDS.UTILIZATION_BUSY) {return 'BUSY'}
+    if (util >= THRESHOLDS.UTILIZATION_MODERATE) {return 'MODERATE'}
     return 'LOW'
   }
 

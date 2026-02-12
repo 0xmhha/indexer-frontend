@@ -16,7 +16,7 @@ import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useFeeDelegationStats } from '@/lib/hooks/useAnalytics'
 import { formatCurrency, formatHash, formatNumber } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
-import { THRESHOLDS } from '@/lib/config/constants'
+import { THRESHOLDS, FORMATTING } from '@/lib/config/constants'
 import { cn } from '@/lib/utils'
 import { TIME_PERIODS, type TimePeriodId, type FeeDelegationDashboardProps } from './types'
 import { StatCard } from './StatCard'
@@ -35,9 +35,9 @@ export function FeeDelegationDashboard({ className }: FeeDelegationDashboardProp
     }
     const now = Math.floor(Date.now() / 1000)
     const periods: Record<string, number> = {
-      '24h': 24 * 60 * 60,
-      '7d': 7 * 24 * 60 * 60,
-      '30d': 30 * 24 * 60 * 60,
+      '24h': FORMATTING.SECONDS_PER_DAY,
+      '7d': FORMATTING.SECONDS_PER_WEEK,
+      '30d': FORMATTING.SECONDS_PER_MONTH,
     }
     const seconds = periods[period]
     if (!seconds) {

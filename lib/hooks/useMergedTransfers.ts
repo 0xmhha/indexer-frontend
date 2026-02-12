@@ -63,8 +63,8 @@ export function useMergedTransfers<T extends BaseTransfer>(
   }
 
   const loadMore = () => {
-    if (fromResult.pageInfo.hasNextPage) fromResult.loadMore?.()
-    if (toResult.pageInfo.hasNextPage) toResult.loadMore?.()
+    if (fromResult.pageInfo.hasNextPage) {fromResult.loadMore?.()}
+    if (toResult.pageInfo.hasNextPage) {toResult.loadMore?.()}
   }
 
   return { transfers, totalCount, loading, error, pageInfo, loadMore }

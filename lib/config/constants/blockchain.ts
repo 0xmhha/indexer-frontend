@@ -36,6 +36,9 @@ export const BLOCKCHAIN = {
 
   /** Hours per day */
   HOURS_PER_DAY: 24,
+
+  /** BigInt percentage precision (10000 = 100.00%) */
+  PERCENTAGE_PRECISION: 10000n,
 } as const
 
 // ============================================================================
@@ -118,6 +121,33 @@ export const GAS = {
 
   /** Fee offset for max fee calculation */
   MAX_FEE_OFFSET: 10,
+
+  /** Gas price percentile thresholds */
+  PERCENTILE_25: 0.25,
+  PERCENTILE_50: 0.5,
+  PERCENTILE_75: 0.75,
+
+  /** Gwei values in wei for gas price calculations */
+  GWEI_1_WEI: 1e9,
+  GWEI_2_WEI: 2e9,
+  GWEI_3_WEI: 3e9,
+  GWEI_5_WEI: 5e9,
+  GWEI_10_WEI: 10e9,
+  GWEI_15_WEI: 15e9,
+
+  /** Estimated confirmation times (seconds) */
+  CONFIRMATION_ECONOMY_SECONDS: 300,
+  CONFIRMATION_STANDARD_SECONDS: 60,
+  CONFIRMATION_PRIORITY_SECONDS: 12,
+
+  /** Block time polling interval (ms) when subscription disabled */
+  BLOCK_TIME_POLL_MS: 12_000,
+
+  /** Default priority fee fallback (Gwei) */
+  DEFAULT_PRIORITY_FEE_FALLBACK: 3,
+
+  /** Default Solidity compiler optimization runs */
+  DEFAULT_OPTIMIZATION_RUNS: 200,
 } as const
 
 // ============================================================================
@@ -254,4 +284,7 @@ export const ABI = {
 
   /** Max numeric character length for boolean detection */
   BOOL_NUMERIC_MAX_LENGTH: 15,
+
+  /** Address hex character length (20 bytes = 40 hex chars, without 0x prefix) */
+  ADDRESS_HEX_LENGTH: 40,
 } as const

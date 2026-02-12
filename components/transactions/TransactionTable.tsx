@@ -82,8 +82,8 @@ export function TransactionTable({
   const allAddresses = useMemo(() => {
     const set = new Set<string>()
     for (const tx of transactions) {
-      if (tx.from) set.add(tx.from)
-      if (tx.to) set.add(tx.to)
+      if (tx.from) {set.add(tx.from)}
+      if (tx.to) {set.add(tx.to)}
     }
     return [...set]
   }, [transactions])

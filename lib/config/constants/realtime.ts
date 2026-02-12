@@ -147,6 +147,9 @@ export const TIMING = {
 
   /** Export loading state display delay (ms) */
   EXPORT_LOADING_DELAY: 100,
+
+  /** Cleanup interval for expired entries (ms) */
+  CLEANUP_INTERVAL: 60_000,
 } as const
 
 // ============================================================================

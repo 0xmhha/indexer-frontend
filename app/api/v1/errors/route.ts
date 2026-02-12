@@ -13,6 +13,7 @@ import {
   handleCorsOptions,
 } from '@/lib/api/response'
 import { errorLogger } from '@/lib/errors/logger'
+import { HTTP_STATUS } from '@/lib/config/constants'
 
 export const dynamic = 'force-dynamic'
 
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json() as ErrorBatch
 
     if (!body.errors || !Array.isArray(body.errors)) {
-      return errorResponse('Invalid error batch format', 400, 'INVALID_FORMAT')
+      return errorResponse('Invalid error batch format', HTTP_STATUS.BAD_REQUEST, 'INVALID_FORMAT')
     }
 
     // Get client IP (for tracking)
@@ -89,11 +90,11 @@ export async function POST(request: NextRequest) {
       }
 
       // Only add optional properties if they have values
-      if (ip) serverError.ip = ip
-      if (error.stack) serverError.stack = error.stack
-      if (error.context) serverError.context = error.context
-      if (error.userAgent) serverError.userAgent = error.userAgent
-      if (error.url) serverError.url = error.url
+      if (ip) {serverError.ip = ip}
+      if (error.stack) {serverError.stack = error.stack}
+      if (error.context) {serverError.context = error.context}
+      if (error.userAgent) {serverError.userAgent = error.userAgent}
+      if (error.url) {serverError.url = error.url}
 
       // Add to server storage
       serverErrors.push(serverError)
@@ -118,10 +119,10 @@ export async function POST(request: NextRequest) {
     return successResponse({
       received: body.errors.length,
       timestamp: new Date().toISOString(),
-    }, 202)
+    }, HTTP_STATUS.ACCEPTED)
   } catch (error) {
     errorLogger.error(error, { component: 'api/v1/errors', action: 'receive-batch' })
-    return errorResponse('Failed to process error batch', 500, 'PROCESSING_ERROR')
+    return errorResponse('Failed to process error batch', HTTP_STATUS.INTERNAL_SERVER_ERROR, 'PROCESSING_ERROR')
   }
 }
 
@@ -144,11 +145,12 @@ export async function GET(request: NextRequest) {
 
     // If API key is configured, require it
     if (expectedKey && apiKey !== expectedKey) {
-      return errorResponse('Unauthorized', 401, 'UNAUTHORIZED')
+      return errorResponse('Unauthorized', HTTP_STATUS.UNAUTHORIZED, 'UNAUTHORIZED')
     }
 
     const { searchParams } = new URL(request.url)
-    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), 200)
+    const MAX_ERROR_QUERY_LIMIT = 200
+    const limit = Math.min(parseInt(searchParams.get('limit') || '50'), MAX_ERROR_QUERY_LIMIT)
     const severity = searchParams.get('severity') as 'error' | 'warning' | 'info' | null
     const component = searchParams.get('component')
     const since = searchParams.get('since')
@@ -191,7 +193,7 @@ export async function GET(request: NextRequest) {
     return successResponse(stats)
   } catch (error) {
     errorLogger.error(error, { component: 'api/v1/errors', action: 'get-stats' })
-    return errorResponse('Failed to fetch error statistics', 500, 'FETCH_ERROR')
+    return errorResponse('Failed to fetch error statistics', HTTP_STATUS.INTERNAL_SERVER_ERROR, 'FETCH_ERROR')
   }
 }
 
@@ -206,7 +208,7 @@ export async function DELETE(request: NextRequest) {
     const expectedKey = process.env.ERROR_MONITORING_API_KEY
 
     if (!expectedKey || apiKey !== expectedKey) {
-      return errorResponse('Unauthorized', 401, 'UNAUTHORIZED')
+      return errorResponse('Unauthorized', HTTP_STATUS.UNAUTHORIZED, 'UNAUTHORIZED')
     }
 
     const clearedCount = serverErrors.length
@@ -218,7 +220,7 @@ export async function DELETE(request: NextRequest) {
     })
   } catch (error) {
     errorLogger.error(error, { component: 'api/v1/errors', action: 'clear-logs' })
-    return errorResponse('Failed to clear error logs', 500, 'CLEAR_ERROR')
+    return errorResponse('Failed to clear error logs', HTTP_STATUS.INTERNAL_SERVER_ERROR, 'CLEAR_ERROR')
   }
 }
 

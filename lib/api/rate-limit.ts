@@ -14,6 +14,8 @@
  * ```
  */
 
+import { TIMING } from '@/lib/config/constants'
+
 /**
  * Rate limiter configuration
  */
@@ -60,7 +62,7 @@ class MemoryRateLimitStore {
     if (typeof window === 'undefined') {
       this.cleanupInterval = setInterval(() => {
         this.cleanup()
-      }, 60000)
+      }, TIMING.CLEANUP_INTERVAL)
     }
   }
 
@@ -205,7 +207,7 @@ export class RateLimiter {
  * Default rate limiter configuration
  */
 export const DEFAULT_RATE_LIMIT_CONFIG: RateLimiterConfig = {
-  windowMs: 60 * 1000, // 1 minute
+  windowMs: TIMING.CLEANUP_INTERVAL, // 1 minute
   max: 100, // 100 requests per minute
   keyPrefix: 'api',
   skipPaths: ['/api/health', '/api/v1/stats'], // Stats can be cached

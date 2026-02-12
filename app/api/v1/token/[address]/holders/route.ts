@@ -18,6 +18,7 @@ import {
 } from '@/lib/api/errors'
 import { errorLogger } from '@/lib/errors/logger'
 import { GET_TOKEN_HOLDERS } from '@/lib/graphql/queries/relay'
+import { BLOCKCHAIN } from '@/lib/config/constants'
 import type { TokenHolderItem } from '@/lib/api/types'
 
 export const dynamic = 'force-dynamic'
@@ -59,14 +60,14 @@ export async function GET(
 
     const totalCount = data.tokenHolders?.totalCount ?? 0
     const nodes = data.tokenHolders?.nodes ?? []
-    const totalBalance = nodes.reduce((sum, node) => {
+    const totalBalance = nodes.reduce<bigint>((sum, node) => {
       try { return sum + BigInt(node.balance) } catch { return sum }
-    }, 0n)
+    }, BLOCKCHAIN.ZERO_BIGINT)
     const holders: TokenHolderItem[] = nodes.map((node) => {
       let percentage = 0
-      if (totalBalance > 0n) {
+      if (totalBalance > BLOCKCHAIN.ZERO_BIGINT) {
         try {
-          percentage = Number((BigInt(node.balance) * 10000n) / totalBalance) / 100
+          percentage = Number((BigInt(node.balance) * BLOCKCHAIN.PERCENTAGE_PRECISION) / totalBalance) / BLOCKCHAIN.PERCENTAGE_MULTIPLIER
         } catch { /* keep 0 */ }
       }
       return {

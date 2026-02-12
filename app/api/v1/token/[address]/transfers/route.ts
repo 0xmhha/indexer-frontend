@@ -19,6 +19,7 @@ import {
 } from '@/lib/api/errors'
 import { errorLogger } from '@/lib/errors/logger'
 import { gql } from '@apollo/client'
+import { ABI, FORMATTING } from '@/lib/config/constants'
 import type { TokenTransferItem } from '@/lib/api/types'
 
 // ERC20 Transfer event topic
@@ -81,11 +82,11 @@ export async function GET(
     const { nodes, totalCount } = data.logs
 
     const transfers: TokenTransferItem[] = nodes
-      .filter((log) => log.topics.length >= 3 && log.topics[0] === TRANSFER_TOPIC)
+      .filter((log) => log.topics.length >= ABI.ERC20_TOPICS_COUNT && log.topics[0] === TRANSFER_TOPIC)
       .map((log) => {
         const from = parseAddressFromTopic(log.topics[1] || '')
         const to = parseAddressFromTopic(log.topics[2] || '')
-        const isERC721 = log.topics.length === 4
+        const isERC721 = log.topics.length === ABI.ERC721_TOPICS_COUNT
         const tokenId = isERC721 ? parseBigIntFromHex(log.topics[3] || '') : null
         const value = isERC721 ? '1' : parseBigIntFromHex(log.data)
 
@@ -115,10 +116,10 @@ export async function GET(
 }
 
 function parseAddressFromTopic(topic: string): string {
-  if (!topic || topic.length < 42) {
-    return '0x' + '0'.repeat(40)
+  if (!topic || topic.length < FORMATTING.ETH_ADDRESS_LENGTH) {
+    return `0x${  '0'.repeat(ABI.ADDRESS_HEX_LENGTH)}`
   }
-  return '0x' + topic.slice(-40).toLowerCase()
+  return `0x${  topic.slice(ABI.ADDRESS_OFFSET).toLowerCase()}`
 }
 
 function parseBigIntFromHex(hex: string): string {

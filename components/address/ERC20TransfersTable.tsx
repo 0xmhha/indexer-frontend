@@ -17,7 +17,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { AddressLink } from '@/components/common/AddressLink'
 import { formatHash, formatNumber, formatDate, formatTokenAmount } from '@/lib/utils/format'
-import { PAGINATION, getSystemContractInfo } from '@/lib/config/constants'
+import { PAGINATION, FORMATTING, getSystemContractInfo } from '@/lib/config/constants'
 import { useContractDetection } from '@/lib/hooks/useContractDetection'
 import type { ERC20Transfer } from '@/types/address-indexing'
 
@@ -41,9 +41,9 @@ export function ERC20TransfersTable({ address, limit = PAGINATION.DEFAULT_PAGE_S
   const allAddresses = useMemo(() => {
     const set = new Set<string>()
     for (const t of erc20Transfers) {
-      if (t.from) set.add(t.from)
-      if (t.to) set.add(t.to)
-      if (t.contractAddress) set.add(t.contractAddress)
+      if (t.from) {set.add(t.from)}
+      if (t.to) {set.add(t.to)}
+      if (t.contractAddress) {set.add(t.contractAddress)}
     }
     return [...set]
   }, [erc20Transfers])
@@ -150,7 +150,7 @@ export function ERC20TransfersTable({ address, limit = PAGINATION.DEFAULT_PAGE_S
                 <TableCell className="text-right font-mono">
                   {(() => {
                     const tokenInfo = getSystemContractInfo(transfer.contractAddress)
-                    const decimals = tokenInfo?.decimals ?? 18
+                    const decimals = tokenInfo?.decimals ?? FORMATTING.DEFAULT_DECIMALS
                     const symbol = tokenInfo?.symbol ?? ''
                     return `${formatTokenAmount(transfer.value, decimals)} ${symbol}`.trim()
                   })()}

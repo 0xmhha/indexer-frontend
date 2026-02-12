@@ -80,7 +80,7 @@ function computeStats(
   let roundChanges = 0
   let participationSum = 0
   for (const b of recentBlocks) {
-    if (b.roundChanged) roundChanges++
+    if (b.roundChanged) {roundChanges++}
     participationSum += b.participationRate
   }
 
@@ -92,6 +92,7 @@ function computeStats(
       case 'high': high++; break
       case 'medium': medium++; break
       case 'low': low++; break
+      // no default
     }
   }
 

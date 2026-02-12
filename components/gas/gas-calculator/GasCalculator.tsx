@@ -14,7 +14,7 @@ import { formatCurrency } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
 import { useGasTracker } from '@/lib/hooks/useGasTracker'
 import { cn } from '@/lib/utils'
-import { THRESHOLDS } from '@/lib/config/constants'
+import { THRESHOLDS, GAS } from '@/lib/config/constants'
 import { TX_PRESETS, type TxPresetId } from './types'
 import { ResultItem } from './ResultItem'
 
@@ -60,7 +60,7 @@ export function GasCalculator({
   }
 
   const networkComparison = useMemo(() => {
-    if (!metrics) return null
+    if (!metrics) {return null}
 
     const economyLevel = metrics.priceLevels.find(l => l.tier === 'economy')
     const standardLevel = metrics.priceLevels.find(l => l.tier === 'standard')
@@ -69,7 +69,7 @@ export function GasCalculator({
     return {
       economy: economyLevel ? weiToGwei(economyLevel.maxPriorityFee) : 1,
       standard: standardLevel ? weiToGwei(standardLevel.maxPriorityFee) : 2,
-      priority: priorityLevel ? weiToGwei(priorityLevel.maxPriorityFee) : 3,
+      priority: priorityLevel ? weiToGwei(priorityLevel.maxPriorityFee) : GAS.DEFAULT_PRIORITY_FEE_FALLBACK,
       utilization: metrics.networkUtilization,
     }
   }, [metrics])

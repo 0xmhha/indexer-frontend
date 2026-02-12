@@ -41,9 +41,9 @@ export function ERC721TransfersTable({ address, limit = PAGINATION.DEFAULT_PAGE_
   const allAddresses = useMemo(() => {
     const set = new Set<string>()
     for (const t of erc721Transfers) {
-      if (t.from) set.add(t.from)
-      if (t.to) set.add(t.to)
-      if (t.contractAddress) set.add(t.contractAddress)
+      if (t.from) {set.add(t.from)}
+      if (t.to) {set.add(t.to)}
+      if (t.contractAddress) {set.add(t.contractAddress)}
     }
     return [...set]
   }, [erc721Transfers])

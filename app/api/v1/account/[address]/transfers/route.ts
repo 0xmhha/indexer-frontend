@@ -19,6 +19,7 @@ import {
 } from '@/lib/api/errors'
 import { errorLogger } from '@/lib/errors/logger'
 import { GET_LOGS_BY_ADDRESS, GET_BLOCK_TIMESTAMP } from '@/lib/graphql/queries/relay'
+import { ABI, FORMATTING } from '@/lib/config/constants'
 import type { LogsResponse, TokenTransferInList } from '@/lib/api/types'
 
 // ERC20 Transfer event topic
@@ -62,7 +63,7 @@ export async function GET(
     const transfers: TokenTransferInList[] = nodes
       .filter((log) => {
         // Filter for Transfer events
-        if (log.topics.length < 3 || log.topics[0] !== TRANSFER_TOPIC) {
+        if (log.topics.length < ABI.ERC20_TOPICS_COUNT || log.topics[0] !== TRANSFER_TOPIC) {
           return false
         }
 
@@ -79,7 +80,7 @@ export async function GET(
         const to = parseAddressFromTopic(log.topics[2] || '')
 
         // Determine token type from topics count
-        const isERC721 = log.topics.length === 4
+        const isERC721 = log.topics.length === ABI.ERC721_TOPICS_COUNT
         const tokenId = isERC721 ? parseBigIntFromHex(log.topics[3] || '') : null
         const value = isERC721 ? '1' : parseBigIntFromHex(log.data)
 
@@ -146,11 +147,11 @@ export async function GET(
  * Parse address from 32-byte topic (last 20 bytes)
  */
 function parseAddressFromTopic(topic: string): string {
-  if (!topic || topic.length < 42) {
-    return '0x' + '0'.repeat(40)
+  if (!topic || topic.length < FORMATTING.ETH_ADDRESS_LENGTH) {
+    return `0x${  '0'.repeat(ABI.ADDRESS_HEX_LENGTH)}`
   }
   // Take last 40 characters (20 bytes) and add 0x prefix
-  return '0x' + topic.slice(-40).toLowerCase()
+  return `0x${  topic.slice(ABI.ADDRESS_OFFSET).toLowerCase()}`
 }
 
 /**

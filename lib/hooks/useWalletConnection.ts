@@ -72,7 +72,7 @@ export function useWalletConnection(): UseWalletConnectionResult {
       } catch {
         // Wallet not connected or MetaMask not ready - silently ignore
         // This prevents errors from appearing when MetaMask extension has issues
-        console.debug('[Wallet] Connection check skipped - wallet not ready')
+        // Wallet not connected or MetaMask not ready - silently ignored
       }
     }
 

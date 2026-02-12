@@ -49,7 +49,11 @@ export async function GET() {
       .map((tx) => tx.gasPrice)
       .filter((price): price is string => price !== null)
       .map((price) => BigInt(price))
-      .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+      .sort((a, b) => {
+        if (a < b) {return -1}
+        if (a > b) {return 1}
+        return 0
+      })
 
     let slowPrice: bigint
     let standardPrice: bigint
@@ -63,9 +67,9 @@ export async function GET() {
       fastPrice = defaultGas
     } else {
       // Calculate percentiles
-      const p25Index = Math.floor(gasPrices.length * 0.25)
-      const p50Index = Math.floor(gasPrices.length * 0.5)
-      const p75Index = Math.floor(gasPrices.length * 0.75)
+      const p25Index = Math.floor(gasPrices.length * GAS.PERCENTILE_25)
+      const p50Index = Math.floor(gasPrices.length * GAS.PERCENTILE_50)
+      const p75Index = Math.floor(gasPrices.length * GAS.PERCENTILE_75)
 
       slowPrice = gasPrices[p25Index] || gasPrices[0] || defaultGas
       standardPrice = gasPrices[p50Index] || gasPrices[0] || defaultGas

@@ -92,7 +92,7 @@ export function isAddressBlacklisted(address: string, blacklistedAddresses: stri
 }
 
 export function filterToBackendStatus(filter: ProposalStatusFilter): BackendProposalStatus | undefined {
-  if (filter === 'all') return undefined
+  if (filter === 'all') {return undefined}
   const mapping: Record<Exclude<ProposalStatusFilter, 'all'>, BackendProposalStatus> = {
     none: 'NONE',
     voting: 'VOTING',

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import { env } from '@/lib/config/env'
+import { ABI } from '@/lib/config/constants'
 
 /**
  * EIP-1967 Storage Slots for Proxy Contracts
@@ -41,13 +42,13 @@ export interface ProxyInfo {
  * Check if value is a valid non-zero address from storage
  */
 function isValidStorageAddress(value: string | null): boolean {
-  if (!value) return false
+  if (!value) {return false}
   // Storage returns 32 bytes, extract last 20 bytes (40 hex chars)
   const cleanValue = value.toLowerCase()
   // Check if it's all zeros or empty
-  if (cleanValue === '0x' || cleanValue === '0x0') return false
+  if (cleanValue === '0x' || cleanValue === '0x0') {return false}
   // Extract address portion (last 40 chars after 0x prefix for 32-byte storage)
-  const addressPart = cleanValue.slice(-40)
+  const addressPart = cleanValue.slice(ABI.ADDRESS_OFFSET)
   return addressPart !== '0000000000000000000000000000000000000000'
 }
 
@@ -55,9 +56,9 @@ function isValidStorageAddress(value: string | null): boolean {
  * Extract address from 32-byte storage value
  */
 function extractAddressFromStorage(value: string | null): string | null {
-  if (!value || !isValidStorageAddress(value)) return null
+  if (!value || !isValidStorageAddress(value)) {return null}
   // Take last 40 hex chars (20 bytes) and format as address
-  const addressPart = value.slice(-40)
+  const addressPart = value.slice(ABI.ADDRESS_OFFSET)
   return `0x${addressPart}`
 }
 
@@ -165,7 +166,7 @@ export function useProxyDetection(
           getStorageAt(rpcUrl, address, EIP_1967_SLOTS.BEACON),
         ])
 
-        if (cancelled) return
+        if (cancelled) {return}
 
         // Extract addresses from storage values
         const implementationAddress = extractAddressFromStorage(implementationStorage)

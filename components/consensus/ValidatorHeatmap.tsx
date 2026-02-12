@@ -158,18 +158,18 @@ function HeatmapCell({ value, label, isProposal = false }: HeatmapCellProps) {
   const getHeatColor = () => {
     if (isProposal) {
       // Proposal rate is typically much lower, use different scale
-      if (value > THRESHOLDS.PROPOSAL_RATE_EXCELLENT) return 'bg-accent-green'
-      if (value > THRESHOLDS.PROPOSAL_RATE_GOOD) return 'bg-accent-cyan'
-      if (value > THRESHOLDS.PROPOSAL_RATE_FAIR) return 'bg-accent-blue'
-      if (value > 0) return 'bg-yellow-500'
+      if (value > THRESHOLDS.PROPOSAL_RATE_EXCELLENT) {return 'bg-accent-green'}
+      if (value > THRESHOLDS.PROPOSAL_RATE_GOOD) {return 'bg-accent-cyan'}
+      if (value > THRESHOLDS.PROPOSAL_RATE_FAIR) {return 'bg-accent-blue'}
+      if (value > 0) {return 'bg-yellow-500'}
       return 'bg-bg-tertiary'
     }
 
     // Standard participation rate thresholds
-    if (value >= THRESHOLDS.PARTICIPATION_EXCELLENT) return 'bg-accent-green'
-    if (value >= THRESHOLDS.PARTICIPATION_GOOD) return 'bg-accent-cyan'
-    if (value >= THRESHOLDS.PARTICIPATION_MINIMUM) return 'bg-yellow-500'
-    if (value >= THRESHOLDS.PARTICIPATION_FALLBACK) return 'bg-orange-500'
+    if (value >= THRESHOLDS.PARTICIPATION_EXCELLENT) {return 'bg-accent-green'}
+    if (value >= THRESHOLDS.PARTICIPATION_GOOD) {return 'bg-accent-cyan'}
+    if (value >= THRESHOLDS.PARTICIPATION_MINIMUM) {return 'bg-yellow-500'}
+    if (value >= THRESHOLDS.PARTICIPATION_FALLBACK) {return 'bg-orange-500'}
     return 'bg-accent-red'
   }
 
@@ -177,7 +177,7 @@ function HeatmapCell({ value, label, isProposal = false }: HeatmapCellProps) {
     if (isProposal) {
       return value > 0 ? 'text-white' : 'text-text-muted'
     }
-    if (value >= THRESHOLDS.PARTICIPATION_MINIMUM) return 'text-white'
+    if (value >= THRESHOLDS.PARTICIPATION_MINIMUM) {return 'text-white'}
     return 'text-white'
   }
 
@@ -197,9 +197,9 @@ function HeatmapCell({ value, label, isProposal = false }: HeatmapCellProps) {
 
 function RankBadge({ rank }: { rank: number }) {
   const getBadgeStyle = () => {
-    if (rank === 1) return 'bg-yellow-500/20 text-yellow-500'
-    if (rank === 2) return 'bg-gray-400/20 text-gray-400'
-    if (rank === 3) return 'bg-orange-600/20 text-orange-600'
+    if (rank === 1) {return 'bg-yellow-500/20 text-yellow-500'}
+    if (rank === 2) {return 'bg-gray-400/20 text-gray-400'}
+    if (rank === THRESHOLDS.RANK_BRONZE) {return 'bg-orange-600/20 text-orange-600'}
     return 'bg-bg-tertiary text-text-muted'
   }
 

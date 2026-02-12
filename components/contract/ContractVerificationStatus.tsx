@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { useContractVerification } from '@/lib/hooks/useContractVerification'
-import { getSystemContractInfo } from '@/lib/config/constants'
+import { getSystemContractInfo, GAS } from '@/lib/config/constants'
 
 interface ContractVerificationStatusProps {
   address: string
@@ -125,7 +125,7 @@ export function ContractVerificationStatus({ address, isContract }: ContractVeri
                     <p className="text-xs text-text-muted">Optimization</p>
                     <p className="font-mono text-text-primary">
                       {verification.optimizationEnabled
-                        ? `Yes (${verification.optimizationRuns ?? 200} runs)`
+                        ? `Yes (${verification.optimizationRuns ?? GAS.DEFAULT_OPTIMIZATION_RUNS} runs)`
                         : 'No'}
                     </p>
                   </div>

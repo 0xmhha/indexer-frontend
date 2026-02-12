@@ -135,7 +135,7 @@ const config = [
       'prefer-template': 'warn',
 
       // Prefer arrow functions for callbacks
-      'prefer-arrow-callback': 'warn',
+      'prefer-arrow-callback': ['warn', { allowNamedFunctions: true }],
 
       // No console in production (warn level for development)
       'no-console': ['warn', { allow: ['warn', 'error', 'info'] }],
@@ -336,7 +336,7 @@ const config = [
   // Relaxed rules for configuration files
   // ============================================================
   {
-    files: ['*.config.{ts,js,mjs}', 'codegen.ts', '**/lib/config/*.ts'],
+    files: ['*.config.{ts,js,mjs}', 'codegen.ts', '**/lib/config/**/*.ts'],
     rules: {
       'max-lines': 'off',
       'no-magic-numbers': 'off',
@@ -419,6 +419,64 @@ const config = [
   {
     files: ['**/lib/errors/*.ts'],
     rules: {
+      'max-statements': ['warn', { max: 25 }],
+    },
+  },
+  // ============================================================
+  // Relaxed rules for API route handlers
+  // Route handlers follow validate → query → transform → respond → catch pattern
+  // ============================================================
+  {
+    files: ['**/app/api/**/*.ts'],
+    rules: {
+      'max-statements': ['warn', { max: 30 }],
+      'max-lines-per-function': ['warn', { max: 100, skipBlankLines: true, skipComments: true }],
+      complexity: ['warn', { max: 25 }],
+    },
+  },
+  // ============================================================
+  // Relaxed rules for complex hooks and lib files
+  // ============================================================
+  {
+    files: [
+      '**/lib/hooks/**/*.ts',
+      '**/lib/api/relay.ts',
+      '**/lib/api/auth.ts',
+      '**/lib/api/types.ts',
+    ],
+    ignores: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts'],
+    rules: {
+      'max-statements': ['warn', { max: 35 }],
+      complexity: ['warn', { max: 30 }],
+      'max-lines': ['warn', { max: 500, skipBlankLines: true, skipComments: true }],
+    },
+  },
+  // ============================================================
+  // Relaxed rules for complex components with large JSX
+  // ============================================================
+  {
+    files: [
+      '**/components/gas/**/*.tsx',
+      '**/components/validators/**/*.tsx',
+      '**/components/systemContracts/**/*.tsx',
+      '**/components/settings/**/*.ts',
+      '**/components/settings/**/*.tsx',
+      '**/components/transactions/advanced-filters/**/*.ts',
+      '**/components/transactions/advanced-filters/**/*.tsx',
+    ],
+    rules: {
+      'max-lines-per-function': ['warn', { max: 300, skipBlankLines: true, skipComments: true }],
+      'max-statements': ['warn', { max: 35 }],
+      complexity: ['warn', { max: 20 }],
+    },
+  },
+  // ============================================================
+  // Relaxed rules for proxy middleware
+  // ============================================================
+  {
+    files: ['proxy.ts'],
+    rules: {
+      'max-lines-per-function': ['warn', { max: 80, skipBlankLines: true, skipComments: true }],
       'max-statements': ['warn', { max: 25 }],
     },
   },

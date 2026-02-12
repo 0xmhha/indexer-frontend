@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useQuery, useSubscription } from '@apollo/client'
 import { GET_RECENT_BLOCKS_FOR_GAS, SUBSCRIBE_NEW_BLOCK_GAS } from '@/lib/apollo/queries/gas'
 import { weiToGwei } from '@/lib/utils/gas'
+import { BLOCKCHAIN, GAS } from '@/lib/config/constants'
 
 /**
  * Gas price tier for recommendations
@@ -79,10 +80,10 @@ interface BlockData {
  * Calculate percentile from sorted array
  */
 function percentile(arr: bigint[], p: number): bigint {
-  if (arr.length === 0) return 0n
-  const index = Math.ceil((p / 100) * arr.length) - 1
+  if (arr.length === 0) {return BLOCKCHAIN.ZERO_BIGINT}
+  const index = Math.ceil((p / BLOCKCHAIN.PERCENTAGE_MULTIPLIER) * arr.length) - 1
   const safeIndex = Math.max(0, Math.min(index, arr.length - 1))
-  return arr[safeIndex] ?? 0n
+  return arr[safeIndex] ?? BLOCKCHAIN.ZERO_BIGINT
 }
 
 /**
@@ -92,7 +93,7 @@ function extractPriorityFees(blocks: BlockData[]): bigint[] {
   const fees: bigint[] = []
 
   for (const block of blocks) {
-    const baseFee = block.baseFeePerGas ? BigInt(block.baseFeePerGas) : 0n
+    const baseFee = block.baseFeePerGas ? BigInt(block.baseFeePerGas) : BLOCKCHAIN.ZERO_BIGINT
 
     for (const tx of block.transactions) {
       // For EIP-1559 transactions (type 2)
@@ -100,7 +101,7 @@ function extractPriorityFees(blocks: BlockData[]): bigint[] {
         fees.push(BigInt(tx.maxPriorityFeePerGas))
       }
       // For legacy transactions, estimate priority fee
-      else if (tx.gasPrice && baseFee > 0n) {
+      else if (tx.gasPrice && baseFee > BLOCKCHAIN.ZERO_BIGINT) {
         const gasPrice = BigInt(tx.gasPrice)
         if (gasPrice > baseFee) {
           fees.push(gasPrice - baseFee)
@@ -109,7 +110,11 @@ function extractPriorityFees(blocks: BlockData[]): bigint[] {
     }
   }
 
-  return fees.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+  return fees.sort((a, b) => {
+    if (a < b) {return -1}
+    if (a > b) {return 1}
+    return 0
+  })
 }
 
 /**
@@ -118,13 +123,13 @@ function extractPriorityFees(blocks: BlockData[]): bigint[] {
 function estimateConfirmationTime(tier: GasPriceTier): number {
   switch (tier) {
     case 'economy':
-      return 300 // ~5 minutes (25 blocks)
+      return GAS.CONFIRMATION_ECONOMY_SECONDS
     case 'standard':
-      return 60 // ~1 minute (5 blocks)
+      return GAS.CONFIRMATION_STANDARD_SECONDS
     case 'priority':
-      return 12 // ~1 block (12 seconds)
+      return GAS.CONFIRMATION_PRIORITY_SECONDS
     default:
-      return 60
+      return GAS.CONFIRMATION_STANDARD_SECONDS
   }
 }
 
@@ -132,10 +137,10 @@ function estimateConfirmationTime(tier: GasPriceTier): number {
  * Format estimated time for display
  */
 function formatEstimatedTime(seconds: number): string {
-  if (seconds < 60) {
+  if (seconds < BLOCKCHAIN.SECONDS_PER_MINUTE) {
     return `~${seconds}s`
   }
-  const minutes = Math.round(seconds / 60)
+  const minutes = Math.round(seconds / BLOCKCHAIN.SECONDS_PER_MINUTE)
   return `~${minutes}m`
 }
 
@@ -153,7 +158,7 @@ export function useGasTracker(options: UseGasTrackerOptions = {}) {
   // Fetch recent blocks
   const { data, loading, error, refetch } = useQuery(GET_RECENT_BLOCKS_FOR_GAS, {
     variables: { limit: blockCount },
-    pollInterval: enableSubscription ? 0 : 12000, // Poll if subscription disabled
+    pollInterval: enableSubscription ? 0 : GAS.BLOCK_TIME_POLL_MS,
     fetchPolicy: 'cache-and-network',
   })
 
@@ -176,36 +181,36 @@ export function useGasTracker(options: UseGasTrackerOptions = {}) {
 
   // Calculate gas metrics from block data
   const metrics = useMemo<NetworkGasMetrics | null>(() => {
-    if (!data?.blocks?.nodes?.length) return null
+    if (!data?.blocks?.nodes?.length) {return null}
 
     const blocks: BlockData[] = data.blocks.nodes
     const latestBlock = blocks[0]
 
     // Guard against empty blocks array (TypeScript narrowing)
-    if (!latestBlock) return null
+    if (!latestBlock) {return null}
 
     // Get base fee from latest block
-    const baseFee = latestBlock.baseFeePerGas ? BigInt(latestBlock.baseFeePerGas) : 0n
+    const baseFee = latestBlock.baseFeePerGas ? BigInt(latestBlock.baseFeePerGas) : BLOCKCHAIN.ZERO_BIGINT
     const baseFeeGwei = weiToGwei(baseFee)
 
     // Calculate network utilization
     const gasUsed = BigInt(latestBlock.gasUsed)
     const gasLimit = BigInt(latestBlock.gasLimit)
-    const networkUtilization = gasLimit > 0n ? Number((gasUsed * 100n) / gasLimit) : 0
+    const networkUtilization = gasLimit > BLOCKCHAIN.ZERO_BIGINT ? Number((gasUsed * BLOCKCHAIN.HUNDRED_BIGINT) / gasLimit) : 0
 
     // Extract and analyze priority fees
     const priorityFees = extractPriorityFees(blocks)
 
     // Calculate percentiles for recommendations
-    const p25 = priorityFees.length > 0 ? percentile(priorityFees, 25) : BigInt(1e9) // 1 Gwei
-    const p50 = priorityFees.length > 0 ? percentile(priorityFees, 50) : BigInt(2e9) // 2 Gwei
-    const p75 = priorityFees.length > 0 ? percentile(priorityFees, 75) : BigInt(3e9) // 3 Gwei
+    const p25 = priorityFees.length > 0 ? percentile(priorityFees, BLOCKCHAIN.PERCENTAGE_QUARTER) : BigInt(GAS.GWEI_1_WEI)
+    const p50 = priorityFees.length > 0 ? percentile(priorityFees, BLOCKCHAIN.PERCENTAGE_HALF) : BigInt(GAS.GWEI_2_WEI)
+    const p75 = priorityFees.length > 0 ? percentile(priorityFees, BLOCKCHAIN.PERCENTAGE_THREE_QUARTERS) : BigInt(GAS.GWEI_3_WEI)
 
     // Ensure minimum priority fees
-    const minPriority = BigInt(1e9) // 1 Gwei minimum
+    const minPriority = BigInt(GAS.GWEI_1_WEI)
     const economyPriority = p25 > minPriority ? p25 : minPriority
-    const standardPriority = p50 > economyPriority ? p50 : economyPriority + BigInt(1e9)
-    const priorityPriority = p75 > standardPriority ? p75 : standardPriority + BigInt(1e9)
+    const standardPriority = p50 > economyPriority ? p50 : economyPriority + BigInt(GAS.GWEI_1_WEI)
+    const priorityPriority = p75 > standardPriority ? p75 : standardPriority + BigInt(GAS.GWEI_1_WEI)
 
     // Build price levels
     const priceLevels: GasPriceLevel[] = [
@@ -213,7 +218,7 @@ export function useGasTracker(options: UseGasTrackerOptions = {}) {
         tier: 'economy',
         label: 'Economy',
         icon: '🐢',
-        maxFeePerGas: baseFee + economyPriority + BigInt(5e9), // +5 Gwei buffer
+        maxFeePerGas: baseFee + economyPriority + BigInt(GAS.GWEI_5_WEI),
         maxPriorityFee: economyPriority,
         estimatedSeconds: estimateConfirmationTime('economy'),
         displayLabel: formatEstimatedTime(estimateConfirmationTime('economy')),
@@ -222,7 +227,7 @@ export function useGasTracker(options: UseGasTrackerOptions = {}) {
         tier: 'standard',
         label: 'Standard',
         icon: '🚗',
-        maxFeePerGas: baseFee + standardPriority + BigInt(10e9), // +10 Gwei buffer
+        maxFeePerGas: baseFee + standardPriority + BigInt(GAS.GWEI_10_WEI),
         maxPriorityFee: standardPriority,
         estimatedSeconds: estimateConfirmationTime('standard'),
         displayLabel: formatEstimatedTime(estimateConfirmationTime('standard')),
@@ -231,7 +236,7 @@ export function useGasTracker(options: UseGasTrackerOptions = {}) {
         tier: 'priority',
         label: 'Priority',
         icon: '🚀',
-        maxFeePerGas: baseFee + priorityPriority + BigInt(15e9), // +15 Gwei buffer
+        maxFeePerGas: baseFee + priorityPriority + BigInt(GAS.GWEI_15_WEI),
         maxPriorityFee: priorityPriority,
         estimatedSeconds: estimateConfirmationTime('priority'),
         displayLabel: formatEstimatedTime(estimateConfirmationTime('priority')),
@@ -254,11 +259,11 @@ export function useGasTracker(options: UseGasTrackerOptions = {}) {
 
   // Calculate gas history for chart
   const history = useMemo<GasPriceHistoryPoint[]>(() => {
-    if (!data?.blocks?.nodes?.length) return []
+    if (!data?.blocks?.nodes?.length) {return []}
 
     return data.blocks.nodes
       .map((block: BlockData) => {
-        const baseFee = block.baseFeePerGas ? BigInt(block.baseFeePerGas) : 0n
+        const baseFee = block.baseFeePerGas ? BigInt(block.baseFeePerGas) : BLOCKCHAIN.ZERO_BIGINT
         const gasUsed = BigInt(block.gasUsed)
         const gasLimit = BigInt(block.gasLimit)
 
@@ -267,7 +272,7 @@ export function useGasTracker(options: UseGasTrackerOptions = {}) {
           timestamp: Number(block.timestamp),
           baseFee,
           baseFeeGwei: weiToGwei(baseFee),
-          utilization: gasLimit > 0n ? Number((gasUsed * 100n) / gasLimit) : 0,
+          utilization: gasLimit > BLOCKCHAIN.ZERO_BIGINT ? Number((gasUsed * BLOCKCHAIN.HUNDRED_BIGINT) / gasLimit) : 0,
           txCount: block.transactionCount,
         }
       })

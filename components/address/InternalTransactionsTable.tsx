@@ -80,8 +80,8 @@ export function InternalTransactionsTable({ address, limit = PAGINATION.DEFAULT_
   const allAddresses = useMemo(() => {
     const set = new Set<string>()
     for (const tx of internalTransactions) {
-      if (tx.from) set.add(tx.from)
-      if (tx.to) set.add(tx.to)
+      if (tx.from) {set.add(tx.from)}
+      if (tx.to) {set.add(tx.to)}
     }
     return [...set]
   }, [internalTransactions])
@@ -97,8 +97,8 @@ export function InternalTransactionsTable({ address, limit = PAGINATION.DEFAULT_
   }
 
   const loadMore = () => {
-    if (fromPageInfo.hasNextPage) loadMoreFrom?.()
-    if (toPageInfo.hasNextPage) loadMoreTo?.()
+    if (fromPageInfo.hasNextPage) {loadMoreFrom?.()}
+    if (toPageInfo.hasNextPage) {loadMoreTo?.()}
   }
 
   const handleLoadMore = () => {

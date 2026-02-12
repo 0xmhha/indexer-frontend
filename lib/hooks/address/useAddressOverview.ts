@@ -51,7 +51,7 @@ export function useAddressOverview(address: string | null) {
   const rawOverview: RawAddressOverview | null = effectiveData?.addressOverview ?? null
 
   const overview = useMemo((): AddressOverview | null => {
-    if (!rawOverview) return null
+    if (!rawOverview) {return null}
 
     return {
       address: rawOverview.address,

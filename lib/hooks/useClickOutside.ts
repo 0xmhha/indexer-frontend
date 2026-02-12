@@ -12,7 +12,7 @@ export function useClickOutside(
   enabled: boolean = true,
 ) {
   useEffect(() => {
-    if (!enabled) return
+    if (!enabled) {return}
 
     const refArray = Array.isArray(refs) ? refs : [refs]
 

@@ -34,15 +34,13 @@ export function useTokenBalances(address: string | null, tokenType?: string) {
 
   const effectiveData = data ?? previousData
 
-  const rawBalances = effectiveData?.tokenBalances ?? []
-
-  const balances = useMemo((): TokenBalance[] =>
-    rawBalances.map((balance: RawTokenBalance) => ({
+  const balances = useMemo((): TokenBalance[] => {
+    const rawBalances = effectiveData?.tokenBalances ?? []
+    return rawBalances.map((balance: RawTokenBalance) => ({
       ...balance,
       balance: BigInt(balance.balance),
-    })),
-    [rawBalances]
-  )
+    }))
+  }, [effectiveData])
 
   return useMemo(() => ({
     balances,

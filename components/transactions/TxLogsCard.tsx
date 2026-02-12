@@ -233,7 +233,7 @@ export function TxLogsCard({ logs }: { logs: Log[] }) {
   // Collect all unique addresses from logs (contract addresses + address-type params)
   const allAddresses = useMemo(() => {
     const set = new Set<string>()
-    if (!logs) return []
+    if (!logs) {return []}
     for (const log of logs) {
       set.add(log.address)
       // Also collect address-type param values from decoded logs

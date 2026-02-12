@@ -5,6 +5,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { formatNumber, formatCurrency } from '@/lib/utils/format'
 import { env } from '@/lib/config/env'
 import { cn } from '@/lib/utils'
+import { THRESHOLDS } from '@/lib/config/constants'
 import { useAddressStats } from '@/lib/hooks/useAddress'
 
 interface AddressStatsCardProps {
@@ -99,11 +100,11 @@ export function AddressStatsCard({
             label="Success Rate"
             value={`${successRate.toFixed(1)}%`}
             subValue={`${stats.successCount} success / ${stats.failedCount} failed`}
-            icon={successRate >= 95 ? '✅' : successRate >= 80 ? '⚠️' : '❌'}
+            icon={successRate >= THRESHOLDS.SUCCESS_RATE_EXCELLENT ? '✅' : successRate >= THRESHOLDS.SUCCESS_RATE_GOOD ? '⚠️' : '❌'}
             color={
-              successRate >= 95
+              successRate >= THRESHOLDS.SUCCESS_RATE_EXCELLENT
                 ? 'text-accent-green'
-                : successRate >= 80
+                : successRate >= THRESHOLDS.SUCCESS_RATE_GOOD
                   ? 'text-yellow-500'
                   : 'text-accent-red'
             }

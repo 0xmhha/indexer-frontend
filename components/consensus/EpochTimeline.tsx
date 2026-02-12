@@ -31,7 +31,7 @@ export function EpochTimeline({ className }: EpochTimelineProps) {
 
   // Create display data from latest epoch
   const epochsToDisplay = useMemo((): EpochDataDisplay[] => {
-    if (!latestEpochData) return []
+    if (!latestEpochData) {return []}
 
     const prevCount = latestEpochData.previousEpochValidatorCount
     const validatorChange = prevCount !== undefined && prevCount !== null

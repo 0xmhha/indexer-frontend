@@ -9,6 +9,7 @@
 
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
+import { TIMING } from '@/lib/config/constants'
 
 // ============================================================================
 // Configuration
@@ -49,7 +50,7 @@ if (typeof window === 'undefined') {
         rateLimitStore.delete(key)
       }
     }
-  }, 60000)
+  }, TIMING.CLEANUP_INTERVAL)
 }
 
 function checkRateLimit(clientKey: string): {

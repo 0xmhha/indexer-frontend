@@ -3,6 +3,8 @@
  * Centralized error handling for REST API endpoints
  */
 
+import { HTTP_STATUS } from '@/lib/config/constants'
+
 /**
  * Base API Error class
  */
@@ -10,7 +12,7 @@ export class ApiError extends Error {
   constructor(
     message: string,
     public code: string,
-    public statusCode: number = 500
+    public statusCode: number = HTTP_STATUS.INTERNAL_SERVER_ERROR
   ) {
     super(message)
     this.name = 'ApiError'
@@ -22,7 +24,7 @@ export class ApiError extends Error {
  */
 export class InvalidAddressError extends ApiError {
   constructor(address: string) {
-    super(`Invalid address format: ${address}`, 'INVALID_ADDRESS', 400)
+    super(`Invalid address format: ${address}`, 'INVALID_ADDRESS', HTTP_STATUS.BAD_REQUEST)
     this.name = 'InvalidAddressError'
   }
 }
@@ -32,7 +34,7 @@ export class InvalidAddressError extends ApiError {
  */
 export class InvalidHashError extends ApiError {
   constructor(hash: string) {
-    super(`Invalid hash format: ${hash}`, 'INVALID_HASH', 400)
+    super(`Invalid hash format: ${hash}`, 'INVALID_HASH', HTTP_STATUS.BAD_REQUEST)
     this.name = 'InvalidHashError'
   }
 }
@@ -42,7 +44,7 @@ export class InvalidHashError extends ApiError {
  */
 export class NotFoundError extends ApiError {
   constructor(resource: string, identifier: string) {
-    super(`${resource} not found: ${identifier}`, 'NOT_FOUND', 404)
+    super(`${resource} not found: ${identifier}`, 'NOT_FOUND', HTTP_STATUS.NOT_FOUND)
     this.name = 'NotFoundError'
   }
 }
@@ -52,7 +54,7 @@ export class NotFoundError extends ApiError {
  */
 export class IndexerConnectionError extends ApiError {
   constructor(originalError?: Error) {
-    super('Failed to connect to Indexer Server', 'INDEXER_CONNECTION_ERROR', 502)
+    super('Failed to connect to Indexer Server', 'INDEXER_CONNECTION_ERROR', HTTP_STATUS.BAD_GATEWAY)
     this.name = 'IndexerConnectionError'
     if (originalError) {
       this.cause = originalError
@@ -65,7 +67,7 @@ export class IndexerConnectionError extends ApiError {
  */
 export class IndexerQueryError extends ApiError {
   constructor(message: string) {
-    super(message, 'INDEXER_ERROR', 500)
+    super(message, 'INDEXER_ERROR', HTTP_STATUS.INTERNAL_SERVER_ERROR)
     this.name = 'IndexerQueryError'
   }
 }
@@ -75,7 +77,7 @@ export class IndexerQueryError extends ApiError {
  */
 export class RateLimitError extends ApiError {
   constructor() {
-    super('Rate limit exceeded', 'RATE_LIMITED', 429)
+    super('Rate limit exceeded', 'RATE_LIMITED', HTTP_STATUS.TOO_MANY_REQUESTS)
     this.name = 'RateLimitError'
   }
 }
@@ -85,7 +87,7 @@ export class RateLimitError extends ApiError {
  */
 export class TimeoutError extends ApiError {
   constructor() {
-    super('Request timeout', 'TIMEOUT', 504)
+    super('Request timeout', 'TIMEOUT', HTTP_STATUS.GATEWAY_TIMEOUT)
     this.name = 'TimeoutError'
   }
 }
@@ -95,7 +97,7 @@ export class TimeoutError extends ApiError {
  */
 export class InvalidPaginationError extends ApiError {
   constructor(message: string) {
-    super(message, 'INVALID_PAGINATION', 400)
+    super(message, 'INVALID_PAGINATION', HTTP_STATUS.BAD_REQUEST)
     this.name = 'InvalidPaginationError'
   }
 }
@@ -105,7 +107,7 @@ export class InvalidPaginationError extends ApiError {
  */
 export class UnauthorizedError extends ApiError {
   constructor(message = 'Invalid or missing API key') {
-    super(message, 'UNAUTHORIZED', 401)
+    super(message, 'UNAUTHORIZED', HTTP_STATUS.UNAUTHORIZED)
     this.name = 'UnauthorizedError'
   }
 }

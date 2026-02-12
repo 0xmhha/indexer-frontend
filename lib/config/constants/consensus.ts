@@ -124,4 +124,16 @@ export const THRESHOLDS = {
 
   /** Participation rate fallback threshold (%) */
   PARTICIPATION_FALLBACK: 50,
+
+  /** Network utilization level thresholds (%) */
+  UTILIZATION_CONGESTED: 90,
+  UTILIZATION_BUSY: 70,
+  UTILIZATION_MODERATE: 50,
+
+  /** Address transaction success rate thresholds (%) */
+  SUCCESS_RATE_EXCELLENT: 95,
+  SUCCESS_RATE_GOOD: 80,
+
+  /** Rank badge thresholds */
+  RANK_BRONZE: 3,
 } as const

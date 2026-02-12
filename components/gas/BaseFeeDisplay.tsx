@@ -2,6 +2,7 @@
 
 import { Card } from '@/components/ui/Card'
 import { cn } from '@/lib/utils'
+import { GAS } from '@/lib/config/constants'
 
 interface BaseFeeDisplayProps {
   baseFeeGwei: number
@@ -17,9 +18,9 @@ interface BaseFeeDisplayProps {
 export function BaseFeeDisplay({ baseFeeGwei, blockNumber, className }: BaseFeeDisplayProps) {
   // Determine color based on base fee level
   const getFeeLevel = (fee: number) => {
-    if (fee >= 100) return { color: 'text-accent-red', label: 'EXTREME' }
-    if (fee >= 50) return { color: 'text-accent-orange', label: 'HIGH' }
-    if (fee >= 25) return { color: 'text-accent-yellow', label: 'MODERATE' }
+    if (fee >= 100) {return { color: 'text-accent-red', label: 'EXTREME' }}
+    if (fee >= GAS.BASE_FEE_HIGH) {return { color: 'text-accent-orange', label: 'HIGH' }}
+    if (fee >= GAS.BASE_FEE_MEDIUM) {return { color: 'text-accent-yellow', label: 'MODERATE' }}
     return { color: 'text-accent-green', label: 'LOW' }
   }
 
