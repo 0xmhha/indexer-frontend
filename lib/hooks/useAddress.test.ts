@@ -35,6 +35,15 @@ vi.mock('@/lib/config/constants', () => ({
     FAST: 10000,
     SLOW: 30000,
   },
+  ERROR_LOGGING: {
+    MAX_IN_MEMORY_LOGS: 100,
+    MAX_BATCH_SIZE: 10,
+    MAX_STORED_ERRORS: 50,
+    DEFAULT_RECENT_COUNT: 10,
+  },
+  TIMEOUTS: {
+    ERROR_BATCH_DELAY: 5000,
+  },
 }))
 
 describe('useAddressBalance', () => {

@@ -233,10 +233,9 @@ export class ApiCache {
    */
   async invalidatePattern(pattern: string): Promise<void> {
     // For memory cache, we need to check each key
-    // This is a simplified version
-    const store = this.store as MemoryCache
-    if ('getStats' in store) {
-      const { keys } = store.getStats()
+    // Use runtime type check instead of unsafe type assertion
+    if (this.store instanceof MemoryCache) {
+      const { keys } = this.store.getStats()
       const regex = new RegExp(pattern.replace('*', '.*'))
       for (const key of keys) {
         if (regex.test(key)) {

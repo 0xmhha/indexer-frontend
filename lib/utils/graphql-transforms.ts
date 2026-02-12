@@ -1,35 +1,59 @@
 /**
  * GraphQL Data Transform Utilities
  *
- * Transforms string-based GraphQL responses to appropriate TypeScript types
+ * Transforms string-based GraphQL responses to appropriate TypeScript types.
+ *
+ * IMPORTANT: Conversion failures for non-empty values are logged as warnings
+ * to surface potential data corruption from the backend.
  */
 
+import { errorLogger } from '@/lib/errors/logger'
+
 /**
- * Transform a string to BigInt, returns 0n if invalid
+ * Transform a string to BigInt.
+ * - null/undefined/empty → BigInt(0) (expected GraphQL nulls)
+ * - Valid numeric string → BigInt value
+ * - Invalid non-empty string → BigInt(0) + warning log (potential data corruption)
  */
 export function toBigInt(value: string | null | undefined): bigint {
-  if (!value) {return BigInt(0)}
+  if (!value) { return BigInt(0) }
   try {
     return BigInt(value)
   } catch {
+    errorLogger.warn(`toBigInt: failed to convert "${value}"`, {
+      component: 'graphql-transforms',
+      action: 'toBigInt',
+      metadata: { rawValue: value },
+    })
     return BigInt(0)
   }
 }
 
 /**
- * Transform a string to number, returns 0 if invalid
+ * Transform a string to number.
+ * - null/undefined/empty → 0 (expected GraphQL nulls)
+ * - Valid numeric string → number value
+ * - Invalid non-empty string → 0 + warning log (potential data corruption)
  */
 export function toNumber(value: string | null | undefined): number {
-  if (!value) {return 0}
+  if (!value) { return 0 }
   const num = Number(value)
-  return isNaN(num) ? 0 : num
+  if (isNaN(num)) {
+    errorLogger.warn(`toNumber: failed to convert "${value}"`, {
+      component: 'graphql-transforms',
+      action: 'toNumber',
+      metadata: { rawValue: value },
+    })
+    return 0
+  }
+  return num
 }
 
 /**
  * Transform a timestamp string to Date
  */
 export function toDate(timestamp: string | null | undefined): Date {
-  if (!timestamp) {return new Date(0)}
+  if (!timestamp) { return new Date(0) }
   const ts = toBigInt(timestamp)
   return new Date(Number(ts) * 1000)
 }

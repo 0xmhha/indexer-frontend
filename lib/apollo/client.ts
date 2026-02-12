@@ -3,7 +3,7 @@ import { GraphQLWsLink } from '@apollo/client/link/subscriptions'
 import { getMainDefinition } from '@apollo/client/utilities'
 import { onError } from '@apollo/client/link/error'
 import { createClient, Client as WsClient } from 'graphql-ws'
-import { REALTIME } from '@/lib/config/constants'
+import { REALTIME, PAGINATION } from '@/lib/config/constants'
 import { errorLogger } from '@/lib/errors/logger'
 import type { NetworkEndpoints } from '@/lib/config/networks.types'
 
@@ -78,7 +78,14 @@ function createLoggingLink() {
 }
 
 /**
- * Create cache instance with type policies
+ * Maximum number of nodes to keep in paginated cache fields.
+ * Prevents unbounded memory growth in long-running sessions.
+ */
+const MAX_CACHED_NODES = PAGINATION.ANALYTICS_BLOCK_LIMIT // 1000
+
+/**
+ * Create cache instance with type policies.
+ * Merge policies include maxSize limits to prevent unbounded cache growth.
  */
 function createCache() {
   return new InMemoryCache({
@@ -93,7 +100,9 @@ function createCache() {
                 return incoming
               }
               const merged = existing ? { ...existing } : { nodes: [], totalCount: 0, pageInfo: {} }
-              merged.nodes = [...(existing?.nodes ?? []), ...(incoming?.nodes ?? [])]
+              const allNodes = [...(existing?.nodes ?? []), ...(incoming?.nodes ?? [])]
+              // Limit cached nodes to prevent unbounded memory growth
+              merged.nodes = allNodes.slice(-MAX_CACHED_NODES)
               merged.totalCount = incoming.totalCount
               merged.pageInfo = incoming.pageInfo
               return merged
@@ -106,7 +115,9 @@ function createCache() {
                 return incoming
               }
               const merged = existing ? { ...existing } : { nodes: [], totalCount: 0, pageInfo: {} }
-              merged.nodes = [...(existing?.nodes ?? []), ...(incoming?.nodes ?? [])]
+              const allNodes = [...(existing?.nodes ?? []), ...(incoming?.nodes ?? [])]
+              // Limit cached nodes to prevent unbounded memory growth
+              merged.nodes = allNodes.slice(-MAX_CACHED_NODES)
               merged.totalCount = incoming.totalCount
               merged.pageInfo = incoming.pageInfo
               return merged

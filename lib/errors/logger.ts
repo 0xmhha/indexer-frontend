@@ -35,6 +35,7 @@ class ErrorLogger {
   private maxLogs = ERROR_LOGGING.MAX_IN_MEMORY_LOGS
   private errorQueue: SerializedErrorLog[] = []
   private batchTimeout: NodeJS.Timeout | null = null
+  private isFlushing = false
   private readonly BATCH_DELAY = TIMEOUTS.ERROR_BATCH_DELAY
   private readonly MAX_BATCH_SIZE = ERROR_LOGGING.MAX_BATCH_SIZE
   private readonly STORAGE_KEY = 'app_error_logs'
@@ -214,12 +215,15 @@ class ErrorLogger {
   }
 
   /**
-   * Flush error batch to API endpoint
+   * Flush error batch to API endpoint.
+   * Uses isFlushing flag to prevent concurrent flushes (race condition).
    */
   private flushErrorBatch(): void {
-    if (this.errorQueue.length === 0) {
+    if (this.isFlushing || this.errorQueue.length === 0) {
       return
     }
+
+    this.isFlushing = true
 
     // Clear timeout
     if (this.batchTimeout) {
@@ -227,7 +231,7 @@ class ErrorLogger {
       this.batchTimeout = null
     }
 
-    // Get batch to send
+    // Get batch to send and clear queue atomically
     const batch = [...this.errorQueue]
     this.errorQueue = []
 
@@ -249,7 +253,11 @@ class ErrorLogger {
       }).catch((e) => {
         // Silently fail if error reporting fails
         console.warn('Failed to send error batch to API:', e)
+      }).finally(() => {
+        this.isFlushing = false
       })
+    } else {
+      this.isFlushing = false
     }
   }
 
