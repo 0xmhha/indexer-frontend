@@ -55,7 +55,7 @@ export function AdvancedTransactionFilters({
   }, [onReset])
 
   const applyQuickFilter = useCallback((filterId: QuickFilterId) => {
-    let newFilters = { ...defaultFilters }
+    const newFilters = { ...defaultFilters }
 
     switch (filterId) {
       case 'contract-calls':

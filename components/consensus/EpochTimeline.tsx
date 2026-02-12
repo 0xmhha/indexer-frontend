@@ -34,7 +34,7 @@ export function EpochTimeline({ className }: EpochTimelineProps) {
     if (!latestEpochData) return []
 
     const prevCount = latestEpochData.previousEpochValidatorCount
-    const validatorChange = prevCount != null
+    const validatorChange = prevCount !== undefined && prevCount !== null
       ? latestEpochData.validatorCount - prevCount
       : 0
 

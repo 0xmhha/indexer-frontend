@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useCallback } from 'react'
 import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import {
@@ -25,22 +25,30 @@ import { BenefitCard } from './BenefitCard'
 
 export function FeeDelegationDashboard({ className }: FeeDelegationDashboardProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<TimePeriodId>('all')
+  const [timeFilter, setTimeFilter] = useState<{ fromTime?: string; toTime?: string }>({})
 
-  const timeFilter = useMemo(() => {
-    if (selectedPeriod === 'all') return {}
+  const handlePeriodChange = useCallback((period: TimePeriodId) => {
+    setSelectedPeriod(period)
+    if (period === 'all') {
+      setTimeFilter({})
+      return
+    }
     const now = Math.floor(Date.now() / 1000)
     const periods: Record<string, number> = {
       '24h': 24 * 60 * 60,
       '7d': 7 * 24 * 60 * 60,
       '30d': 30 * 24 * 60 * 60,
     }
-    const seconds = periods[selectedPeriod]
-    if (!seconds) return {}
-    return {
+    const seconds = periods[period]
+    if (!seconds) {
+      setTimeFilter({})
+      return
+    }
+    setTimeFilter({
       fromTime: String(now - seconds),
       toTime: String(now),
-    }
-  }, [selectedPeriod])
+    })
+  }, [])
 
   const { stats, loading, error } = useFeeDelegationStats(timeFilter)
 
@@ -75,7 +83,7 @@ export function FeeDelegationDashboard({ className }: FeeDelegationDashboardProp
           {TIME_PERIODS.map((period) => (
             <button
               key={period.id}
-              onClick={() => setSelectedPeriod(period.id)}
+              onClick={() => handlePeriodChange(period.id)}
               className={cn(
                 'rounded border px-3 py-1.5 font-mono text-xs transition-colors',
                 selectedPeriod === period.id

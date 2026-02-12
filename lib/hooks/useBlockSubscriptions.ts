@@ -39,10 +39,10 @@ function toRawBlock(block: RealtimeBlock): RawBlock {
   return {
     number: block.number,
     hash: block.hash,
-    ...(block.parentHash != null && { parentHash: block.parentHash }),
+    ...(block.parentHash !== undefined && block.parentHash !== null && { parentHash: block.parentHash }),
     timestamp: block.timestamp,
-    ...(block.miner != null && { miner: block.miner }),
-    ...(block.transactionCount != null && { transactionCount: block.transactionCount }),
+    ...(block.miner !== undefined && block.miner !== null && { miner: block.miner }),
+    ...(block.transactionCount !== undefined && block.transactionCount !== null && { transactionCount: block.transactionCount }),
   }
 }
 

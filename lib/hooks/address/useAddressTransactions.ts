@@ -1,21 +1,24 @@
 'use client'
 
-import { useRef, useMemo } from 'react'
+import { useState } from 'react'
 import { useQuery } from '@apollo/client'
 import { GET_TRANSACTIONS_BY_ADDRESS } from '@/lib/apollo/queries'
 import { transformTransactions, type TransformedTransaction } from '@/lib/utils/graphql-transforms'
 import { PAGINATION, POLLING_INTERVALS } from '@/lib/config/constants'
 
+interface CachedTransactionData {
+  transactions: TransformedTransaction[]
+  totalCount: number
+  pageInfo: { hasNextPage: boolean; hasPreviousPage: boolean } | undefined
+}
+
+const EMPTY_CACHE: CachedTransactionData = { transactions: [], totalCount: 0, pageInfo: undefined }
+
 /**
  * Hook to fetch transactions by address with auto-refresh
  */
 export function useAddressTransactions(address: string | null, limit: number = PAGINATION.ADDRESS_TX_LIMIT, offset: number = 0) {
-  const lastOffsetRef = useRef<number>(offset)
-  const cachedDataRef = useRef<{
-    transactions: TransformedTransaction[]
-    totalCount: number
-    pageInfo: { hasNextPage: boolean; hasPreviousPage: boolean } | undefined
-  } | null>(null)
+  const [cachedData, setCachedData] = useState<CachedTransactionData>(EMPTY_CACHE)
 
   const { data, loading, error, fetchMore } = useQuery(GET_TRANSACTIONS_BY_ADDRESS, {
     variables: {
@@ -29,34 +32,25 @@ export function useAddressTransactions(address: string | null, limit: number = P
     notifyOnNetworkStatusChange: false,
   })
 
-  const result = useMemo(() => {
+  // Cache latest successful result during render
+  // Pattern: https://react.dev/reference/react/useState#storing-information-from-previous-renders
+  const [prevData, setPrevData] = useState(data)
+  if (data !== prevData) {
+    setPrevData(data)
     if (data?.transactionsByAddress) {
       const rawTransactions = data.transactionsByAddress.nodes ?? []
-      const transactions = transformTransactions(rawTransactions)
-      const totalCount = data.transactionsByAddress.totalCount ?? 0
-      const pageInfo = data.transactionsByAddress.pageInfo
-
-      lastOffsetRef.current = offset
-      cachedDataRef.current = { transactions, totalCount, pageInfo }
-
-      return { transactions, totalCount, pageInfo }
+      setCachedData({
+        transactions: transformTransactions(rawTransactions),
+        totalCount: data.transactionsByAddress.totalCount ?? 0,
+        pageInfo: data.transactionsByAddress.pageInfo,
+      })
     }
-
-    if (cachedDataRef.current && lastOffsetRef.current === offset) {
-      return cachedDataRef.current
-    }
-
-    return {
-      transactions: [] as TransformedTransaction[],
-      totalCount: cachedDataRef.current?.totalCount ?? 0,
-      pageInfo: undefined,
-    }
-  }, [data, offset])
+  }
 
   return {
-    transactions: result.transactions,
-    totalCount: result.totalCount,
-    pageInfo: result.pageInfo,
+    transactions: cachedData.transactions,
+    totalCount: cachedData.totalCount,
+    pageInfo: cachedData.pageInfo,
     loading,
     error,
     fetchMore,
