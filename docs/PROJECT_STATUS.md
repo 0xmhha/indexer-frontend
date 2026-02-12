@@ -55,10 +55,10 @@
 
 | 영역 | 상태 |
 |------|------|
-| 구현 페이지 | 19개 (SEO, 404 포함) |
+| 구현 페이지 | 21개 (SEO, 404 포함) |
 | 컴포넌트 | 151개 |
-| 커스텀 Hooks | 63개 |
-| GraphQL Hooks | 24+ 쿼리/구독 |
+| 커스텀 Hooks | 70개 |
+| GraphQL | 35개 쿼리/구독 |
 | 테스트 | 28 파일, **666 테스트** (Vitest) |
 | TypeScript | Strict Mode, **0 에러** |
 | ESLint | **0 에러, 0 워닝** (복잡도 규칙 포함) |
@@ -71,26 +71,6 @@
 
 ## 2. 필수 남은 작업
 
-### E2E 테스트 (우선순위: 높음)
-
-**상태**: Playwright 설정 완료, 테스트 케이스 미작성
-
-필요 파일:
-```
-tests/e2e/
-├── block-detail.spec.ts
-├── transaction-detail.spec.ts
-├── address-page.spec.ts
-├── search.spec.ts
-└── realtime-updates.spec.ts
-```
-
-핵심 시나리오:
-- 블록/트랜잭션 상세 페이지 렌더링 및 네비게이션
-- 주소 페이지 트랜잭션 목록 및 필터링
-- 검색 (블록 번호, 해시, 주소)
-- WebSocket 실시간 블록 업데이트
-
 ### WCAG 2.1 AA 접근성 (우선순위: 높음)
 
 **상태**: 기본 시맨틱 HTML/ARIA 구현, 포괄적 검증 미완료
@@ -102,13 +82,27 @@ tests/e2e/
 - 키보드 네비게이션 전체 테스트
 - 포커스 관리 검증
 
-### Contract Verification 실제 API 연동 (우선순위: 중간)
+### E2E 테스트 실행 검증 (우선순위: 중간)
 
-**상태**: Mock 데이터 사용 중 → 백엔드 API 완료됨
+**상태**: 10개 E2E 테스트 파일 작성 완료 (Playwright)
 
-필요 작업:
-- `GET_CONTRACT_VERIFICATION` 쿼리 사용으로 변경
-- Mock 로직 제거, 로딩/에러 처리
+```
+tests/e2e/
+├── address.spec.ts
+├── block-detail.spec.ts
+├── contract.spec.ts
+├── homepage.spec.ts
+├── navigation.spec.ts
+├── pagination.spec.ts
+├── search.spec.ts
+├── settings.spec.ts
+├── transaction-detail.spec.ts
+└── validators.spec.ts
+```
+
+남은 작업:
+- 실제 백엔드 연결 후 E2E 테스트 실행 및 통과 확인
+- CI/CD 파이프라인에 E2E 테스트 통합
 
 ---
 
@@ -189,19 +183,20 @@ tests/e2e/
 
 ## 6. 명세 준수 현황
 
-`FRONTEND_IMPLEMENTATION_PROMPT.md` 대비 구현율: **~95%**
+`FRONTEND_IMPLEMENTATION_PROMPT.md` 대비 구현율: **~97%**
 
 | 영역 | 상태 | 비고 |
 |------|:----:|------|
 | 기술 스택 | ✅ | 모든 기술 스택 적용 |
 | 디자인 시스템 | ✅ | Crystalline Infrastructure |
-| 핵심 페이지 | ✅ | 10개 명세 + 9개 추가 |
+| 핵심 페이지 | ✅ | 10개 명세 + 11개 추가 (21개) |
 | 컴포넌트 | ✅ | 151개 |
-| 커스텀 훅 | ✅ | 63개 |
-| GraphQL | ✅ | 24+ 쿼리/구독 |
+| 커스텀 훅 | ✅ | 70개 |
+| GraphQL | ✅ | 35개 쿼리/구독 |
 | WebSocket | ✅ | 실시간 업데이트 |
 | 에러 핸들링 | ✅ | AppError, Recovery, CircuitBreaker |
 | TypeScript | ✅ | Strict 모든 옵션 활성화 |
 | 코드 품질 | ✅ | SOLID, Clean Code, 666 테스트 |
-| **E2E 테스트** | ⚠️ | 설정 완료, 케이스 미작성 |
+| E2E 테스트 | ✅ | 10개 spec 파일 작성 완료 |
+| Contract Verification | ✅ | 실제 API 연동 완료 |
 | **접근성** | ⚠️ | 기본 구현, 포괄적 감사 미완료 |
