@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useCallback } from 'react'
+import { useSwitchChain, useAccount } from 'wagmi'
 import { useClickOutside } from '@/lib/hooks/useClickOutside'
 import Link from 'next/link'
 import { useNetworkStore, selectCurrentNetwork, selectConnectionStatus } from '@/stores/networkStore'
@@ -173,6 +174,8 @@ export function NetworkSelector() {
   const connectionStatus = useNetworkStore(selectConnectionStatus)
   const customNetworks = useNetworkStore((state) => state.customNetworks)
   const selectNetwork = useNetworkStore((state) => state.selectNetwork)
+  const { isPending: isChainSwitching } = useSwitchChain()
+  const { isConnected } = useAccount()
 
   const allNetworks = [...PRESET_NETWORKS, ...customNetworks]
   const groupedNetworks = groupNetworksByType(allNetworks)
@@ -197,9 +200,11 @@ export function NetworkSelector() {
         aria-haspopup="listbox"
         aria-label={`Select network. Current: ${currentNetwork?.name ?? 'None'}`}
       >
-        <StatusIndicator status={connectionStatus} />
+        <StatusIndicator status={isConnected && isChainSwitching ? 'connecting' : connectionStatus} />
         <div className="flex items-center gap-1">
-          <span className="text-text-primary">{currentNetwork?.name ?? 'Select Network'}</span>
+          <span className="text-text-primary">
+            {isConnected && isChainSwitching ? 'Switching...' : (currentNetwork?.name ?? 'Select Network')}
+          </span>
           <span className="text-text-muted">({currentNetwork?.chain.id ?? '-'})</span>
         </div>
         <DropdownArrow isOpen={isOpen} />

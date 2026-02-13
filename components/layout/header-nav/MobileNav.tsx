@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import { NetworkSelector } from '@/components/common/NetworkSelector'
+import { WalletButton } from '@/components/common/WalletButton'
 import { CORE_NAV_LINKS, NAV_SECTIONS } from './navigation'
 
 interface MobileNavProps {
@@ -37,6 +39,17 @@ export function MobileNav({ onClose }: MobileNavProps) {
             ))}
           </div>
         ))}
+
+        {/* Network & Wallet */}
+        <div className="border-t border-bg-tertiary mt-2 pt-2">
+          <div className="px-4 py-2 font-mono text-xs text-text-muted uppercase tracking-wider">
+            Network & Wallet
+          </div>
+          <div className="flex flex-col gap-2 px-4 py-2">
+            <NetworkSelector />
+            <WalletButton />
+          </div>
+        </div>
       </div>
     </nav>
   )

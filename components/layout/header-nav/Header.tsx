@@ -7,6 +7,7 @@ import { useClickOutside } from '@/lib/hooks/useClickOutside'
 import { SearchBar } from '@/components/common/SearchBar'
 import { ThemeToggle } from '@/components/common/ThemeToggle'
 import { NetworkSelector } from '@/components/common/NetworkSelector'
+import { WalletButton } from '@/components/common/WalletButton'
 import { useNetworkStore, selectCurrentNetwork } from '@/stores/networkStore'
 import { CORE_NAV_LINKS } from './navigation'
 import { DesktopMoreMenu } from './DesktopMoreMenu'
@@ -142,6 +143,11 @@ export function Header() {
             {/* Network Selector */}
             <div className="hidden md:flex">
               <NetworkSelector />
+            </div>
+
+            {/* Wallet Button */}
+            <div className="hidden md:flex">
+              <WalletButton />
             </div>
           </div>
         </div>

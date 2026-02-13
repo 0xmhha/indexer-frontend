@@ -17,9 +17,6 @@ export * as paginationKeyboard from '@/lib/hooks/usePaginationKeyboard'
 // User preferences & settings
 export * as userPreferences from '@/lib/hooks/useUserPreferences'
 
-// Wallet connection
-export * as walletConnection from '@/lib/hooks/useWalletConnection'
-
 // Analytics
 export * as analytics from '@/lib/hooks/useAnalytics'
 

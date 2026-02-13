@@ -1,5 +1,7 @@
 'use client'
 
+import { useConnect, useDisconnect } from 'wagmi'
+import { injected } from '@wagmi/connectors'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import type { AbiFunction, AbiInput } from '@/types/contract'
@@ -13,6 +15,7 @@ export interface TransactionResult {
   loading: boolean
   success: boolean | null
   error: string | null
+  gasEstimate: string | null
 }
 
 // ============================================================
@@ -23,14 +26,92 @@ export interface TransactionResult {
  * Get placeholder text for input based on type
  */
 export function getPlaceholder(type: string): string {
-  if (type === 'address') {return '0x...'}
-  if (type.includes('uint') || type.includes('int')) {return '0'}
-  if (type === 'bool' || type === 'boolean') {return 'true or false'}
-  if (type === 'string') {return 'Enter string'}
-  if (type.includes('bytes')) {return '0x...'}
-  if (type.includes('[]')) {return '[value1, value2, ...]'}
+  if (type === 'address') { return '0x...' }
+  if (type.includes('uint') || type.includes('int')) { return '0' }
+  if (type === 'bool' || type === 'boolean') { return 'true or false' }
+  if (type === 'string') { return 'Enter string' }
+  if (type.includes('bytes')) { return '0x...' }
+  if (type.includes('[]')) { return '[value1, value2, ...]' }
   return `Enter ${type}`
 }
+
+const ADDRESS_HEX_LENGTH = 42
+const HEX_PREFIX_LENGTH = 2
+
+function validateNumericInput(value: string, type: string): string | null {
+  if (!/^-?\d+$/.test(value)) { return 'Must be an integer' }
+  if (type.includes('uint') && value.startsWith('-')) { return 'Unsigned integer cannot be negative' }
+  return null
+}
+
+function validateBytesInput(value: string, type: string): string | null {
+  if (!/^0x[0-9a-fA-F]*$/i.test(value)) { return 'Must be hex (0x...)' }
+
+  // Fixed-size bytes (bytes1..bytes32)
+  if (/^bytes\d+$/.test(type)) {
+    const byteSize = parseInt(type.replace('bytes', ''), 10)
+    const expectedHexLen = HEX_PREFIX_LENGTH + byteSize * 2
+    if (value.length !== expectedHexLen) {
+      return `Expected ${expectedHexLen} chars for ${type} (got ${value.length})`
+    }
+  } else if (value.length % 2 !== 0) {
+    return 'Hex must have even length'
+  }
+
+  return null
+}
+
+function validateCompositeInput(value: string, type: string): string | null {
+  if (type.includes('[]')) {
+    try {
+      const parsed = JSON.parse(value)
+      if (!Array.isArray(parsed)) { return 'Must be a JSON array' }
+    } catch {
+      if (!value.includes(',') && !value.startsWith('[')) {
+        return 'Must be a JSON array or comma-separated values'
+      }
+    }
+    return null
+  }
+
+  if (type === 'tuple' || type.startsWith('tuple')) {
+    try { JSON.parse(value) } catch { return 'Must be valid JSON for tuple type' }
+    return null
+  }
+
+  return null
+}
+
+/**
+ * Validate an ABI input value based on its Solidity type.
+ * Returns null if valid, or an error message string.
+ */
+export function validateAbiInput(value: string, type: string): string | null {
+  if (!value) { return null }
+
+  if (type === 'address') {
+    return /^0x[0-9a-fA-F]{40}$/i.test(value) ? null : `Must be a ${ADDRESS_HEX_LENGTH}-char hex address (0x...)`
+  }
+
+  if (type === 'bool' || type === 'boolean') {
+    return value === 'true' || value === 'false' ? null : 'Must be "true" or "false"'
+  }
+
+  if (type.includes('uint') || type.includes('int')) {
+    return validateNumericInput(value, type)
+  }
+
+  if (type.includes('bytes')) {
+    return validateBytesInput(value, type)
+  }
+
+  if (type.includes('[]') || type.startsWith('tuple')) {
+    return validateCompositeInput(value, type)
+  }
+
+  return null
+}
+
 
 // ============================================================
 // Wallet Connection Card
@@ -39,16 +120,15 @@ export function getPlaceholder(type: string): string {
 interface WalletConnectionCardProps {
   isConnected: boolean
   address: string
-  onConnect: () => void
-  onDisconnect: () => void
 }
 
 export function WalletConnectionCard({
   isConnected,
   address,
-  onConnect,
-  onDisconnect,
 }: WalletConnectionCardProps) {
+  const { connect } = useConnect()
+  const { disconnect } = useDisconnect()
+
   return (
     <Card>
       <CardHeader className="border-b border-bg-tertiary">
@@ -60,13 +140,13 @@ export function WalletConnectionCard({
             <p className="font-mono text-xs text-text-secondary">
               Connect your wallet to write to the contract
             </p>
-            <Button onClick={onConnect}>CONNECT WALLET</Button>
+            <Button onClick={() => connect({ connector: injected() })}>CONNECT WALLET</Button>
           </div>
         ) : (
           <div className="space-y-2">
             <div className="annotation">CONNECTED ADDRESS</div>
             <div className="break-all font-mono text-sm text-accent-blue">{address}</div>
-            <Button onClick={onDisconnect}>DISCONNECT</Button>
+            <Button onClick={() => disconnect()}>DISCONNECT</Button>
           </div>
         )}
       </CardContent>
@@ -87,6 +167,8 @@ interface FunctionInputFieldProps {
 }
 
 export function FunctionInputField({ input, index, disabled, value, onChange }: FunctionInputFieldProps) {
+  const validationError = value ? validateAbiInput(value, input.type) : null
+
   return (
     <div>
       <label className="annotation mb-1 block">
@@ -97,9 +179,14 @@ export function FunctionInputField({ input, index, disabled, value, onChange }: 
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={getPlaceholder(input.type)}
-        className="w-full border border-bg-tertiary bg-bg-secondary px-3 py-2 font-mono text-xs text-text-primary focus:border-accent-blue focus:outline-none"
+        className={`w-full border bg-bg-secondary px-3 py-2 font-mono text-xs text-text-primary focus:outline-none ${
+          validationError ? 'border-error focus:border-error' : 'border-bg-tertiary focus:border-accent-blue'
+        }`}
         disabled={disabled}
       />
+      {validationError && (
+        <p className="mt-1 font-mono text-xs text-error">{validationError}</p>
+      )}
     </div>
   )
 }
@@ -174,12 +261,20 @@ interface ErrorDisplayProps {
   error: string
 }
 
-export function TransactionErrorDisplay({ error }: ErrorDisplayProps) {
+export function TransactionErrorDisplay({ error, onRetry }: ErrorDisplayProps & { onRetry?: () => void }) {
   return (
     <div className="border-t border-bg-tertiary pt-4">
       <div className="annotation mb-2">ERROR</div>
       <div className="rounded border border-error bg-error/10 p-4">
         <p className="font-mono text-xs text-error">{error}</p>
+        {onRetry && (
+          <button
+            onClick={onRetry}
+            className="mt-2 border border-error px-3 py-1 font-mono text-xs text-error transition-colors hover:bg-error hover:text-white"
+          >
+            RETRY
+          </button>
+        )}
       </div>
     </div>
   )
@@ -241,11 +336,19 @@ export function WriteFunctionCard({ func, index, latestTx, onWrite, inputValues,
           {isLoading ? 'PROCESSING...' : 'WRITE'}
         </Button>
 
+        {/* Gas Estimate */}
+        {latestTx?.gasEstimate && (
+          <div className="border-t border-bg-tertiary pt-4">
+            <div className="annotation mb-1">ESTIMATED GAS</div>
+            <div className="font-mono text-xs text-text-secondary">{latestTx.gasEstimate} units</div>
+          </div>
+        )}
+
         {/* Transaction Result */}
         {latestTx && <TransactionResultDisplay result={latestTx} />}
 
-        {/* Error */}
-        {latestTx?.error && <TransactionErrorDisplay error={latestTx.error} />}
+        {/* Error with Retry */}
+        {latestTx?.error && <TransactionErrorDisplay error={latestTx.error} onRetry={onWrite} />}
 
         {/* Warning */}
         <div className="border-t border-bg-tertiary pt-4">
