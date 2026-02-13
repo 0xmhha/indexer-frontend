@@ -1,6 +1,6 @@
 # Project Status
 
-> **Last Updated**: 2025-02-13
+> **Last Updated**: 2026-02-13
 > **Repository**: indexer-frontend (StableNet Block Explorer)
 
 ---
@@ -59,7 +59,7 @@
 | 컴포넌트 | 151개 |
 | 커스텀 Hooks | 70개 |
 | GraphQL | 35개 쿼리/구독 |
-| 테스트 | 28 파일, **666 테스트** (Vitest) |
+| 테스트 | 33 파일, **741 테스트** (Vitest) |
 | TypeScript | Strict Mode, **0 에러** |
 | ESLint | **0 에러, 0 워닝** (복잡도 규칙 포함) |
 | 에러 처리 | AppError, Recovery (withRetry, CircuitBreaker) |
@@ -73,14 +73,19 @@
 
 ### WCAG 2.1 AA 접근성 (우선순위: 높음)
 
-**상태**: 기본 시맨틱 HTML/ARIA 구현, 포괄적 검증 미완료
+**상태**: 포괄적 감사 및 주요 수정 완료
 
-필요 작업:
-- 색상 대비 비율 검증 (텍스트 4.5:1, 대형 3:1)
-- 스크린 리더 테스트 (VoiceOver)
-- 터치 타겟 크기 검증 (최소 44x44px)
-- 키보드 네비게이션 전체 테스트
-- 포커스 관리 검증
+완료된 작업:
+- ✅ 터치 타겟 크기 44px 이상 적용 (Button, Input, Select, ThemeToggle 등 10개 컴포넌트)
+- ✅ 차트 텍스트 대비 개선 (tooltip/axis opacity 0.7→0.9)
+- ✅ 폼 라벨 htmlFor/id 연결 (TransactionFilters, AdvancedTransactionFilters)
+- ✅ 범위 입력 aria-label 추가 (block range, value range, gas range)
+- ✅ Toast 닫기 버튼 포커스 링 추가
+- ✅ 시맨틱 HTML, ARIA live regions, skip-to-content, focus-visible 시스템
+
+남은 작업:
+- 스크린 리더 실제 테스트 (VoiceOver)
+- text-text-muted / text-text-secondary 색상 대비 실측 검증
 
 ### E2E 테스트 실행 검증 (우선순위: 중간)
 
@@ -196,7 +201,7 @@ tests/e2e/
 | WebSocket | ✅ | 실시간 업데이트 |
 | 에러 핸들링 | ✅ | AppError, Recovery, CircuitBreaker |
 | TypeScript | ✅ | Strict 모든 옵션 활성화 |
-| 코드 품질 | ✅ | SOLID, Clean Code, 666 테스트 |
+| 코드 품질 | ✅ | SOLID, Clean Code, 741 테스트 |
 | E2E 테스트 | ✅ | 10개 spec 파일 작성 완료 |
 | Contract Verification | ✅ | 실제 API 연동 완료 |
-| **접근성** | ⚠️ | 기본 구현, 포괄적 감사 미완료 |
+| **접근성** | ✅ | 터치 타겟 44px, 폼 라벨 연결, 차트 대비 개선 |
