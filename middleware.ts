@@ -124,7 +124,7 @@ function getCorsHeaders(origin: string | null): Record<string, string> {
 // Middleware
 // ============================================================================
 
-export function proxy(request: NextRequest) {
+export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const origin = request.headers.get('origin')
 
@@ -191,6 +191,7 @@ export function proxy(request: NextRequest) {
       Math.ceil(rateLimit.resetAt / 1000).toString()
     )
 
+    addSecurityHeaders(response)
     return response
   }
 
@@ -200,7 +201,18 @@ export function proxy(request: NextRequest) {
     response.headers.set(key, value)
   })
 
+  addSecurityHeaders(response)
   return response
+}
+
+/**
+ * Add security headers to all responses
+ */
+function addSecurityHeaders(response: NextResponse): void {
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
 }
 
 export const config = {

@@ -2,6 +2,15 @@
 
 import { useMemo } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
+import {
+  BLOCKS_TOOLTIP_CONTENT_STYLE,
+  BLOCKS_TOOLTIP_LABEL_STYLE,
+  BLOCKS_AXIS_STROKE,
+  BLOCKS_AXIS_STYLE,
+  BLOCKS_GRID_STROKE,
+  BLOCKS_GRID_OPACITY,
+  GRID_DASH_ARRAY,
+} from '@/lib/config/chartTheme'
 
 interface BlocksOverTimeEntry {
   timestamp: string
@@ -46,25 +55,19 @@ export function BlocksOverTimeChart({ data }: BlocksOverTimeChartProps) {
     <div className="h-64 w-full">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#2D3748" opacity={0.3} />
+          <CartesianGrid strokeDasharray={GRID_DASH_ARRAY} stroke={BLOCKS_GRID_STROKE} opacity={BLOCKS_GRID_OPACITY} />
           <XAxis
             dataKey="timestamp"
-            stroke="#718096"
-            style={{ fontSize: '10px', fontFamily: 'monospace' }}
+            stroke={BLOCKS_AXIS_STROKE}
+            style={BLOCKS_AXIS_STYLE}
           />
           <YAxis
-            stroke="#718096"
-            style={{ fontSize: '10px', fontFamily: 'monospace' }}
+            stroke={BLOCKS_AXIS_STROKE}
+            style={BLOCKS_AXIS_STYLE}
           />
           <Tooltip
-            contentStyle={{
-              backgroundColor: '#1A202C',
-              border: '1px solid #2D3748',
-              borderRadius: 0,
-              fontFamily: 'monospace',
-              fontSize: '11px',
-            }}
-            labelStyle={{ color: '#00D4FF', marginBottom: '4px' }}
+            contentStyle={BLOCKS_TOOLTIP_CONTENT_STYLE}
+            labelStyle={BLOCKS_TOOLTIP_LABEL_STYLE}
             formatter={(value: number) => [value, 'Blocks']}
           />
           <Bar dataKey="count" fill="#00D4FF" />

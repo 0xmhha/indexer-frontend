@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
-import { useBlocksByTimeRange, useNetworkMetrics } from '@/lib/hooks/useAnalytics'
+import { useBlocksByTimeRange, useNetworkCounts } from '@/lib/hooks/useAnalytics'
 import { useTopMiners } from '@/lib/hooks/useStats'
 import { TopMinersTable } from '@/components/stats/TopMinersTable'
 import { formatNumber } from '@/lib/utils/format'
@@ -42,7 +42,7 @@ const GasUsageTrendsChart = dynamic(
 )
 
 export default function StatsPage() {
-  const { blockCount, transactionCount, loading: metricsLoading, error: metricsError } = useNetworkMetrics()
+  const { blockCount, transactionCount, loading: metricsLoading, error: metricsError } = useNetworkCounts()
 
   // Calculate time range for last 24 hours
   const now = Math.floor(Date.now() / 1000)

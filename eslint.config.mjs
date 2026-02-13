@@ -330,6 +330,8 @@ const config = [
       'no-magic-numbers': 'off',
       // Test files commonly have deeply nested callbacks (describe → test → assertions)
       'max-nested-callbacks': 'off',
+      // Non-null assertions in tests are safe — values are checked with toBeDefined() first
+      '@typescript-eslint/no-non-null-assertion': 'off',
     },
   },
   // ============================================================
@@ -443,6 +445,7 @@ const config = [
       '**/lib/api/relay.ts',
       '**/lib/api/auth.ts',
       '**/lib/api/types.ts',
+      '**/lib/api/etherscan.ts',
     ],
     ignores: ['**/*.test.ts', '**/*.test.tsx', '**/*.spec.ts'],
     rules: {
@@ -471,10 +474,10 @@ const config = [
     },
   },
   // ============================================================
-  // Relaxed rules for proxy middleware
+  // Relaxed rules for middleware
   // ============================================================
   {
-    files: ['proxy.ts'],
+    files: ['middleware.ts'],
     rules: {
       'max-lines-per-function': ['warn', { max: 80, skipBlankLines: true, skipComments: true }],
       'max-statements': ['warn', { max: 25 }],

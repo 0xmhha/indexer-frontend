@@ -75,18 +75,66 @@ function generateCustomNetworkId(): string {
 }
 
 /**
+ * Validate a URL has an allowed scheme and is not pointing to private/internal networks
+ */
+function isValidEndpointUrl(url: string, allowedSchemes: string[]): boolean {
+  try {
+    const parsed = new URL(url)
+    if (!allowedSchemes.includes(parsed.protocol)) {
+      return false
+    }
+
+    // Block private/internal network addresses (SSRF prevention)
+    const hostname = parsed.hostname.toLowerCase()
+    if (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      hostname === '0.0.0.0' ||
+      hostname === '::1' ||
+      hostname.startsWith('10.') ||
+      hostname.startsWith('192.168.') ||
+      hostname.startsWith('169.254.') ||
+      /^172\.(1[6-9]|2\d|3[01])\./.test(hostname) ||
+      hostname.endsWith('.local') ||
+      hostname.endsWith('.internal')
+    ) {
+      return false
+    }
+
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
  * Validate network configuration
  */
 function isValidNetworkConfig(network: Partial<NetworkConfig>): boolean {
-  return !!(
-    network.name &&
-    network.endpoints?.graphqlEndpoint &&
-    network.endpoints?.wsEndpoint &&
-    network.endpoints?.jsonRpcEndpoint &&
-    network.chain?.name &&
-    network.chain?.id &&
-    network.chain?.currencySymbol
-  )
+  if (
+    !network.name ||
+    !network.endpoints?.graphqlEndpoint ||
+    !network.endpoints?.wsEndpoint ||
+    !network.endpoints?.jsonRpcEndpoint ||
+    !network.chain?.name ||
+    !network.chain?.id ||
+    !network.chain?.currencySymbol
+  ) {
+    return false
+  }
+
+  // Validate endpoint URLs
+  if (!isValidEndpointUrl(network.endpoints.graphqlEndpoint, ['https:', 'http:'])) {
+    return false
+  }
+  if (!isValidEndpointUrl(network.endpoints.wsEndpoint, ['wss:', 'ws:'])) {
+    return false
+  }
+  if (!isValidEndpointUrl(network.endpoints.jsonRpcEndpoint, ['https:', 'http:'])) {
+    return false
+  }
+
+  return true
 }
 
 // ============================================================================
@@ -281,7 +329,7 @@ export const useNetworkStore = create<NetworkState>()(
         skipHydration: true,
       }
     ),
-    { name: 'NetworkStore' }
+    { name: 'NetworkStore', enabled: process.env.NODE_ENV === 'development' }
   )
 )
 

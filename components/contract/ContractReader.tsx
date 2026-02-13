@@ -14,7 +14,6 @@ interface ContractReaderProps {
 
 interface FunctionCall {
   name: string
-  inputs: string[]
   result: string | null
   loading: boolean
   error: string | null
@@ -32,6 +31,7 @@ interface ContractCallResponse {
 
 export function ContractReader({ contractAddress, abi }: ContractReaderProps) {
   const [functionCalls, setFunctionCalls] = useState<Record<string, FunctionCall>>({})
+  const [inputValues, setInputValues] = useState<Record<string, string[]>>({})
 
   // Use Apollo Client's lazy query for on-demand contract calls
   const [executeCall] = useLazyQuery<ContractCallResponse>(CONTRACT_CALL, {
@@ -46,13 +46,21 @@ export function ContractReader({ contractAddress, abi }: ContractReaderProps) {
       (item.stateMutability === 'view' || item.stateMutability === 'pure')
   ) as AbiFunction[]
 
+  const handleInputChange = (funcName: string, inputIndex: number, value: string, inputCount: number) => {
+    setInputValues((prev) => {
+      const current = prev[funcName] || Array.from({ length: inputCount }, () => '')
+      const updated = [...current]
+      updated[inputIndex] = value
+      return { ...prev, [funcName]: updated }
+    })
+  }
+
   const handleCallFunction = async (func: AbiFunction) => {
     const functionName = func.name || 'unknown'
     setFunctionCalls((prev) => ({
       ...prev,
       [functionName]: {
         name: functionName,
-        inputs: prev[functionName]?.inputs || [],
         result: prev[functionName]?.result || null,
         loading: true,
         error: null,
@@ -60,13 +68,8 @@ export function ContractReader({ contractAddress, abi }: ContractReaderProps) {
     }))
 
     try {
-      // Get input values
-      const inputs = func.inputs.map((_input, index: number) => {
-        const inputElement = document.getElementById(
-          `input-${functionName}-${index}`
-        ) as HTMLInputElement
-        return inputElement?.value || ''
-      })
+      // Get input values from controlled state
+      const inputs = inputValues[functionName] || func.inputs.map(() => '')
 
       // Convert inputs to appropriate types based on ABI
       const typedInputs = inputs.map((value, index) => {
@@ -118,7 +121,6 @@ export function ContractReader({ contractAddress, abi }: ContractReaderProps) {
         ...prev,
         [functionName]: {
           name: functionName,
-          inputs,
           result: formattedResult,
           loading: false,
           error: null,
@@ -130,7 +132,6 @@ export function ContractReader({ contractAddress, abi }: ContractReaderProps) {
         ...prev,
         [functionName]: {
           name: functionName,
-          inputs: [],
           result: null,
           loading: false,
           error: errorMessage,
@@ -177,11 +178,10 @@ export function ContractReader({ contractAddress, abi }: ContractReaderProps) {
                       <label className="annotation mb-1 block">
                         {input.name || `param${inputIndex}`} ({input.type})
                       </label>
-                      <input
-                        id={`input-${funcName}-${inputIndex}`}
-                        type="text"
-                        placeholder={getPlaceholder(input.type)}
-                        className="w-full border border-bg-tertiary bg-bg-secondary px-3 py-2 font-mono text-xs text-text-primary focus:border-accent-blue focus:outline-none"
+                      <ReadFunctionInput
+                        inputType={input.type}
+                        value={inputValues[funcName]?.[inputIndex] ?? ''}
+                        onValueChange={(value) => handleInputChange(funcName, inputIndex, value, func.inputs.length)}
                       />
                     </div>
                   ))}
@@ -222,6 +222,26 @@ export function ContractReader({ contractAddress, abi }: ContractReaderProps) {
         )
       })}
     </div>
+  )
+}
+
+function ReadFunctionInput({
+  inputType,
+  value,
+  onValueChange,
+}: {
+  inputType: string
+  value: string
+  onValueChange: (value: string) => void
+}) {
+  return (
+    <input
+      type="text"
+      value={value}
+      onChange={(e) => onValueChange(e.target.value)}
+      placeholder={getPlaceholder(inputType)}
+      className="w-full border border-bg-tertiary bg-bg-secondary px-3 py-2 font-mono text-xs text-text-primary focus:border-accent-blue focus:outline-none"
+    />
   )
 }
 

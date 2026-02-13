@@ -1,8 +1,7 @@
 'use client'
 
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
-import { LoadingSpinner } from '@/components/common/LoadingSpinner'
-import { ErrorDisplay } from '@/components/common/ErrorBoundary'
+import { CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import { DataCard } from '@/components/ui/DataCard'
 import { useConsensusData } from '@/lib/hooks/useConsensus'
 import { truncateAddress } from '@/lib/utils/format'
 import { RoundIndicator } from './RoundIndicator'
@@ -25,47 +24,20 @@ interface BlockConsensusDetailProps {
 export function BlockConsensusDetail({ blockNumber }: BlockConsensusDetailProps) {
   const { consensusData, loading, error } = useConsensusData(blockNumber)
 
-  if (loading) {
+  if (loading || error || !consensusData) {
     return (
-      <Card>
-        <CardHeader className="border-b border-bg-tertiary">
-          <CardTitle>CONSENSUS DATA</CardTitle>
-        </CardHeader>
-        <CardContent className="flex h-64 items-center justify-center">
-          <LoadingSpinner />
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (error) {
-    return (
-      <Card>
-        <CardHeader className="border-b border-bg-tertiary">
-          <CardTitle>CONSENSUS DATA</CardTitle>
-        </CardHeader>
-        <CardContent className="p-6">
-          <ErrorDisplay title="Failed to load consensus data" message={error.message} />
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (!consensusData) {
-    return (
-      <Card>
-        <CardHeader className="border-b border-bg-tertiary">
-          <CardTitle>CONSENSUS DATA</CardTitle>
-        </CardHeader>
-        <CardContent className="flex h-64 items-center justify-center">
-          <p className="font-mono text-sm text-text-muted">No consensus data available</p>
-        </CardContent>
-      </Card>
+      <DataCard
+        title="CONSENSUS DATA"
+        loading={loading}
+        error={error}
+        isEmpty={!consensusData}
+        emptyMessage="No consensus data available"
+      />
     )
   }
 
   return (
-    <Card>
+    <DataCard title="CONSENSUS DATA">
       <CardHeader className="border-b border-bg-tertiary">
         <div className="flex items-center justify-between">
           <CardTitle>CONSENSUS DATA</CardTitle>
@@ -254,6 +226,6 @@ export function BlockConsensusDetail({ blockNumber }: BlockConsensusDetailProps)
           </div>
         </div>
       </CardContent>
-    </Card>
+    </DataCard>
   )
 }

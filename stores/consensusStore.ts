@@ -397,6 +397,7 @@ export const useConsensusStore = create<ConsensusState>()(
     ),
     {
       name: 'ConsensusStore',
+      enabled: process.env.NODE_ENV === 'development',
     }
   )
 )

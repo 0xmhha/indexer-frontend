@@ -38,27 +38,6 @@ function getWriteFunctions(abi: ContractABI): AbiFunction[] {
 }
 
 /**
- * Get input values from DOM
- */
-function getInputValues(funcName: string, inputs: { name?: string; type: string }[]): string[] {
-  return inputs.map((_, index) => {
-    const inputElement = document.getElementById(
-      `write-input-${funcName}-${index}`
-    ) as HTMLInputElement
-    return inputElement?.value || ''
-  })
-}
-
-/**
- * Get ETH value for payable functions
- */
-function getPayableValue(funcName: string): bigint {
-  const valueElement = document.getElementById(`value-${funcName}`) as HTMLInputElement
-  const valueStr = valueElement?.value || '0'
-  return ethers.parseEther(valueStr)
-}
-
-/**
  * Get latest transaction for a function
  */
 function getLatestTransaction(
@@ -77,6 +56,8 @@ function getLatestTransaction(
 export function ContractWriter({ contractAddress, abi }: ContractWriterProps) {
   const { walletState, connect, disconnect, getSigner } = useWalletConnection()
   const [transactions, setTransactions] = useState<Record<string, TransactionResult>>({})
+  const [inputValues, setInputValues] = useState<Record<string, string[]>>({})
+  const [payableValues, setPayableValues] = useState<Record<string, string>>({})
 
   const writeFunctions = getWriteFunctions(abi)
 
@@ -91,11 +72,12 @@ export function ContractWriter({ contractAddress, abi }: ContractWriterProps) {
       const txKey = `${functionName}-${Date.now()}`
 
       try {
-        const inputs = getInputValues(functionName, func.inputs)
+        const inputs = inputValues[functionName] || func.inputs.map(() => '')
 
         let value: bigint | undefined
         if (func.stateMutability === 'payable') {
-          value = getPayableValue(functionName)
+          const valueStr = payableValues[functionName] || '0'
+          value = ethers.parseEther(valueStr)
         }
 
         const signer = await getSigner()
@@ -139,7 +121,7 @@ export function ContractWriter({ contractAddress, abi }: ContractWriterProps) {
         }))
       }
     },
-    [walletState.isConnected, getSigner, contractAddress, abi]
+    [walletState.isConnected, getSigner, contractAddress, abi, inputValues, payableValues]
   )
 
   return (
@@ -165,6 +147,19 @@ export function ContractWriter({ contractAddress, abi }: ContractWriterProps) {
               index={index}
               latestTx={latestTx}
               onWrite={() => handleWriteFunction(func)}
+              inputValues={inputValues[funcName] || []}
+              onInputChange={(inputIndex, value) => {
+                setInputValues((prev) => {
+                  const current = prev[funcName] || func.inputs.map(() => '')
+                  const updated = [...current]
+                  updated[inputIndex] = value
+                  return { ...prev, [funcName]: updated }
+                })
+              }}
+              payableValue={payableValues[funcName] || ''}
+              onPayableValueChange={(value) => {
+                setPayableValues((prev) => ({ ...prev, [funcName]: value }))
+              }}
             />
           )
         })

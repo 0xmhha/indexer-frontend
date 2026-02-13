@@ -53,10 +53,12 @@ export function useBlocksByTimeRange(fromTime: bigint, toTime: bigint, limit = P
 }
 
 /**
- * Hook to fetch network metrics (block count and transaction count)
+ * Hook to fetch network counts (block count and transaction count)
  * Uses efficient root queries: blockCount and transactionCount
+ *
+ * For real-time metrics with avgBlockTime, use useNetworkMetrics from useNetworkMetrics.ts
  */
-export function useNetworkMetrics() {
+export function useNetworkCounts() {
   const { data: blockData, loading: blockLoading, error: blockError, previousData: blockPrevData } = useQuery(
     GET_BLOCK_COUNT,
     { returnPartialData: true }

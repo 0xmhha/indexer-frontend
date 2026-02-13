@@ -2,9 +2,8 @@
 
 import { useLatestHeight } from '@/lib/hooks/useLatestHeight'
 import { useNetworkMetrics } from '@/lib/hooks/useNetworkMetrics'
-import { Card, CardContent } from '@/components/ui/Card'
+import { StatCard } from '@/components/common/StatCard'
 import { formatNumber } from '@/lib/utils/format'
-import { LoadingSkeleton } from '@/components/common/LoadingSpinner'
 
 export function NetworkStats() {
   const { latestHeight, loading: heightLoading } = useLatestHeight()
@@ -38,28 +37,3 @@ export function NetworkStats() {
   )
 }
 
-function StatCard({
-  label,
-  value,
-  loading,
-  info,
-}: {
-  label: string
-  value: string | null
-  loading?: boolean
-  info?: string
-}) {
-  return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="annotation mb-2">{label}</div>
-        {loading ? (
-          <LoadingSkeleton className="h-8 w-24" />
-        ) : (
-          <div className="font-mono text-2xl font-bold text-accent-blue">{value}</div>
-        )}
-        {info && <div className="mt-1 text-xs text-text-muted">{info}</div>}
-      </CardContent>
-    </Card>
-  )
-}

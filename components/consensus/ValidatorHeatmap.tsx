@@ -7,6 +7,7 @@ import { useAllValidatorStats, type ValidatorStats } from '@/lib/hooks/useConsen
 import { truncateAddress } from '@/lib/utils/format'
 import { THRESHOLDS } from '@/lib/config/constants'
 import { cn } from '@/lib/utils'
+import { getParticipationRateColor } from '@/lib/utils/consensus'
 
 interface ValidatorHeatmapProps {
   limit?: number
@@ -165,10 +166,10 @@ function HeatmapCell({ value, label, isProposal = false }: HeatmapCellProps) {
       return 'bg-bg-tertiary'
     }
 
-    // Standard participation rate thresholds
-    if (value >= THRESHOLDS.PARTICIPATION_EXCELLENT) {return 'bg-accent-green'}
-    if (value >= THRESHOLDS.PARTICIPATION_GOOD) {return 'bg-accent-cyan'}
-    if (value >= THRESHOLDS.PARTICIPATION_MINIMUM) {return 'bg-yellow-500'}
+    // Standard participation rate thresholds (with extra orange tier for heatmap)
+    if (value >= THRESHOLDS.PARTICIPATION_MINIMUM) {
+      return getParticipationRateColor(value).bg
+    }
     if (value >= THRESHOLDS.PARTICIPATION_FALLBACK) {return 'bg-orange-500'}
     return 'bg-accent-red'
   }

@@ -79,21 +79,23 @@ export function WalletConnectionCard({
 // ============================================================
 
 interface FunctionInputFieldProps {
-  funcName: string
   input: AbiInput
   index: number
   disabled: boolean
+  value: string
+  onChange: (value: string) => void
 }
 
-export function FunctionInputField({ funcName, input, index, disabled }: FunctionInputFieldProps) {
+export function FunctionInputField({ input, index, disabled, value, onChange }: FunctionInputFieldProps) {
   return (
     <div>
       <label className="annotation mb-1 block">
         {input.name || `param${index}`} ({input.type})
       </label>
       <input
-        id={`write-input-${funcName}-${index}`}
         type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
         placeholder={getPlaceholder(input.type)}
         className="w-full border border-bg-tertiary bg-bg-secondary px-3 py-2 font-mono text-xs text-text-primary focus:border-accent-blue focus:outline-none"
         disabled={disabled}
@@ -107,17 +109,19 @@ export function FunctionInputField({ funcName, input, index, disabled }: Functio
 // ============================================================
 
 interface ValueInputProps {
-  funcName: string
   disabled: boolean
+  value: string
+  onChange: (value: string) => void
 }
 
-export function ValueInput({ funcName, disabled }: ValueInputProps) {
+export function ValueInput({ disabled, value, onChange }: ValueInputProps) {
   return (
     <div>
       <label className="annotation mb-1 block">VALUE (ETH)</label>
       <input
-        id={`value-${funcName}`}
         type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
         placeholder="0.0"
         className="w-full border border-bg-tertiary bg-bg-secondary px-3 py-2 font-mono text-xs text-text-primary focus:border-accent-blue focus:outline-none"
         disabled={disabled}
@@ -190,9 +194,13 @@ interface WriteFunctionCardProps {
   index: number
   latestTx: TransactionResult | undefined
   onWrite: () => void
+  inputValues: string[]
+  onInputChange: (inputIndex: number, value: string) => void
+  payableValue: string
+  onPayableValueChange: (value: string) => void
 }
 
-export function WriteFunctionCard({ func, index, latestTx, onWrite }: WriteFunctionCardProps) {
+export function WriteFunctionCard({ func, index, latestTx, onWrite, inputValues, onInputChange, payableValue, onPayableValueChange }: WriteFunctionCardProps) {
   const funcName = func.name || `function-${index}`
   const isLoading = latestTx?.loading ?? false
 
@@ -213,10 +221,11 @@ export function WriteFunctionCard({ func, index, latestTx, onWrite }: WriteFunct
             {func.inputs.map((input, inputIndex) => (
               <FunctionInputField
                 key={inputIndex}
-                funcName={funcName}
                 input={input}
                 index={inputIndex}
                 disabled={isLoading}
+                value={inputValues[inputIndex] ?? ''}
+                onChange={(value) => onInputChange(inputIndex, value)}
               />
             ))}
           </div>
@@ -224,7 +233,7 @@ export function WriteFunctionCard({ func, index, latestTx, onWrite }: WriteFunct
 
         {/* Payable Amount */}
         {func.stateMutability === 'payable' && (
-          <ValueInput funcName={funcName} disabled={isLoading} />
+          <ValueInput disabled={isLoading} value={payableValue} onChange={onPayableValueChange} />
         )}
 
         {/* Write Button */}

@@ -18,6 +18,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { useConsensusStore } from '@/stores/consensusStore'
 import { useRealtimeStore } from '@/stores/realtimeStore'
 import { CONSENSUS, UI } from '@/lib/config/constants'
+import { getConsensusParticipationColor } from '@/lib/utils/consensus'
 
 /**
  * Participation Rate History Chart
@@ -80,13 +81,7 @@ export function ParticipationChart() {
           {new Date(data.timestamp * 1000).toLocaleTimeString()}
         </p>
         <p
-          className={`mt-1 font-mono text-lg font-bold ${
-            data.participationRate >= CONSENSUS.PARTICIPATION_WARNING_THRESHOLD
-              ? 'text-accent-green'
-              : data.participationRate >= CONSENSUS.PARTICIPATION_CRITICAL_THRESHOLD
-                ? 'text-yellow-400'
-                : 'text-accent-red'
-          }`}
+          className={`mt-1 font-mono text-lg font-bold ${getConsensusParticipationColor(data.participationRate)}`}
         >
           {data.participationRate.toFixed(1)}%
         </p>
@@ -124,13 +119,7 @@ export function ParticipationChart() {
           <div className="rounded border border-bg-tertiary bg-bg-secondary p-3 text-center">
             <div className="font-mono text-xs text-text-muted">Min</div>
             <div
-              className={`font-mono text-lg font-bold ${
-                chartStats.min >= CONSENSUS.PARTICIPATION_WARNING_THRESHOLD
-                  ? 'text-accent-green'
-                  : chartStats.min >= CONSENSUS.PARTICIPATION_CRITICAL_THRESHOLD
-                    ? 'text-yellow-400'
-                    : 'text-accent-red'
-              }`}
+              className={`font-mono text-lg font-bold ${getConsensusParticipationColor(chartStats.min)}`}
             >
               {chartStats.min.toFixed(1)}%
             </div>
@@ -263,16 +252,10 @@ export function ParticipationIndicator() {
 
   const rate = latestBlock?.participationRate ?? stats.averageParticipation
 
-  const getColor = (value: number) => {
-    if (value >= CONSENSUS.PARTICIPATION_WARNING_THRESHOLD) {return 'text-accent-green'}
-    if (value >= CONSENSUS.PARTICIPATION_CRITICAL_THRESHOLD) {return 'text-yellow-400'}
-    return 'text-accent-red'
-  }
-
   return (
     <div className="flex items-center gap-2">
       <div className="font-mono text-xs text-text-muted">Participation:</div>
-      <div className={`font-mono text-sm font-bold ${getColor(rate)}`}>{rate.toFixed(1)}%</div>
+      <div className={`font-mono text-sm font-bold ${getConsensusParticipationColor(rate)}`}>{rate.toFixed(1)}%</div>
     </div>
   )
 }

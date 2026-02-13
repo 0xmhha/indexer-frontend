@@ -124,7 +124,7 @@ export interface UseNetworkMetricsResult {
  * })
  * ```
  */
-export function useNetworkMetrics(
+export function useNetworkMetricsByTimeRange(
   options: UseNetworkMetricsOptions = {}
 ): UseNetworkMetricsResult {
   const {
@@ -152,8 +152,8 @@ export function useNetworkMetrics(
   }
 }
 
-/** @deprecated Use useNetworkMetrics instead */
-export const useNetworkStats = useNetworkMetrics
+/** @deprecated Use useNetworkMetricsByTimeRange instead */
+export const useNetworkStats = useNetworkMetricsByTimeRange
 
 // ============================================================================
 // Utility Functions

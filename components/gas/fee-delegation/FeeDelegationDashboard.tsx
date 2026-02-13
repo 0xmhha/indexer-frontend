@@ -105,28 +105,28 @@ export function FeeDelegationDashboard({ className }: FeeDelegationDashboardProp
           value={formatNumber(stats.totalFeeDelegatedTxs)}
           icon="📝"
           color="text-accent-purple"
-          description="Transactions using fee delegation"
+          subtitle="Transactions using fee delegation"
         />
         <StatCard
           label="Total Fees Saved"
           value={formatCurrency(stats.totalFeesSaved, env.currencySymbol)}
           icon="💰"
           color="text-accent-green"
-          description="User savings from fee delegation"
+          subtitle="User savings from fee delegation"
         />
         <StatCard
           label="Adoption Rate"
           value={`${stats.adoptionRate.toFixed(1)}%`}
           icon="📊"
           color="text-accent-blue"
-          description="Percentage of all transactions"
+          subtitle="Percentage of all transactions"
         />
         <StatCard
           label="Avg Fee Saved"
           value={formatCurrency(stats.avgFeeSaved, env.currencySymbol)}
           icon="💎"
           color="text-accent-cyan"
-          description="Average per delegated transaction"
+          subtitle="Average per delegated transaction"
         />
       </div>
 

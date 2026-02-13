@@ -190,7 +190,7 @@ export const useRealtimeStore = create<RealtimeState>()(
           pendingTransactions: [],
         }),
     }),
-    { name: 'RealtimeStore' }
+    { name: 'RealtimeStore', enabled: process.env.NODE_ENV === 'development' }
   )
 )
 

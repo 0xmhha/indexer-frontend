@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { useConsensusStore } from '@/stores/consensusStore'
 import { useRealtimeStore } from '@/stores/realtimeStore'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import { getHealthStatusStyles } from '@/lib/utils/consensus'
 
 /**
  * Network health status component
@@ -14,50 +15,10 @@ export function NetworkHealthStatus() {
   const { networkHealth, stats } = useConsensusStore()
   const isConnected = useRealtimeStore((s) => s.isConnected)
 
-  const healthColor = useMemo(() => {
-    switch (networkHealth.status) {
-      case 'excellent':
-        return 'text-green-400'
-      case 'good':
-        return 'text-yellow-400'
-      case 'fair':
-        return 'text-orange-400'
-      case 'poor':
-        return 'text-red-400'
-      default:
-        return 'text-gray-400'
-    }
-  }, [networkHealth.status])
-
-  const healthBgColor = useMemo(() => {
-    switch (networkHealth.status) {
-      case 'excellent':
-        return 'bg-green-500'
-      case 'good':
-        return 'bg-yellow-500'
-      case 'fair':
-        return 'bg-orange-500'
-      case 'poor':
-        return 'bg-red-500'
-      default:
-        return 'bg-gray-500'
-    }
-  }, [networkHealth.status])
-
-  const statusIcon = useMemo(() => {
-    switch (networkHealth.status) {
-      case 'excellent':
-        return '🟢'
-      case 'good':
-        return '🟡'
-      case 'fair':
-        return '🟠'
-      case 'poor':
-        return '🔴'
-      default:
-        return '⚪'
-    }
-  }, [networkHealth.status])
+  const { textColor: healthColor, bgColor: healthBgColor, icon: statusIcon, label: statusLabel } = useMemo(
+    () => getHealthStatusStyles(networkHealth.status),
+    [networkHealth.status]
+  )
 
   return (
     <Card>
@@ -80,7 +41,7 @@ export function NetworkHealthStatus() {
           <div className="mb-2 flex items-center justify-between">
             <span className="font-mono text-sm text-text-muted">Health Score</span>
             <span className="font-mono text-sm text-text-muted">
-              {statusIcon} {networkHealth.status.charAt(0).toUpperCase() + networkHealth.status.slice(1)}
+              {statusIcon} {statusLabel}
             </span>
           </div>
           <div className="flex items-baseline">
@@ -163,20 +124,10 @@ export function NetworkHealthIndicator() {
   const { networkHealth } = useConsensusStore()
   const isConnected = useRealtimeStore((s) => s.isConnected)
 
-  const statusColor = useMemo(() => {
-    switch (networkHealth.status) {
-      case 'excellent':
-        return 'bg-green-500'
-      case 'good':
-        return 'bg-yellow-500'
-      case 'fair':
-        return 'bg-orange-500'
-      case 'poor':
-        return 'bg-red-500'
-      default:
-        return 'bg-gray-500'
-    }
-  }, [networkHealth.status])
+  const { bgColor: statusColor } = useMemo(
+    () => getHealthStatusStyles(networkHealth.status),
+    [networkHealth.status]
+  )
 
   return (
     <div className="flex items-center gap-2">

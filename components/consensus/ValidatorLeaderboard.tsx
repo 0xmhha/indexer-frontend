@@ -7,7 +7,8 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useAllValidatorStats, type ValidatorStats } from '@/lib/hooks/useConsensus'
 import { truncateAddress, formatNumber } from '@/lib/utils/format'
-import { THRESHOLDS, BLOCKCHAIN } from '@/lib/config/constants'
+import { BLOCKCHAIN } from '@/lib/config/constants'
+import { getParticipationRateColor } from '@/lib/utils/consensus'
 import { ParticipationRate } from './ParticipationRate'
 
 interface ValidatorLeaderboardProps {
@@ -206,32 +207,12 @@ const ValidatorRow = memo(function ValidatorRow({ validator, rank }: ValidatorRo
         {formatNumber(validator.blocksProposed)}
       </td>
       <td className="px-4 py-3 text-center">
-        <span
-          className={`font-mono text-sm ${
-            prepareRate >= THRESHOLDS.PARTICIPATION_EXCELLENT
-              ? 'text-accent-green'
-              : prepareRate >= THRESHOLDS.PARTICIPATION_GOOD
-                ? 'text-accent-cyan'
-                : prepareRate >= THRESHOLDS.PARTICIPATION_MINIMUM
-                  ? 'text-yellow-500'
-                  : 'text-accent-red'
-          }`}
-        >
+        <span className={`font-mono text-sm ${getParticipationRateColor(prepareRate).text}`}>
           {prepareRate.toFixed(1)}%
         </span>
       </td>
       <td className="px-4 py-3 text-center">
-        <span
-          className={`font-mono text-sm ${
-            commitRate >= THRESHOLDS.PARTICIPATION_EXCELLENT
-              ? 'text-accent-green'
-              : commitRate >= THRESHOLDS.PARTICIPATION_GOOD
-                ? 'text-accent-cyan'
-                : commitRate >= THRESHOLDS.PARTICIPATION_MINIMUM
-                  ? 'text-yellow-500'
-                  : 'text-accent-red'
-          }`}
-        >
+        <span className={`font-mono text-sm ${getParticipationRateColor(commitRate).text}`}>
           {commitRate.toFixed(1)}%
         </span>
       </td>

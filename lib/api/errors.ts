@@ -1,20 +1,23 @@
 /**
  * API Relay Error Classes
  * Centralized error handling for REST API endpoints
+ *
+ * All API errors extend AppError for unified error handling across the app.
  */
 
 import { HTTP_STATUS } from '@/lib/config/constants'
+import { AppError } from '@/lib/errors/types'
 
 /**
- * Base API Error class
+ * Base API Error class — extends AppError for a single error hierarchy
  */
-export class ApiError extends Error {
+export class ApiError extends AppError {
   constructor(
     message: string,
-    public code: string,
-    public statusCode: number = HTTP_STATUS.INTERNAL_SERVER_ERROR
+    code: string,
+    statusCode: number = HTTP_STATUS.INTERNAL_SERVER_ERROR
   ) {
-    super(message)
+    super(message, code, statusCode)
     this.name = 'ApiError'
   }
 }

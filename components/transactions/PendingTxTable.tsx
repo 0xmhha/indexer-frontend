@@ -9,6 +9,7 @@ import {
   TableHead,
   TableCell,
 } from '@/components/ui/Table'
+import { AddressLink } from '@/components/common/AddressLink'
 import { TransactionTypeBadge } from '@/components/transactions/TransactionTypeBadge'
 import { formatHash, formatCurrency, formatNumber } from '@/lib/utils/format'
 import { weiToGwei } from '@/lib/utils/gas'
@@ -21,25 +22,16 @@ interface PendingTxTableProps {
 }
 
 /**
- * Address link cell
+ * Nullable address cell — delegates to shared AddressLink for valid addresses
  */
-function AddressLink({ address, isTo = false }: { address: string | null | undefined; isTo?: boolean }) {
+function AddressCell({ address, isTo = false }: { address: string | null | undefined; isTo?: boolean }) {
   if (!address && isTo) {
     return <span className="font-mono text-text-muted">[Contract]</span>
   }
-
   if (!address) {
     return <span className="font-mono text-text-muted">-</span>
   }
-
-  return (
-    <Link
-      href={`/address/${address}`}
-      className="font-mono text-accent-blue hover:text-accent-cyan"
-    >
-      {formatHash(address, true)}
-    </Link>
-  )
+  return <AddressLink address={address} />
 }
 
 /**
@@ -81,10 +73,10 @@ export function PendingTxTable({ transactions, maxTransactions }: PendingTxTable
                 </Link>
               </TableCell>
               <TableCell>
-                <AddressLink address={tx.from} />
+                <AddressCell address={tx.from} />
               </TableCell>
               <TableCell>
-                <AddressLink address={tx.to} isTo />
+                <AddressCell address={tx.to} isTo />
               </TableCell>
               <TableCell className="text-right font-mono">
                 {formatCurrency(tx.value, env.currencySymbol)}

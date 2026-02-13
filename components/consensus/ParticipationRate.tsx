@@ -1,4 +1,4 @@
-import { THRESHOLDS } from '@/lib/config/constants'
+import { getParticipationRateColor } from '@/lib/utils/consensus'
 
 interface ParticipationRateProps {
   rate: number
@@ -22,14 +22,7 @@ export function ParticipationRate({
   showBar = true,
   label,
 }: ParticipationRateProps) {
-  const getColor = () => {
-    if (rate >= THRESHOLDS.PARTICIPATION_EXCELLENT) {return { text: 'text-accent-green', bg: 'bg-accent-green' }}
-    if (rate >= THRESHOLDS.PARTICIPATION_GOOD) {return { text: 'text-accent-cyan', bg: 'bg-accent-cyan' }}
-    if (rate >= THRESHOLDS.PARTICIPATION_MINIMUM) {return { text: 'text-yellow-500', bg: 'bg-yellow-500' }}
-    return { text: 'text-accent-red', bg: 'bg-accent-red' }
-  }
-
-  const color = getColor()
+  const color = getParticipationRateColor(rate)
 
   const sizeClasses = {
     sm: { text: 'text-sm', bar: 'h-1' },

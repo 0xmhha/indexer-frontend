@@ -5,7 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { formatNumber } from '@/lib/utils/format'
-import { THRESHOLDS } from '@/lib/config/constants'
+import { getParticipationRateColor } from '@/lib/utils/consensus'
 import { ParticipationRate } from '@/components/consensus/ParticipationRate'
 
 interface ValidatorStatsOverviewProps {
@@ -100,12 +100,7 @@ export function ValidatorStatsOverview({ stats, loading, error }: ValidatorStats
           <div className="space-y-3">
             <div className="rounded border border-bg-tertiary bg-bg-secondary p-3">
               <div className="font-mono text-xs text-text-muted">Prepare Rate</div>
-              <div className={`font-mono text-xl font-bold ${
-                prepareRate >= THRESHOLDS.PARTICIPATION_EXCELLENT ? 'text-accent-green'
-                  : prepareRate >= THRESHOLDS.PARTICIPATION_GOOD ? 'text-accent-cyan'
-                    : prepareRate >= THRESHOLDS.PARTICIPATION_MINIMUM ? 'text-yellow-500'
-                      : 'text-accent-red'
-              }`}>
+              <div className={`font-mono text-xl font-bold ${getParticipationRateColor(prepareRate).text}`}>
                 {prepareRate.toFixed(2)}%
               </div>
             </div>
@@ -124,12 +119,7 @@ export function ValidatorStatsOverview({ stats, loading, error }: ValidatorStats
           <div className="space-y-3">
             <div className="rounded border border-bg-tertiary bg-bg-secondary p-3">
               <div className="font-mono text-xs text-text-muted">Commit Rate</div>
-              <div className={`font-mono text-xl font-bold ${
-                commitRate >= THRESHOLDS.PARTICIPATION_EXCELLENT ? 'text-accent-green'
-                  : commitRate >= THRESHOLDS.PARTICIPATION_GOOD ? 'text-accent-cyan'
-                    : commitRate >= THRESHOLDS.PARTICIPATION_MINIMUM ? 'text-yellow-500'
-                      : 'text-accent-red'
-              }`}>
+              <div className={`font-mono text-xl font-bold ${getParticipationRateColor(commitRate).text}`}>
                 {commitRate.toFixed(2)}%
               </div>
             </div>

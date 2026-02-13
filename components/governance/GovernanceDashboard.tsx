@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
+import { StatCard } from '@/components/common/StatCard'
 import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import {
@@ -206,46 +207,6 @@ export function GovernanceDashboard() {
   )
 }
 
-function StatCard({
-  label,
-  value,
-  icon,
-  color,
-  subtitle,
-  link,
-}: {
-  label: string
-  value: string
-  icon: string
-  color: string
-  subtitle?: string
-  link?: string
-}) {
-  const content = (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <div className="annotation mb-2">{label}</div>
-            <div className="font-mono text-2xl font-bold text-accent-blue">{value}</div>
-            {subtitle && <div className="mt-1 font-mono text-xs text-text-muted">{subtitle}</div>}
-          </div>
-          <div className={`font-mono text-3xl ${color}`}>{icon}</div>
-        </div>
-      </CardContent>
-    </Card>
-  )
-
-  if (link) {
-    return (
-      <Link href={link} className="transition-transform hover:scale-105">
-        {content}
-      </Link>
-    )
-  }
-
-  return content
-}
 
 function StatusItem({ label, count, color }: { label: string; count: number; color: string }) {
   return (

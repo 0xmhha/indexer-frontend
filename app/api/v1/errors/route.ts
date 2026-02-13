@@ -7,6 +7,7 @@
  */
 
 import { NextRequest } from 'next/server'
+import { timingSafeEqual } from 'crypto'
 import {
   successResponse,
   errorResponse,
@@ -44,6 +45,28 @@ interface ErrorBatch {
 // Replace with database in production
 const serverErrors: ServerErrorLog[] = []
 const MAX_SERVER_ERRORS = 1000
+const MAX_BATCH_SIZE = 50
+const MAX_BODY_SIZE = 100_000 // 100KB
+const MAX_ERROR_MESSAGE_LENGTH = 2000
+
+/**
+ * Timing-safe API key comparison to prevent timing attacks
+ */
+function isValidApiKey(provided: string | null, expected: string): boolean {
+  if (!provided) {
+    return false
+  }
+  try {
+    const a = Buffer.from(provided)
+    const b = Buffer.from(expected)
+    if (a.length !== b.length) {
+      return false
+    }
+    return timingSafeEqual(a, b)
+  } catch {
+    return false
+  }
+}
 
 // Error statistics
 interface ErrorStats {
@@ -71,50 +94,28 @@ export async function OPTIONS() {
  */
 export async function POST(request: NextRequest) {
   try {
+    // Enforce body size limit
+    const contentLength = request.headers.get('content-length')
+    if (contentLength && parseInt(contentLength, 10) > MAX_BODY_SIZE) {
+      return errorResponse('Request body too large', HTTP_STATUS.BAD_REQUEST, 'BODY_TOO_LARGE')
+    }
+
     const body = await request.json() as ErrorBatch
 
     if (!body.errors || !Array.isArray(body.errors)) {
       return errorResponse('Invalid error batch format', HTTP_STATUS.BAD_REQUEST, 'INVALID_FORMAT')
     }
 
+    // Enforce batch size limit
+    if (body.errors.length > MAX_BATCH_SIZE) {
+      return errorResponse(`Batch size exceeds limit of ${MAX_BATCH_SIZE}`, HTTP_STATUS.BAD_REQUEST, 'BATCH_TOO_LARGE')
+    }
+
     // Get client IP (for tracking)
     const forwarded = request.headers.get('x-forwarded-for')
-    const ip = forwarded ? forwarded.split(',')[0] : 'unknown'
+    const ip = (forwarded ? forwarded.split(',')[0] : undefined) ?? 'unknown'
 
-    // Process each error
-    for (const error of body.errors) {
-      const serverError: ServerErrorLog = {
-        timestamp: error.timestamp || new Date().toISOString(),
-        message: error.message || 'Unknown error',
-        severity: error.severity || 'error',
-      }
-
-      // Only add optional properties if they have values
-      if (ip) {serverError.ip = ip}
-      if (error.stack) {serverError.stack = error.stack}
-      if (error.context) {serverError.context = error.context}
-      if (error.userAgent) {serverError.userAgent = error.userAgent}
-      if (error.url) {serverError.url = error.url}
-
-      // Add to server storage
-      serverErrors.push(serverError)
-
-      // Keep only recent errors
-      if (serverErrors.length > MAX_SERVER_ERRORS) {
-        serverErrors.shift()
-      }
-
-      // Log to server-side logger with context
-      const logContext = error.context
-        ? { ...error.context, metadata: { ...error.context.metadata, ip } }
-        : { component: 'client', metadata: { ip } }
-
-      errorLogger.log(
-        new Error(error.message),
-        logContext,
-        error.severity || 'error'
-      )
-    }
+    processErrorBatch(body.errors, ip)
 
     return successResponse({
       received: body.errors.length,
@@ -138,13 +139,12 @@ export async function POST(request: NextRequest) {
  */
 export async function GET(request: NextRequest) {
   try {
-    // Check for admin authorization (simple API key check)
-    // In production, use proper authentication
+    // Check for admin authorization
     const apiKey = request.headers.get('x-api-key')
     const expectedKey = process.env.ERROR_MONITORING_API_KEY
 
-    // If API key is configured, require it
-    if (expectedKey && apiKey !== expectedKey) {
+    // If API key is configured, require it (timing-safe comparison)
+    if (expectedKey && !isValidApiKey(apiKey, expectedKey)) {
       return errorResponse('Unauthorized', HTTP_STATUS.UNAUTHORIZED, 'UNAUTHORIZED')
     }
 
@@ -203,11 +203,11 @@ export async function GET(request: NextRequest) {
  */
 export async function DELETE(request: NextRequest) {
   try {
-    // Require API key for deletion
+    // Require API key for deletion (timing-safe comparison)
     const apiKey = request.headers.get('x-api-key')
     const expectedKey = process.env.ERROR_MONITORING_API_KEY
 
-    if (!expectedKey || apiKey !== expectedKey) {
+    if (!expectedKey || !isValidApiKey(apiKey, expectedKey)) {
       return errorResponse('Unauthorized', HTTP_STATUS.UNAUTHORIZED, 'UNAUTHORIZED')
     }
 
@@ -221,6 +221,42 @@ export async function DELETE(request: NextRequest) {
   } catch (error) {
     errorLogger.error(error, { component: 'api/v1/errors', action: 'clear-logs' })
     return errorResponse('Failed to clear error logs', HTTP_STATUS.INTERNAL_SERVER_ERROR, 'CLEAR_ERROR')
+  }
+}
+
+/**
+ * Process and store a batch of error reports
+ */
+const VALID_SEVERITIES = new Set(['error', 'warning', 'info'])
+
+function processErrorBatch(errors: ServerErrorLog[], ip: string): void {
+  for (const error of errors) {
+    const severity = VALID_SEVERITIES.has(error.severity) ? error.severity : 'error'
+    const message = typeof error.message === 'string' ? error.message.slice(0, MAX_ERROR_MESSAGE_LENGTH) : 'Unknown error'
+
+    const serverError: ServerErrorLog = {
+      timestamp: error.timestamp || new Date().toISOString(),
+      message,
+      severity,
+    }
+
+    if (ip) { serverError.ip = ip }
+    if (error.stack) { serverError.stack = error.stack }
+    if (error.context) { serverError.context = error.context }
+    if (error.userAgent) { serverError.userAgent = error.userAgent }
+    if (error.url) { serverError.url = error.url }
+
+    serverErrors.push(serverError)
+
+    if (serverErrors.length > MAX_SERVER_ERRORS) {
+      serverErrors.shift()
+    }
+
+    const logContext = error.context
+      ? { ...error.context, metadata: { ...error.context.metadata, ip } }
+      : { component: 'client', metadata: { ip } }
+
+    errorLogger.log(new Error(error.message), logContext, error.severity || 'error')
   }
 }
 

@@ -7,7 +7,8 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { useEpochData, useLatestEpochData } from '@/lib/hooks/useConsensus'
 import { truncateAddress } from '@/lib/utils/format'
-import { FORMATTING, BLOCKCHAIN, THRESHOLDS } from '@/lib/config/constants'
+import { FORMATTING, BLOCKCHAIN } from '@/lib/config/constants'
+import { getParticipationRateColor } from '@/lib/utils/consensus'
 
 interface EpochDetailProps {
   epochNumber: string
@@ -300,15 +301,7 @@ const CandidateRow = memo(function CandidateRow({
       </td>
       <td className="px-4 py-3 text-center">
         <span
-          className={`font-mono text-sm ${
-            diligence >= THRESHOLDS.PARTICIPATION_EXCELLENT
-              ? 'text-accent-green'
-              : diligence >= THRESHOLDS.PARTICIPATION_GOOD
-                ? 'text-accent-cyan'
-                : diligence >= THRESHOLDS.PARTICIPATION_MINIMUM
-                  ? 'text-yellow-500'
-                  : 'text-accent-red'
-          }`}
+          className={`font-mono text-sm ${getParticipationRateColor(diligence).text}`}
         >
           {diligence.toFixed(2)}%
         </span>

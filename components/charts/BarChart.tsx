@@ -10,6 +10,16 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts'
+import {
+  TOOLTIP_CONTENT_STYLE,
+  TOOLTIP_LABEL_STYLE,
+  TOOLTIP_ITEM_STYLE,
+  AXIS_STROKE,
+  AXIS_TICK,
+  GRID_STROKE,
+  GRID_DASH_ARRAY,
+  LEGEND_WRAPPER_STYLE,
+} from '@/lib/config/chartTheme'
 
 export interface BarChartProps {
   data: Array<Record<string, unknown>>
@@ -47,35 +57,29 @@ export function BarChart({
         margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
         layout={horizontal ? 'vertical' : 'horizontal'}
       >
-        {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="rgba(255, 255, 255, 0.1)" />}
+        {showGrid && <CartesianGrid strokeDasharray={GRID_DASH_ARRAY} stroke={GRID_STROKE} />}
         <XAxis
           {...(!horizontal && { dataKey: xKey })}
           type={horizontal ? 'number' : 'category'}
-          stroke="rgba(255, 255, 255, 0.5)"
-          tick={{ fill: 'rgba(255, 255, 255, 0.7)', fontSize: 12 }}
+          stroke={AXIS_STROKE}
+          tick={AXIS_TICK}
           {...(xAxisLabel && { label: { value: xAxisLabel, position: 'insideBottom', offset: -5 } })}
         />
         <YAxis
           {...(horizontal && { dataKey: xKey })}
           type={horizontal ? 'category' : 'number'}
-          stroke="rgba(255, 255, 255, 0.5)"
-          tick={{ fill: 'rgba(255, 255, 255, 0.7)', fontSize: 12 }}
+          stroke={AXIS_STROKE}
+          tick={AXIS_TICK}
           {...(yAxisLabel && { label: { value: yAxisLabel, angle: -90, position: 'insideLeft' } })}
         />
         <Tooltip
-          contentStyle={{
-            backgroundColor: 'rgba(0, 0, 0, 0.9)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            borderRadius: '4px',
-            fontSize: '12px',
-            fontFamily: 'monospace',
-          }}
-          labelStyle={{ color: 'rgba(255, 255, 255, 0.9)' }}
-          itemStyle={{ color: 'rgba(255, 255, 255, 0.7)' }}
+          contentStyle={TOOLTIP_CONTENT_STYLE}
+          labelStyle={TOOLTIP_LABEL_STYLE}
+          itemStyle={TOOLTIP_ITEM_STYLE}
         />
         {showLegend && (
           <Legend
-            wrapperStyle={{ fontSize: '12px', fontFamily: 'monospace' }}
+            wrapperStyle={LEGEND_WRAPPER_STYLE}
             iconType="rect"
           />
         )}

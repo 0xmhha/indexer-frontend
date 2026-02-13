@@ -5,6 +5,7 @@
 
 import { NextResponse } from 'next/server'
 import { ApiError } from './errors'
+import { HTTP_STATUS } from '@/lib/config/constants'
 
 /**
  * Create a success response
@@ -51,7 +52,7 @@ export function apiErrorResponse(error: ApiError): NextResponse {
         code: error.code,
       },
     },
-    { status: error.statusCode }
+    { status: error.statusCode ?? HTTP_STATUS.INTERNAL_SERVER_ERROR }
   )
 }
 
