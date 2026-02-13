@@ -85,7 +85,7 @@ export function Toast({ id, type, title, message, duration = 5000, onClose }: To
             <button
               type="button"
               onClick={() => onClose(id)}
-              className="inline-flex rounded-md text-text-muted transition-colors hover:text-text-primary focus:outline-none"
+              className="inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-md text-text-muted transition-colors hover:text-text-primary focus:outline-none focus:ring-2 focus:ring-accent-blue"
               aria-label="Close notification"
             >
               <span className="text-lg">×</span>

@@ -21,7 +21,7 @@ export function ThemeToggle({ className = '' }: ThemeToggleProps) {
     <button
       type="button"
       onClick={toggleTheme}
-      className={`rounded-md p-2 transition-colors hover:bg-bg-tertiary focus:outline-none focus:ring-2 focus:ring-accent-blue ${className}`}
+      className={`rounded-md p-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center transition-colors hover:bg-bg-tertiary focus:outline-none focus:ring-2 focus:ring-accent-blue ${className}`}
       aria-label={`Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} theme`}
       title={`Switch to ${resolvedTheme === 'dark' ? 'light' : 'dark'} theme`}
     >

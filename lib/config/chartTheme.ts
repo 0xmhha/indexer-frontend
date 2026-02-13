@@ -28,7 +28,7 @@ export const TOOLTIP_LABEL_STYLE: CSSProperties = {
 
 /** Tooltip item text styles */
 export const TOOLTIP_ITEM_STYLE: CSSProperties = {
-  color: 'rgba(255, 255, 255, 0.7)',
+  color: 'rgba(255, 255, 255, 0.9)',
 }
 
 /** Axis stroke color */
@@ -36,7 +36,7 @@ export const AXIS_STROKE = 'rgba(255, 255, 255, 0.5)'
 
 /** Axis tick style */
 export const AXIS_TICK = {
-  fill: 'rgba(255, 255, 255, 0.7)',
+  fill: 'rgba(255, 255, 255, 0.9)',
   fontSize: 12,
 } as const
 

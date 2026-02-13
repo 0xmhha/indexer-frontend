@@ -48,7 +48,7 @@ export function ExportButton<T extends Record<string, unknown>>({
       <button
         onClick={() => handleExport('csv')}
         disabled={isDisabled}
-        className="inline-flex items-center gap-2 rounded border border-bg-tertiary bg-bg-secondary px-3 py-1.5 font-mono text-xs text-text-primary transition-colors hover:border-accent-blue hover:bg-bg-tertiary disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex items-center gap-2 rounded border border-bg-tertiary bg-bg-secondary px-3 py-2 min-h-[44px] font-mono text-xs text-text-primary transition-colors hover:border-accent-blue hover:bg-bg-tertiary disabled:cursor-not-allowed disabled:opacity-50"
         aria-label="Export as CSV"
       >
         <Download className="h-3 w-3" aria-hidden="true" />
@@ -57,7 +57,7 @@ export function ExportButton<T extends Record<string, unknown>>({
       <button
         onClick={() => handleExport('json')}
         disabled={isDisabled}
-        className="inline-flex items-center gap-2 rounded border border-bg-tertiary bg-bg-secondary px-3 py-1.5 font-mono text-xs text-text-primary transition-colors hover:border-accent-blue hover:bg-bg-tertiary disabled:cursor-not-allowed disabled:opacity-50"
+        className="inline-flex items-center gap-2 rounded border border-bg-tertiary bg-bg-secondary px-3 py-2 min-h-[44px] font-mono text-xs text-text-primary transition-colors hover:border-accent-blue hover:bg-bg-tertiary disabled:cursor-not-allowed disabled:opacity-50"
         aria-label="Export as JSON"
       >
         <Download className="h-3 w-3" aria-hidden="true" />

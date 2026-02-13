@@ -174,31 +174,31 @@ export function AdvancedTransactionFilters({
 
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             <div className="space-y-2">
-              <label className="font-mono text-xs uppercase text-text-secondary">Block Range</label>
+              <span className="font-mono text-xs uppercase text-text-secondary" id="adv-block-range">Block Range</span>
               <div className="flex gap-2">
-                <Input type="number" placeholder="From" value={filters.fromBlock} onChange={(e) => handleChange('fromBlock', e.target.value)} min="0" />
-                <Input type="number" placeholder="To" value={filters.toBlock} onChange={(e) => handleChange('toBlock', e.target.value)} min="0" />
+                <Input type="number" placeholder="From" value={filters.fromBlock} onChange={(e) => handleChange('fromBlock', e.target.value)} min="0" aria-label="Block range from" />
+                <Input type="number" placeholder="To" value={filters.toBlock} onChange={(e) => handleChange('toBlock', e.target.value)} min="0" aria-label="Block range to" />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="font-mono text-xs uppercase text-text-secondary">Value Range (Wei)</label>
+              <span className="font-mono text-xs uppercase text-text-secondary" id="adv-value-range">Value Range (Wei)</span>
               <div className="flex gap-2">
-                <Input type="number" placeholder="Min" value={filters.minValue} onChange={(e) => handleChange('minValue', e.target.value)} min="0" />
-                <Input type="number" placeholder="Max" value={filters.maxValue} onChange={(e) => handleChange('maxValue', e.target.value)} min="0" />
+                <Input type="number" placeholder="Min" value={filters.minValue} onChange={(e) => handleChange('minValue', e.target.value)} min="0" aria-label="Value range min" />
+                <Input type="number" placeholder="Max" value={filters.maxValue} onChange={(e) => handleChange('maxValue', e.target.value)} min="0" aria-label="Value range max" />
               </div>
             </div>
 
             <div className="space-y-2">
-              <label className="font-mono text-xs uppercase text-text-secondary">EIP Transaction Type</label>
-              <Select value={filters.eipType.toString()} onChange={(e) => handleChange('eipType', parseInt(e.target.value))}>
+              <label htmlFor="adv-eip-type" className="font-mono text-xs uppercase text-text-secondary">EIP Transaction Type</label>
+              <Select id="adv-eip-type" value={filters.eipType.toString()} onChange={(e) => handleChange('eipType', parseInt(e.target.value))}>
                 {TX_TYPE_OPTIONS.map((opt) => (<option key={opt.value} value={opt.value}>{opt.label}</option>))}
               </Select>
             </div>
 
             <div className="space-y-2">
-              <label className="font-mono text-xs uppercase text-text-secondary">Direction</label>
-              <Select value={filters.direction} onChange={(e) => handleChange('direction', e.target.value as AdvancedTransactionFilterValues['direction'])}>
+              <label htmlFor="adv-direction" className="font-mono text-xs uppercase text-text-secondary">Direction</label>
+              <Select id="adv-direction" value={filters.direction} onChange={(e) => handleChange('direction', e.target.value as AdvancedTransactionFilterValues['direction'])}>
                 <option value="all">All</option>
                 <option value="sent">Sent</option>
                 <option value="received">Received</option>
@@ -206,8 +206,8 @@ export function AdvancedTransactionFilters({
             </div>
 
             <div className="space-y-2">
-              <label className="font-mono text-xs uppercase text-text-secondary">Status</label>
-              <Select value={filters.status} onChange={(e) => handleChange('status', e.target.value as AdvancedTransactionFilterValues['status'])}>
+              <label htmlFor="adv-status" className="font-mono text-xs uppercase text-text-secondary">Status</label>
+              <Select id="adv-status" value={filters.status} onChange={(e) => handleChange('status', e.target.value as AdvancedTransactionFilterValues['status'])}>
                 <option value="all">All</option>
                 <option value="success">Success</option>
                 <option value="failed">Failed</option>
@@ -216,8 +216,8 @@ export function AdvancedTransactionFilters({
             </div>
 
             <div className="space-y-2">
-              <label className="font-mono text-xs uppercase text-text-secondary">Interaction Type</label>
-              <Select value={filters.contractInteraction} onChange={(e) => handleChange('contractInteraction', e.target.value as AdvancedTransactionFilterValues['contractInteraction'])}>
+              <label htmlFor="adv-interaction" className="font-mono text-xs uppercase text-text-secondary">Interaction Type</label>
+              <Select id="adv-interaction" value={filters.contractInteraction} onChange={(e) => handleChange('contractInteraction', e.target.value as AdvancedTransactionFilterValues['contractInteraction'])}>
                 <option value="all">All</option>
                 <option value="contract-call">Contract Call</option>
                 <option value="contract-deploy">Contract Deploy</option>
@@ -226,8 +226,8 @@ export function AdvancedTransactionFilters({
             </div>
 
             <div className="space-y-2">
-              <label className="font-mono text-xs uppercase text-text-secondary">Fee Delegation</label>
-              <Select value={filters.feeDelegated} onChange={(e) => handleChange('feeDelegated', e.target.value as AdvancedTransactionFilterValues['feeDelegated'])}>
+              <label htmlFor="adv-fee-delegation" className="font-mono text-xs uppercase text-text-secondary">Fee Delegation</label>
+              <Select id="adv-fee-delegation" value={filters.feeDelegated} onChange={(e) => handleChange('feeDelegated', e.target.value as AdvancedTransactionFilterValues['feeDelegated'])}>
                 <option value="all">All</option>
                 <option value="yes">Fee Delegated Only</option>
                 <option value="no">Not Fee Delegated</option>
@@ -235,8 +235,8 @@ export function AdvancedTransactionFilters({
             </div>
 
             <div className="space-y-2">
-              <label className="font-mono text-xs uppercase text-text-secondary">Time Range</label>
-              <Select value={filters.timeRange} onChange={(e) => handleChange('timeRange', e.target.value as AdvancedTransactionFilterValues['timeRange'])}>
+              <label htmlFor="adv-time-range" className="font-mono text-xs uppercase text-text-secondary">Time Range</label>
+              <Select id="adv-time-range" value={filters.timeRange} onChange={(e) => handleChange('timeRange', e.target.value as AdvancedTransactionFilterValues['timeRange'])}>
                 <option value="all">All Time</option>
                 <option value="1h">Last 1 Hour</option>
                 <option value="24h">Last 24 Hours</option>
@@ -247,25 +247,25 @@ export function AdvancedTransactionFilters({
             </div>
 
             <div className="space-y-2">
-              <label className="font-mono text-xs uppercase text-text-secondary">From Address</label>
-              <Input type="text" placeholder="0x..." value={filters.fromAddress} onChange={(e) => handleChange('fromAddress', e.target.value)} />
+              <label htmlFor="adv-from-address" className="font-mono text-xs uppercase text-text-secondary">From Address</label>
+              <Input id="adv-from-address" type="text" placeholder="0x..." value={filters.fromAddress} onChange={(e) => handleChange('fromAddress', e.target.value)} />
             </div>
 
             <div className="space-y-2">
-              <label className="font-mono text-xs uppercase text-text-secondary">To Address</label>
-              <Input type="text" placeholder="0x..." value={filters.toAddress} onChange={(e) => handleChange('toAddress', e.target.value)} />
+              <label htmlFor="adv-to-address" className="font-mono text-xs uppercase text-text-secondary">To Address</label>
+              <Input id="adv-to-address" type="text" placeholder="0x..." value={filters.toAddress} onChange={(e) => handleChange('toAddress', e.target.value)} />
             </div>
 
             <div className="space-y-2">
-              <label className="font-mono text-xs uppercase text-text-secondary">Method ID</label>
-              <Input type="text" placeholder="0x..." value={filters.methodId} onChange={(e) => handleChange('methodId', e.target.value)} />
+              <label htmlFor="adv-method-id" className="font-mono text-xs uppercase text-text-secondary">Method ID</label>
+              <Input id="adv-method-id" type="text" placeholder="0x..." value={filters.methodId} onChange={(e) => handleChange('methodId', e.target.value)} />
             </div>
 
             <div className="space-y-2">
-              <label className="font-mono text-xs uppercase text-text-secondary">Gas Used Range</label>
+              <span className="font-mono text-xs uppercase text-text-secondary" id="adv-gas-range">Gas Used Range</span>
               <div className="flex gap-2">
-                <Input type="number" placeholder="Min" value={filters.minGasUsed} onChange={(e) => handleChange('minGasUsed', e.target.value)} min="0" />
-                <Input type="number" placeholder="Max" value={filters.maxGasUsed} onChange={(e) => handleChange('maxGasUsed', e.target.value)} min="0" />
+                <Input type="number" placeholder="Min" value={filters.minGasUsed} onChange={(e) => handleChange('minGasUsed', e.target.value)} min="0" aria-label="Gas used range min" />
+                <Input type="number" placeholder="Max" value={filters.maxGasUsed} onChange={(e) => handleChange('maxGasUsed', e.target.value)} min="0" aria-label="Gas used range max" />
               </div>
             </div>
           </div>

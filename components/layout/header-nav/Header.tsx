@@ -82,7 +82,7 @@ export function Header() {
             {/* Mobile Menu Icon */}
             <button
               onClick={() => setShowMobileMenu(!showMobileMenu)}
-              className="md:hidden border border-bg-tertiary bg-bg-secondary px-3 py-2 font-mono text-xs text-text-primary transition-colors hover:border-accent-blue hover:text-accent-blue focus:outline-none focus:ring-2 focus:ring-accent-blue"
+              className="md:hidden border border-bg-tertiary bg-bg-secondary px-3 py-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center font-mono text-xs text-text-primary transition-colors hover:border-accent-blue hover:text-accent-blue focus:outline-none focus:ring-2 focus:ring-accent-blue"
               aria-label={showMobileMenu ? 'Close menu' : 'Open menu'}
               aria-expanded={showMobileMenu}
               aria-controls="mobile-menu"
@@ -117,7 +117,7 @@ export function Header() {
             {/* Mobile Search Icon */}
             <button
               onClick={() => setShowSearch(!showSearch)}
-              className="lg:hidden border border-bg-tertiary bg-bg-secondary px-3 py-2 font-mono text-xs text-text-primary transition-colors hover:border-accent-blue hover:text-accent-blue focus:outline-none focus:ring-2 focus:ring-accent-blue"
+              className="lg:hidden border border-bg-tertiary bg-bg-secondary px-3 py-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center font-mono text-xs text-text-primary transition-colors hover:border-accent-blue hover:text-accent-blue focus:outline-none focus:ring-2 focus:ring-accent-blue"
               aria-label={showSearch ? 'Close search' : 'Open search'}
               aria-expanded={showSearch}
               aria-controls="mobile-search"

@@ -94,9 +94,9 @@ export function TransactionFilters({
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {/* Block Range */}
             <div className="space-y-2">
-              <label className="font-mono text-xs uppercase text-text-secondary">
+              <span className="font-mono text-xs uppercase text-text-secondary" id="tf-block-range">
                 Block Range
-              </label>
+              </span>
               <div className="flex gap-2">
                 <Input
                   type="number"
@@ -104,6 +104,7 @@ export function TransactionFilters({
                   value={filters.fromBlock}
                   onChange={(e) => handleChange('fromBlock', e.target.value)}
                   min="0"
+                  aria-label="Block range from"
                 />
                 <Input
                   type="number"
@@ -111,15 +112,16 @@ export function TransactionFilters({
                   value={filters.toBlock}
                   onChange={(e) => handleChange('toBlock', e.target.value)}
                   min="0"
+                  aria-label="Block range to"
                 />
               </div>
             </div>
 
             {/* Value Range */}
             <div className="space-y-2">
-              <label className="font-mono text-xs uppercase text-text-secondary">
+              <span className="font-mono text-xs uppercase text-text-secondary" id="tf-value-range">
                 Value Range (Wei)
-              </label>
+              </span>
               <div className="flex gap-2">
                 <Input
                   type="number"
@@ -127,6 +129,7 @@ export function TransactionFilters({
                   value={filters.minValue}
                   onChange={(e) => handleChange('minValue', e.target.value)}
                   min="0"
+                  aria-label="Value range min"
                 />
                 <Input
                   type="number"
@@ -134,16 +137,18 @@ export function TransactionFilters({
                   value={filters.maxValue}
                   onChange={(e) => handleChange('maxValue', e.target.value)}
                   min="0"
+                  aria-label="Value range max"
                 />
               </div>
             </div>
 
             {/* Transaction Type */}
             <div className="space-y-2">
-              <label className="font-mono text-xs uppercase text-text-secondary">
+              <label htmlFor="tf-tx-type" className="font-mono text-xs uppercase text-text-secondary">
                 Transaction Type
               </label>
               <Select
+                id="tf-tx-type"
                 value={filters.txType.toString()}
                 onChange={(e) => handleChange('txType', parseInt(e.target.value))}
               >
