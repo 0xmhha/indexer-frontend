@@ -107,7 +107,7 @@ export function formatCurrency(value: bigint | string, symbol = 'WKRC', decimals
  */
 export function formatTimeAgo(timestamp: bigint | number): string {
   const now = BigInt(Math.floor(Date.now() / FORMATTING.MS_PER_SECOND))
-  const timestampBigInt = typeof timestamp === 'number' ? BigInt(timestamp) : timestamp
+  const timestampBigInt = typeof timestamp === 'number' ? BigInt(Math.floor(timestamp)) : timestamp
   const diff = Number(now - timestampBigInt)
 
   if (diff < 0) {return 'in the future'}

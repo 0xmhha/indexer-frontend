@@ -1,11 +1,29 @@
 'use client'
 
 import { useState } from 'react'
-import { GasCalculator } from '@/components/gas/GasCalculator'
-import { FeeEfficiencyAnalyzer } from '@/components/gas/FeeEfficiencyAnalyzer'
-import { FeeDelegationDashboard } from '@/components/gas/FeeDelegationDashboard'
-import { TransactionSimulator } from '@/components/gas/TransactionSimulator'
-import { NetworkGasMonitor } from '@/components/gas/NetworkGasMonitor'
+import dynamic from 'next/dynamic'
+import { LoadingSpinner } from '@/components/common/LoadingSpinner'
+
+const GasCalculator = dynamic(
+  () => import('@/components/gas/GasCalculator').then((mod) => ({ default: mod.GasCalculator })),
+  { loading: () => <LoadingSpinner /> }
+)
+const FeeEfficiencyAnalyzer = dynamic(
+  () => import('@/components/gas/FeeEfficiencyAnalyzer').then((mod) => ({ default: mod.FeeEfficiencyAnalyzer })),
+  { loading: () => <LoadingSpinner /> }
+)
+const FeeDelegationDashboard = dynamic(
+  () => import('@/components/gas/FeeDelegationDashboard').then((mod) => ({ default: mod.FeeDelegationDashboard })),
+  { loading: () => <LoadingSpinner /> }
+)
+const TransactionSimulator = dynamic(
+  () => import('@/components/gas/TransactionSimulator').then((mod) => ({ default: mod.TransactionSimulator })),
+  { loading: () => <LoadingSpinner /> }
+)
+const NetworkGasMonitor = dynamic(
+  () => import('@/components/gas/NetworkGasMonitor').then((mod) => ({ default: mod.NetworkGasMonitor })),
+  { loading: () => <LoadingSpinner /> }
+)
 
 type ActiveTool = 'tracker' | 'calculator' | 'analyzer' | 'simulator' | 'delegation'
 

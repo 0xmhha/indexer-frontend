@@ -1,5 +1,11 @@
 import type { Metadata } from 'next'
-import { ConsensusDashboard } from '@/components/consensus/ConsensusDashboard'
+import dynamic from 'next/dynamic'
+import { LoadingSpinner } from '@/components/common/LoadingSpinner'
+
+const ConsensusDashboard = dynamic(
+  () => import('@/components/consensus/ConsensusDashboard').then((mod) => ({ default: mod.ConsensusDashboard })),
+  { loading: () => <LoadingSpinner /> }
+)
 
 export const metadata: Metadata = {
   title: 'Consensus | StableNet Explorer',

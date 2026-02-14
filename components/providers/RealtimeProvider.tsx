@@ -75,7 +75,8 @@ export function RealtimeProvider({
         }
       },
       onError: (error) => {
-        errorLogger.error(error, { component: 'RealtimeProvider', action: 'block-subscription' })
+        // Downgrade to warn — WS client already logs the root cause error
+        errorLogger.warn(error, { component: 'RealtimeProvider', action: 'block-subscription' })
         setConnected(false)
       },
     }
@@ -96,7 +97,7 @@ export function RealtimeProvider({
         }
       },
       onError: (error) => {
-        errorLogger.error(error, { component: 'RealtimeProvider', action: 'transaction-subscription' })
+        errorLogger.warn(error, { component: 'RealtimeProvider', action: 'transaction-subscription' })
       },
     }
   )
@@ -114,7 +115,7 @@ export function RealtimeProvider({
       }
     },
     onError: (error) => {
-      errorLogger.error(error, { component: 'RealtimeProvider', action: 'pending-tx-subscription' })
+      errorLogger.warn(error, { component: 'RealtimeProvider', action: 'pending-tx-subscription' })
     },
   })
 

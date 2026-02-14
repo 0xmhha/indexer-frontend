@@ -80,7 +80,7 @@ export function useTransactions(params: UseTransactionsParams = {}) {
       blockNumberTo: blockNumberTo || undefined,
       from: from || undefined,
       to: to || undefined,
-      type: type || undefined,
+      type: type ?? undefined,
     },
     // Use previous data while loading to prevent flickering
     returnPartialData: true,

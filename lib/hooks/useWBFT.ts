@@ -10,6 +10,7 @@ import {
   GET_BLOCK_SIGNERS,
 } from '@/lib/graphql/queries/consensus'
 import { GET_ACTIVE_VALIDATORS } from '@/lib/graphql/queries/system-contracts'
+import { GET_LATEST_HEIGHT } from '@/lib/apollo/queries/block'
 
 // Types - aligned with backend schema
 
@@ -204,7 +205,7 @@ export function useEpochByNumber(epochNumber: string) {
 /**
  * Hook to fetch all validators signing statistics
  * Requires: fromBlock, toBlock (backend requires these)
- * Default block range: "0" to "999999999" (all blocks)
+ * Default block range: last 1000 blocks from latestHeight
  */
 export function useValidatorSigningStats(
   params: {
@@ -214,14 +215,22 @@ export function useValidatorSigningStats(
     offset?: number
   } = {}
 ) {
+  // First fetch latestHeight to compute a reasonable default range
+  const { data: heightData } = useQuery(GET_LATEST_HEIGHT, {
+    pollInterval: POLLING_INTERVALS.FAST,
+  })
+
+  const latestHeight = heightData?.latestHeight ? String(heightData.latestHeight) : null
+
   // Backend requires fromBlock and toBlock to be non-null
-  // Use default values for full range if not provided
+  // Default to last 1000 blocks to avoid scanning the entire chain (which causes timeout)
   const {
-    fromBlock = '0',
-    toBlock = '999999999',
     limit = PAGINATION.DEFAULT_PAGE_SIZE,
     offset = 0
   } = params
+
+  const toBlock = params.toBlock ?? latestHeight ?? '1000'
+  const fromBlock = params.fromBlock ?? String(Math.max(0, Number(toBlock) - 1000))
 
   const { data, loading, error, refetch, fetchMore, previousData } = useQuery(
     GET_ALL_VALIDATORS_SIGNING_STATS,
@@ -233,6 +242,7 @@ export function useValidatorSigningStats(
         offset,
       },
       returnPartialData: true,
+      skip: !latestHeight && !params.toBlock,
     }
   )
 

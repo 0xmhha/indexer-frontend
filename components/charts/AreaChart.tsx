@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import {
   AreaChart as RechartsAreaChart,
   Area,
@@ -41,7 +42,7 @@ export interface AreaChartProps {
   xAxisInterval?: 'preserveStartEnd' | 'preserveStart' | 'preserveEnd' | number
 }
 
-export function AreaChart({
+export const AreaChart = memo(function AreaChart({
   data,
   xKey,
   yKeys,
@@ -54,6 +55,7 @@ export function AreaChart({
   xAxisInterval = 'preserveStartEnd',
 }: AreaChartProps) {
   return (
+    <div role="img" aria-label={`Area chart showing ${yKeys.map((y) => y.name || y.key).join(', ')} over ${xKey}`}>
     <ResponsiveContainer width="100%" height={height}>
       <RechartsAreaChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
         {showGrid && <CartesianGrid strokeDasharray={GRID_DASH_ARRAY} stroke={GRID_STROKE} />}
@@ -95,5 +97,6 @@ export function AreaChart({
         ))}
       </RechartsAreaChart>
     </ResponsiveContainer>
+    </div>
   )
-}
+})

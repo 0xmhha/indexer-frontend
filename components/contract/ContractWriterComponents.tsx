@@ -168,13 +168,16 @@ interface FunctionInputFieldProps {
 
 export function FunctionInputField({ input, index, disabled, value, onChange }: FunctionInputFieldProps) {
   const validationError = value ? validateAbiInput(value, input.type) : null
+  const inputId = `abi-input-${input.name || `param${index}`}`
+  const errorId = `${inputId}-error`
 
   return (
     <div>
-      <label className="annotation mb-1 block">
+      <label htmlFor={inputId} className="annotation mb-1 block">
         {input.name || `param${index}`} ({input.type})
       </label>
       <input
+        id={inputId}
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}
@@ -183,9 +186,11 @@ export function FunctionInputField({ input, index, disabled, value, onChange }: 
           validationError ? 'border-error focus:border-error' : 'border-bg-tertiary focus:border-accent-blue'
         }`}
         disabled={disabled}
+        aria-invalid={validationError ? true : undefined}
+        aria-describedby={validationError ? errorId : undefined}
       />
       {validationError && (
-        <p className="mt-1 font-mono text-xs text-error">{validationError}</p>
+        <p id={errorId} className="mt-1 font-mono text-xs text-error" role="alert">{validationError}</p>
       )}
     </div>
   )

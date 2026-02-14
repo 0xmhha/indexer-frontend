@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { env } from '@/lib/config/env'
 import { ABI } from '@/lib/config/constants'
+import { errorLogger } from '@/lib/errors'
 
 /**
  * EIP-1967 Storage Slots for Proxy Contracts
@@ -84,12 +85,12 @@ async function getStorageAt(
 
     const data = await response.json()
     if (data.error) {
-      console.warn('Storage read error:', data.error)
+      errorLogger.warn(new Error(String(data.error)), { action: 'proxy_detection', metadata: { type: 'storage_read' } })
       return null
     }
     return data.result
   } catch (error) {
-    console.warn('Failed to read storage:', error)
+    errorLogger.warn(error instanceof Error ? error : new Error(String(error)), { action: 'proxy_detection', metadata: { type: 'storage_read_failed' } })
     return null
   }
 }

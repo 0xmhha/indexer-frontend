@@ -45,7 +45,7 @@ const connectors = (() => {
         metadata: {
           name: 'StableNet Explorer',
           description: 'Blockchain explorer for StableNet',
-          url: typeof window !== 'undefined' ? window.location.origin : 'https://stablenet.io',
+          url: typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_APP_URL ?? 'https://stablenet.io'),
           icons: [],
         },
       })

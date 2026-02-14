@@ -164,6 +164,9 @@ function createWsClient(wsEndpoint: string): WsClient | null {
     return null
   }
 
+  // Throttle WS error logging to avoid spamming during reconnection attempts
+  let lastErrorLoggedAt = 0
+
   return createClient({
     url: wsEndpoint,
     connectionParams: {
@@ -171,12 +174,13 @@ function createWsClient(wsEndpoint: string): WsClient | null {
     },
     lazy: true, // Connect only when subscriptions are needed
     keepAlive: REALTIME.WS_KEEPALIVE_INTERVAL, // Send ping every 10 seconds to keep connection alive
-    retryAttempts: REALTIME.WS_RETRY_ATTEMPTS, // Reduce retry attempts to fail faster
+    retryAttempts: REALTIME.WS_RETRY_ATTEMPTS, // Infinite retries — never permanently disconnect
     retryWait: async (retries) => {
-      // Exponential backoff: 1s, 2s, 4s
-      await new Promise((resolve) =>
-        setTimeout(resolve, Math.min(1000 * 2 ** retries, REALTIME.WS_RETRY_MAX_WAIT))
-      )
+      // Exponential backoff: 1s, 2s, 4s, 8s, 16s, 30s, 30s, ...
+      const baseDelay = Math.min(1000 * 2 ** retries, REALTIME.WS_RETRY_MAX_WAIT)
+      // Add ±25% jitter to prevent thundering herd on reconnection
+      const jitter = baseDelay * 0.25 * (Math.random() * 2 - 1)
+      await new Promise((resolve) => setTimeout(resolve, baseDelay + jitter))
     },
     shouldRetry: (errOrCloseEvent) => {
       // Only retry on certain close codes (not on authentication failures)
@@ -188,8 +192,18 @@ function createWsClient(wsEndpoint: string): WsClient | null {
       return true
     },
     on: {
+      connected: () => {
+        // Reset throttle on successful connection so next error is always logged
+        lastErrorLoggedAt = 0
+        errorLogger.info('WebSocket connected', { component: 'WebSocket', action: 'connected' })
+      },
       error: (wsError) => {
-        errorLogger.error(wsError, { component: 'ApolloClient', action: 'websocket-error' })
+        // Throttle error logging — at most once per WS_ERROR_LOG_THROTTLE interval
+        const now = Date.now()
+        if (now - lastErrorLoggedAt >= REALTIME.WS_ERROR_LOG_THROTTLE) {
+          lastErrorLoggedAt = now
+          errorLogger.warn(wsError, { component: 'WebSocket', action: 'connection-error' })
+        }
       },
     },
   })

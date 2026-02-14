@@ -3,6 +3,7 @@
  * Centralized access to environment variables with type safety
  */
 import appConfig from '@/config/app.config.json'
+import { errorLogger } from '@/lib/errors'
 
 interface ApiConfig {
   graphqlEndpoint?: string
@@ -68,6 +69,6 @@ if (typeof window === 'undefined') {
       }
     })
   } catch (error) {
-    console.error('Environment validation failed:', error)
+    errorLogger.error(error instanceof Error ? error : new Error(String(error)), { action: 'env_validation' })
   }
 }

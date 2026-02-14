@@ -22,11 +22,14 @@ export const REALTIME = {
   /** WebSocket keepAlive interval (ms) */
   WS_KEEPALIVE_INTERVAL: 10_000,
 
-  /** WebSocket retry attempts */
-  WS_RETRY_ATTEMPTS: 3,
+  /** WebSocket retry attempts (Infinity = never stop retrying) */
+  WS_RETRY_ATTEMPTS: Infinity,
 
   /** WebSocket maximum retry wait time (ms) */
-  WS_RETRY_MAX_WAIT: 4_000,
+  WS_RETRY_MAX_WAIT: 30_000,
+
+  /** WebSocket error log throttle interval (ms) — suppress duplicate logs */
+  WS_ERROR_LOG_THROTTLE: 30_000,
 
   /** WebSocket close code: Normal closure */
   WS_CLOSE_NORMAL: 1000,
