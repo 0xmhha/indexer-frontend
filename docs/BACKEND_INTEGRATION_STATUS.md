@@ -1,6 +1,6 @@
 # Backend Integration Status
 
-> **Last Updated**: 2026-02-13
+> **Last Updated**: 2026-02-14
 > **Project**: indexer-frontend ↔ indexer-go
 > **Purpose**: 백엔드 연동 현황의 단일 진실 공급원 (Single Source of Truth)
 

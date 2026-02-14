@@ -1,6 +1,6 @@
 # Project Status
 
-> **Last Updated**: 2026-02-13
+> **Last Updated**: 2026-02-14
 > **Repository**: indexer-frontend (StableNet Block Explorer)
 
 ---
@@ -16,7 +16,7 @@
 | 트랜잭션 목록 | `/txs` | 필터링, 정렬 |
 | 트랜잭션 상세 | `/tx/[hash]` | Receipt, Internal Calls, Logs, InputDataViewer |
 | 주소 페이지 | `/address/[address]` | 잔액, 트랜잭션, ERC20/721, 내부TX |
-| 컨트랙트 조회 | `/contract` | 소스코드, Read 함수 호출 |
+| 컨트랙트 조회 | `/contract` | 소스코드, Read/Write 함수 호출 |
 | 검색 | `/search` | 주소/해시/블록번호 감지, 히스토리 |
 | Home (Dashboard) | `/` | 네트워크 개요, 최근 블록/TX |
 
@@ -32,6 +32,16 @@
 | Validators | `/validators` | 검증자 목록, 상태 |
 | 멀티 네트워크 | 전역 | 동적 네트워크 전환, 커스텀 추가 |
 
+### 지갑 연결 (wagmi/viem)
+
+| 기능 | 비고 |
+|------|------|
+| MetaMask 연결 | injected connector |
+| 체인 자동 전환 | 네트워크 선택기 ↔ 지갑 동기화 |
+| 자동 재연결 | 세션 간 연결 유지 |
+| ContractWriter | wagmi writeContract + viem 유틸리티 |
+| WalletButton | Header에 통합, 주소 축약 표시 |
+
 ### 실시간 기능 (WebSocket)
 
 | 기능 | 비고 |
@@ -40,14 +50,14 @@
 | 새 트랜잭션 구독 | 실시간 피드 |
 | 펜딩 트랜잭션 | 멤풀 모니터링 |
 | 로그 구독 | 이벤트 필터링 |
-| 라이브 인디케이터 | 실시간 상태 표시, Exponential backoff 재연결 |
+| 라이브 인디케이터 | Exponential backoff + jitter 재연결 |
 
 ### 통계 및 분석
 
 | 기능 | 비고 |
 |------|------|
 | 네트워크 통계 | `/stats` — 블록/트랜잭션 카운트 |
-| 가스 도구 | `/gas` — 기본 가스 차트 |
+| 가스 도구 | `/gas` — 가스 차트, 시뮬레이터, Fee 분석 |
 | 마이너/검증자 순위 | Top miners |
 | Fee Delegation 분석 | 채택률, 절감액 통계 |
 
@@ -56,58 +66,51 @@
 | 영역 | 상태 |
 |------|------|
 | 구현 페이지 | 21개 (SEO, 404 포함) |
-| 컴포넌트 | 151개 |
+| 컴포넌트 | 154개 |
 | 커스텀 Hooks | 70개 |
 | GraphQL | 35개 쿼리/구독 |
-| 테스트 | 33 파일, **741 테스트** (Vitest) |
+| 테스트 | 47 파일, **1,337 테스트** (Vitest) |
+| 에러 바운더리 | 21개 (모든 라우트) |
 | TypeScript | Strict Mode, **0 에러** |
-| ESLint | **0 에러, 0 워닝** (복잡도 규칙 포함) |
+| ESLint | **0 에러, 0 워닝** |
 | 에러 처리 | AppError, Recovery (withRetry, CircuitBreaker) |
-| 코드 품질 | SOLID 분석기, Clean Code 메트릭, A-F 등급 |
 | 상태 관리 | Apollo Cache + Zustand + Context |
-| 번들 | First Load JS: 87.7 kB, 최대 249 kB |
+| 지갑 연결 | wagmi v3 + viem v2 (ethers 제거) |
 
 ---
 
 ## 2. 필수 남은 작업
 
-### WCAG 2.1 AA 접근성 (우선순위: 높음)
+### WCAG 2.1 AA 접근성
 
-**상태**: 포괄적 감사 및 주요 수정 완료
+**상태**: 주요 수정 완료
 
-완료된 작업:
-- ✅ 터치 타겟 크기 44px 이상 적용 (Button, Input, Select, ThemeToggle 등 10개 컴포넌트)
-- ✅ 차트 텍스트 대비 개선 (tooltip/axis opacity 0.7→0.9)
-- ✅ 폼 라벨 htmlFor/id 연결 (TransactionFilters, AdvancedTransactionFilters)
-- ✅ 범위 입력 aria-label 추가 (block range, value range, gas range)
-- ✅ Toast 닫기 버튼 포커스 링 추가
-- ✅ 시맨틱 HTML, ARIA live regions, skip-to-content, focus-visible 시스템
+완료:
+- 터치 타겟 크기 44px 이상 적용
+- 차트 텍스트 대비 개선 (opacity 0.7→0.9)
+- 폼 라벨 htmlFor/id 연결
+- 범위 입력 aria-label 추가
+- 시맨틱 HTML, ARIA live regions, skip-to-content, focus-visible
 
 남은 작업:
 - 스크린 리더 실제 테스트 (VoiceOver)
-- text-text-muted / text-text-secondary 색상 대비 실측 검증
+- text-muted / text-secondary 색상 대비 실측 검증
 
-### E2E 테스트 실행 검증 (우선순위: 중간)
+### E2E 테스트
 
-**상태**: 10개 E2E 테스트 파일 작성 완료 (Playwright)
-
-```
-tests/e2e/
-├── address.spec.ts
-├── block-detail.spec.ts
-├── contract.spec.ts
-├── homepage.spec.ts
-├── navigation.spec.ts
-├── pagination.spec.ts
-├── search.spec.ts
-├── settings.spec.ts
-├── transaction-detail.spec.ts
-└── validators.spec.ts
-```
+**상태**: 10개 파일 작성 완료 (Playwright)
 
 남은 작업:
 - 실제 백엔드 연결 후 E2E 테스트 실행 및 통과 확인
 - CI/CD 파이프라인에 E2E 테스트 통합
+
+### WalletConnect 멀티월렛
+
+**상태**: wagmi 설정 완료, projectId 미등록
+
+남은 작업:
+- WalletConnect Cloud에서 projectId 발급
+- `walletConnect` connector 활성화
 
 ---
 
@@ -117,25 +120,23 @@ tests/e2e/
 
 | 기능 | 난이도 | 비고 |
 |------|:------:|------|
-| 검색 자동완성 | 중 | 실시간 결과, 타입별 아이콘, 키보드 네비 |
-| Gas Tracker 개선 | 중 | 실시간 Low/Avg/High, 히스토리 차트, Guzzlers |
+| 검색 자동완성 | 중 | 실시간 결과, 타입별 아이콘 |
+| Gas Tracker 개선 | 중 | Low/Avg/High, Guzzlers |
 
 ### Phase 2: 토큰 기능
 
 | 기능 | 난이도 | 비고 |
 |------|:------:|------|
-| Token Tracker 페이지 | 상 | ERC-20/721/1155 목록, 홀더 수, 전송 횟수 |
-| Token Holders 분석 | 중 | Top 홀더, 분포 차트, 고래 추적 |
-| NFT Gallery | 중 | 이미지 갤러리, 메타데이터, 소유권 이력 |
+| Token Tracker 페이지 | 상 | ERC-20/721/1155 목록, 홀더 수 |
+| Token Holders 분석 | 중 | Top 홀더, 분포 차트 |
+| NFT Gallery | 중 | 이미지 갤러리, 메타데이터 |
 | Token Approvals | 중 | 승인 목록, Unlimited 경고 |
 
 ### Phase 3: 컨트랙트 기능
 
 | 기능 | 난이도 | 비고 |
 |------|:------:|------|
-| 지갑 연결 (Web3) | 상 | MetaMask, WalletConnect (wagmi/viem) |
-| Write Contract | 상 | ABI 기반 함수, 가스 예측, TX 서명 |
-| Contract Verification UI | 상 | 웹 업로드, 컴파일러 선택, Multi-file |
+| Contract Verification UI | 상 | 웹 업로드, 컴파일러 선택 |
 | Proxy Contract 감지 | 중 | 자동 감지, Implementation 로드 |
 
 ### Phase 4: 사용자 기능 (Backend 필요)
@@ -144,8 +145,7 @@ tests/e2e/
 |------|:------:|------|
 | 계정 시스템 | 상 | 회원가입/로그인, API Key 관리 |
 | Watch List | 중 | 주소 모니터링 |
-| 이메일 알림 | 상 | TX/토큰/가격/이벤트 알림 |
-| Address Notes | 하 | 개인 메모, 태깅 |
+| 이메일 알림 | 상 | TX/토큰/이벤트 알림 |
 
 ### Phase 5: 분석 도구
 
@@ -162,11 +162,12 @@ tests/e2e/
 | 기능 | 설명 |
 |------|------|
 | **실시간 WebSocket** | 네이티브 GraphQL Subscriptions (Etherscan은 폴링) |
-| **WBFT 컨센서스** | 검증자 참여율, 에포크, 포크 감지 — Etherscan에 없음 |
+| **WBFT 컨센서스** | 검증자 참여율, 에포크, 포크 감지 |
 | **Fee Delegation** | 수수료 대납 TX, 채택률 분석 — StableNet 고유 |
-| **EIP-7702 SetCode** | Authorization List, 서명 데이터 표시 — 최신 EIP |
+| **EIP-7702 SetCode** | Authorization List, 서명 데이터 표시 |
 | **멀티 네트워크** | 단일 앱에서 동적 전환, 커스텀 네트워크 추가 |
 | **시스템 컨트랙트** | 거버넌스, Mint/Burn, Token Supply 추적 |
+| **wagmi/viem 지갑** | 네트워크 ↔ 지갑 체인 자동 동기화 |
 
 ---
 
@@ -174,34 +175,13 @@ tests/e2e/
 
 | 구분 | 기술 |
 |------|------|
-| Framework | Next.js 14 (App Router) |
+| Framework | Next.js 16 (App Router, Turbopack) |
 | Language | TypeScript 5 (Strict Mode) |
 | Data | Apollo Client 3 (GraphQL + WebSocket) |
+| Wallet | wagmi v3 + viem v2 |
 | Styling | Tailwind CSS 3 + Radix UI |
 | State | Apollo Cache + Zustand + React Context |
 | Charts | Recharts |
 | Testing | Vitest (unit) + Playwright (E2E) |
-| Quality | ESLint 9 + SOLID Analyzer + Clean Code Metrics |
+| Quality | ESLint 9 |
 | Icons | Lucide Icons |
-
----
-
-## 6. 명세 준수 현황
-
-`FRONTEND_IMPLEMENTATION_PROMPT.md` 대비 구현율: **~97%**
-
-| 영역 | 상태 | 비고 |
-|------|:----:|------|
-| 기술 스택 | ✅ | 모든 기술 스택 적용 |
-| 디자인 시스템 | ✅ | Crystalline Infrastructure |
-| 핵심 페이지 | ✅ | 10개 명세 + 11개 추가 (21개) |
-| 컴포넌트 | ✅ | 151개 |
-| 커스텀 훅 | ✅ | 70개 |
-| GraphQL | ✅ | 35개 쿼리/구독 |
-| WebSocket | ✅ | 실시간 업데이트 |
-| 에러 핸들링 | ✅ | AppError, Recovery, CircuitBreaker |
-| TypeScript | ✅ | Strict 모든 옵션 활성화 |
-| 코드 품질 | ✅ | SOLID, Clean Code, 741 테스트 |
-| E2E 테스트 | ✅ | 10개 spec 파일 작성 완료 |
-| Contract Verification | ✅ | 실제 API 연동 완료 |
-| **접근성** | ✅ | 터치 타겟 44px, 폼 라벨 연결, 차트 대비 개선 |
