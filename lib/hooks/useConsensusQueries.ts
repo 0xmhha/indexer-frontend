@@ -20,6 +20,7 @@ import {
   GET_LATEST_EPOCH_INFO,
   GET_BLOCK_SIGNERS,
 } from '@/lib/graphql/queries/consensus'
+import { GET_LATEST_HEIGHT } from '@/lib/apollo/queries/block'
 import type {
   WBFTBlockExtra,
   BlockSigners,
@@ -275,12 +276,21 @@ export function useAllValidatorStats(params: {
   limit?: number
   offset?: number
 } = {}) {
+  // First fetch latestHeight to compute a reasonable default range
+  const { data: heightData } = useQuery(GET_LATEST_HEIGHT, {
+    pollInterval: POLLING_INTERVALS.FAST,
+  })
+
+  const latestHeight = heightData?.latestHeight ? String(heightData.latestHeight) : null
+
+  // Default to last 1000 blocks to avoid scanning the entire chain (which causes timeout)
   const {
-    fromBlock = '0',
-    toBlock = '999999999',
     limit = PAGINATION.DEFAULT_PAGE_SIZE,
     offset = 0,
   } = params
+
+  const toBlock = params.toBlock ?? latestHeight ?? '1000'
+  const fromBlock = params.fromBlock ?? String(Math.max(0, Number(toBlock) - 1000))
 
   const { data, loading, error, refetch, fetchMore, previousData } = useQuery(
     GET_ALL_VALIDATORS_SIGNING_STATS,
@@ -288,6 +298,7 @@ export function useAllValidatorStats(params: {
       variables: { fromBlock, toBlock, limit, offset },
       returnPartialData: true,
       errorPolicy: 'all',
+      skip: !latestHeight && !params.toBlock,
     }
   )
 

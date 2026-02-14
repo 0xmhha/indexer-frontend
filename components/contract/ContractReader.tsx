@@ -103,16 +103,19 @@ function getPlaceholder(type: string): string {
 // ============================================================
 
 function ReadFunctionInput({
+  id,
   inputType,
   value,
   onValueChange,
 }: {
+  id?: string
   inputType: string
   value: string
   onValueChange: (value: string) => void
 }) {
   return (
     <input
+      id={id}
       type="text"
       value={value}
       onChange={(e) => onValueChange(e.target.value)}
@@ -230,18 +233,22 @@ export function ContractReader({ contractAddress, abi }: ContractReaderProps) {
               {/* Function Inputs */}
               {func.inputs.length > 0 && (
                 <div className="space-y-3">
-                  {func.inputs.map((input, inputIndex: number) => (
-                    <div key={inputIndex}>
-                      <label className="annotation mb-1 block">
-                        {input.name || `param${inputIndex}`} ({input.type})
-                      </label>
-                      <ReadFunctionInput
-                        inputType={input.type}
-                        value={inputValues[funcName]?.[inputIndex] ?? ''}
-                        onValueChange={(value) => handleInputChange(funcName, inputIndex, value, func.inputs.length)}
-                      />
-                    </div>
-                  ))}
+                  {func.inputs.map((input, inputIndex: number) => {
+                    const inputId = `read-input-${funcName}-${input.name || `param${inputIndex}`}`
+                    return (
+                      <div key={inputIndex}>
+                        <label htmlFor={inputId} className="annotation mb-1 block">
+                          {input.name || `param${inputIndex}`} ({input.type})
+                        </label>
+                        <ReadFunctionInput
+                          id={inputId}
+                          inputType={input.type}
+                          value={inputValues[funcName]?.[inputIndex] ?? ''}
+                          onValueChange={(value) => handleInputChange(funcName, inputIndex, value, func.inputs.length)}
+                        />
+                      </div>
+                    )
+                  })}
                 </div>
               )}
 

@@ -6,7 +6,8 @@
  */
 
 import { gql, useQuery } from '@apollo/client'
-import { PAGINATION } from '@/lib/config/constants'
+import { PAGINATION, POLLING_INTERVALS } from '@/lib/config/constants'
+import { GET_LATEST_HEIGHT } from '@/lib/apollo/queries/block'
 import {
   GET_TOTAL_SUPPLY,
   GET_ACTIVE_MINTERS,
@@ -104,13 +105,22 @@ export function useMintEvents(params: {
   limit?: number
   offset?: number
 } = {}) {
+  // First fetch latestHeight to compute a reasonable default range
+  const { data: heightData } = useQuery(GET_LATEST_HEIGHT, {
+    pollInterval: POLLING_INTERVALS.FAST,
+  })
+
+  const latestHeight = heightData?.latestHeight ? String(heightData.latestHeight) : null
+
+  // Default to last 1000 blocks to avoid scanning the entire chain (which causes timeout)
   const {
-    fromBlock = '0',
-    toBlock = '999999999',
     minter,
     limit = PAGINATION.DEFAULT_PAGE_SIZE,
     offset = 0,
   } = params
+
+  const toBlock = params.toBlock ?? latestHeight ?? '1000'
+  const fromBlock = params.fromBlock ?? String(Math.max(0, Number(toBlock) - 1000))
 
   const { data, loading, error, refetch, fetchMore, previousData } = useQuery(GET_MINT_EVENTS, {
     variables: {
@@ -119,6 +129,7 @@ export function useMintEvents(params: {
     },
     returnPartialData: true,
     errorPolicy: 'all',
+    skip: !latestHeight && !params.toBlock,
   })
 
   const effectiveData = data ?? previousData
@@ -147,13 +158,22 @@ export function useBurnEvents(params: {
   limit?: number
   offset?: number
 } = {}) {
+  // First fetch latestHeight to compute a reasonable default range
+  const { data: burnHeightData } = useQuery(GET_LATEST_HEIGHT, {
+    pollInterval: POLLING_INTERVALS.FAST,
+  })
+
+  const burnLatestHeight = burnHeightData?.latestHeight ? String(burnHeightData.latestHeight) : null
+
+  // Default to last 1000 blocks to avoid scanning the entire chain (which causes timeout)
   const {
-    fromBlock = '0',
-    toBlock = '999999999',
     burner,
     limit = PAGINATION.DEFAULT_PAGE_SIZE,
     offset = 0,
   } = params
+
+  const toBlock = params.toBlock ?? burnLatestHeight ?? '1000'
+  const fromBlock = params.fromBlock ?? String(Math.max(0, Number(toBlock) - 1000))
 
   const { data, loading, error, refetch, fetchMore, previousData } = useQuery(GET_BURN_EVENTS, {
     variables: {
@@ -162,6 +182,7 @@ export function useBurnEvents(params: {
     },
     returnPartialData: true,
     errorPolicy: 'all',
+    skip: !burnLatestHeight && !params.toBlock,
   })
 
   const effectiveData = data ?? previousData

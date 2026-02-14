@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import {
   LineChart as RechartsLineChart,
   Line,
@@ -36,7 +37,7 @@ export interface LineChartProps {
   yAxisLabel?: string
 }
 
-export function LineChart({
+export const LineChart = memo(function LineChart({
   data,
   xKey,
   yKeys,
@@ -47,6 +48,7 @@ export function LineChart({
   yAxisLabel,
 }: LineChartProps) {
   return (
+    <div role="img" aria-label={`Line chart showing ${yKeys.map((y) => y.name || y.key).join(', ')} over ${xKey}`}>
     <ResponsiveContainer width="100%" height={height}>
       <RechartsLineChart data={data} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
         {showGrid && <CartesianGrid strokeDasharray={GRID_DASH_ARRAY} stroke={GRID_STROKE} />}
@@ -86,5 +88,6 @@ export function LineChart({
         ))}
       </RechartsLineChart>
     </ResponsiveContainer>
+    </div>
   )
-}
+})

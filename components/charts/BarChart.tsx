@@ -1,5 +1,6 @@
 'use client'
 
+import { memo } from 'react'
 import {
   BarChart as RechartsBarChart,
   Bar,
@@ -38,7 +39,7 @@ export interface BarChartProps {
   yAxisLabel?: string
 }
 
-export function BarChart({
+export const BarChart = memo(function BarChart({
   data,
   xKey,
   yKeys,
@@ -51,6 +52,7 @@ export function BarChart({
   yAxisLabel,
 }: BarChartProps) {
   return (
+    <div role="img" aria-label={`Bar chart showing ${yKeys.map((y) => y.name || y.key).join(', ')} by ${xKey}`}>
     <ResponsiveContainer width="100%" height={height}>
       <RechartsBarChart
         data={data}
@@ -94,5 +96,6 @@ export function BarChart({
         ))}
       </RechartsBarChart>
     </ResponsiveContainer>
+    </div>
   )
-}
+})

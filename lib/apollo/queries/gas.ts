@@ -12,7 +12,7 @@ import { gql } from '@apollo/client'
  */
 export const GET_RECENT_BLOCKS_FOR_GAS = gql`
   query GetRecentBlocksForGas($limit: Int!) {
-    blocks(pagination: { limit: $limit, orderBy: "number", orderDirection: "desc" }) {
+    blocks(pagination: { limit: $limit }) {
       nodes {
         number
         hash
