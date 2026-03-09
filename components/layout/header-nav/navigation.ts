@@ -25,6 +25,14 @@ export const NAV_SECTIONS: NavSection[] = [
     ],
   },
   {
+    title: 'Account Abstraction',
+    links: [
+      { href: '/userops', label: 'User Operations', mobileLabel: 'UserOps' },
+      { href: '/bundlers', label: 'Bundlers' },
+      { href: '/paymasters', label: 'Paymasters' },
+    ],
+  },
+  {
     title: 'Blockchain',
     links: [
       { href: '/system-contracts', label: 'System Contracts' },

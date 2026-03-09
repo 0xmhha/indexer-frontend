@@ -6,6 +6,7 @@ import { NetworkStats } from '@/components/common/NetworkStats'
 import { LiveIndicator } from '@/components/common/LiveIndicator'
 import { AdvancedPendingTransactionsPanel } from '@/components/transactions/AdvancedPendingTransactionsPanel'
 import { RealtimeActivityChart } from '@/components/charts/RealtimeActivityChart'
+import { AADashboardSection } from '@/components/aa/AADashboardSection'
 
 // Force dynamic rendering for real-time WebSocket features
 export const dynamic = 'force-dynamic'
@@ -44,6 +45,11 @@ export default function HomePage() {
         <div className="lg:col-span-2">
           <RecentBlocksList />
         </div>
+      </div>
+
+      {/* Account Abstraction (EIP-4337) - Stats and recent UserOps */}
+      <div className="mt-8">
+        <AADashboardSection />
       </div>
 
       {/* Advanced Pending Transactions - Full width real-time feed with filters */}

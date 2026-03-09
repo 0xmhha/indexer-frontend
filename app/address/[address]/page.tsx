@@ -22,6 +22,7 @@ import { AddressStatsCard } from '@/components/address/AddressStatsCard'
 import { BalanceHistoryCard } from '@/components/address/BalanceHistoryCard'
 import { AddressTransactionsSection } from '@/components/address/AddressTransactionsSection'
 import { ContractLogsSection } from '@/components/address/ContractLogsSection'
+import { AddressUserOpsSection } from '@/components/aa/AddressUserOpsSection'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/Tabs'
 import { isValidAddress } from '@/lib/utils/validation'
 import { CopyButton } from '@/components/common/CopyButton'
@@ -204,6 +205,7 @@ function AddressPageContent() {
           <TabsTrigger value="erc20">ERC20 Transfers</TabsTrigger>
           <TabsTrigger value="erc721">ERC721 Transfers</TabsTrigger>
           <TabsTrigger value="logs">Event Logs</TabsTrigger>
+          <TabsTrigger value="userops">User Operations</TabsTrigger>
         </TabsList>
 
         <TabsContent value="transactions">
@@ -228,6 +230,10 @@ function AddressPageContent() {
 
         <TabsContent value="logs">
           <ContractLogsSection address={address} />
+        </TabsContent>
+
+        <TabsContent value="userops">
+          <AddressUserOpsSection address={address} />
         </TabsContent>
       </Tabs>
     </div>

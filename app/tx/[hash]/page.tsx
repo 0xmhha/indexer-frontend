@@ -17,6 +17,7 @@ import {
 } from '@/components/transactions/TxDetailCards'
 // EIP-7702 SetCode transactions include authorizationList field
 import { InternalCallsViewer } from '@/components/transactions/InternalCallsViewer'
+import { TxBundleCard } from '@/components/aa/TxBundleCard'
 import type { Log } from '@/types/graphql'
 import { BLOCKCHAIN } from '@/lib/config/constants'
 
@@ -112,6 +113,9 @@ export default function TransactionPage() {
 
       {/* Receipt Card - shows detailed receipt information */}
       {receipt && <TxReceiptCard receipt={receipt} />}
+
+      {/* EIP-4337 AA Bundle - shows UserOps bundled in this tx */}
+      <TxBundleCard txHash={hash} />
 
       {/* Internal Calls - via debug_traceTransaction RPC */}
       <InternalCallsViewer txHash={hash} />
