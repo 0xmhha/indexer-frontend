@@ -6,8 +6,10 @@ import { Table, TableBody, TableRow, TableCell } from '@/components/ui/Table'
 import { CopyButton } from '@/components/common/CopyButton'
 import { AddressLink } from '@/components/common/AddressLink'
 import { useContractDetection } from '@/lib/hooks/useContractDetection'
+import { useTokenInfoCache } from '@/lib/hooks/useTokenInfoCache'
 import { FORMATTING } from '@/lib/config/constants'
 import { decodeEventLog, formatTokenAmount } from '@/lib/utils/eventDecoder'
+import type { TokenInfo } from '@/lib/config/known-tokens'
 import type { Log, DecodedLog } from '@/types/graphql'
 
 // ============================================================
@@ -21,17 +23,23 @@ function DecodedLogView({
   decoded,
   contractAddress,
   contractMap,
+  tokenInfo,
 }: {
   decoded: DecodedLog
   contractAddress: string
   contractMap: Map<string, boolean>
+  tokenInfo: TokenInfo | undefined
 }) {
+  // Build display name: "USDC Transfer" instead of just "Transfer" for token events
+  const isTokenEvent = tokenInfo && (decoded.eventName === 'Transfer' || decoded.eventName === 'Approval')
+  const displayName = isTokenEvent ? `${tokenInfo.symbol} ${decoded.eventName}` : decoded.eventName
+
   return (
     <div className="space-y-3">
       {/* Event Name Badge */}
       <div className="flex items-center gap-2">
         <span className="rounded bg-accent-blue/20 px-2 py-1 font-mono text-xs font-medium text-accent-blue">
-          {decoded.eventName}
+          {displayName}
         </span>
         <span className="font-mono text-xs text-text-muted">
           {decoded.eventSignature}
@@ -63,7 +71,7 @@ function DecodedLogView({
                   {param.type}
                 </TableCell>
                 <TableCell className="py-2 font-mono text-xs">
-                  <ParamValue param={param} contractMap={contractMap} />
+                  <ParamValue param={param} contractMap={contractMap} tokenInfo={tokenInfo} />
                 </TableCell>
               </TableRow>
             ))}
@@ -80,9 +88,11 @@ function DecodedLogView({
 function ParamValue({
   param,
   contractMap,
+  tokenInfo,
 }: {
   param: { name: string; type: string; value: string }
   contractMap: Map<string, boolean>
+  tokenInfo: TokenInfo | undefined
 }) {
   const { type, value, name } = param
 
@@ -102,10 +112,12 @@ function ParamValue({
 
   // uint256 - check if it looks like a token amount
   if (type === 'uint256' && (name === 'value' || name === 'wad' || name === 'amount')) {
-    const formatted = formatTokenAmount(value, FORMATTING.DEFAULT_DECIMALS)
+    const decimals = tokenInfo?.decimals ?? FORMATTING.DEFAULT_DECIMALS
+    const formatted = formatTokenAmount(value, decimals)
+    const symbolSuffix = tokenInfo?.symbol ? ` ${tokenInfo.symbol}` : ''
     return (
       <span className="flex items-center gap-2 text-text-primary">
-        <span>{formatted}</span>
+        <span>{formatted}{symbolSuffix}</span>
         <span className="text-text-muted">({value})</span>
         <CopyButton text={value} size="sm" />
       </span>
@@ -176,10 +188,12 @@ function LogEntry({
   log,
   index,
   contractMap,
+  tokenInfoMap,
 }: {
   log: Log
   index: number
   contractMap: Map<string, boolean>
+  tokenInfoMap: Map<string, TokenInfo>
 }) {
   const [showRaw, setShowRaw] = useState(false)
 
@@ -214,7 +228,12 @@ function LogEntry({
       </div>
 
       {canDecode && !showRaw ? (
-        <DecodedLogView decoded={decoded} contractAddress={log.address} contractMap={contractMap} />
+        <DecodedLogView
+          decoded={decoded}
+          contractAddress={log.address}
+          contractMap={contractMap}
+          tokenInfo={tokenInfoMap.get(log.address.toLowerCase())}
+        />
       ) : (
         <RawLogView log={log} contractMap={contractMap} />
       )}
@@ -251,6 +270,14 @@ export function TxLogsCard({ logs }: { logs: Log[] }) {
 
   const contractMap = useContractDetection(allAddresses)
 
+  // Collect all log contract addresses for token info resolution
+  const logAddresses = useMemo(() => {
+    if (!logs) { return [] }
+    return [...new Set(logs.map((log) => log.address))]
+  }, [logs])
+
+  const tokenInfoMap = useTokenInfoCache(logAddresses)
+
   if (!logs || logs.length === 0) { return null }
 
   return (
@@ -261,7 +288,7 @@ export function TxLogsCard({ logs }: { logs: Log[] }) {
       <CardContent className="p-4">
         <div className="space-y-4">
           {logs.map((log, index) => (
-            <LogEntry key={index} log={log} index={index} contractMap={contractMap} />
+            <LogEntry key={index} log={log} index={index} contractMap={contractMap} tokenInfoMap={tokenInfoMap} />
           ))}
         </div>
       </CardContent>

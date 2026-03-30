@@ -203,6 +203,54 @@ export const GET_PAYMASTER_STATS = gql`
 `
 
 // ============================================================================
+// Bundler / Paymaster List Queries (paginated)
+// ============================================================================
+
+/** Get paginated list of all known bundlers with stats */
+export const GET_ALL_BUNDLERS = gql`
+  query GetAllBundlers($limit: Int, $offset: Int) {
+    allBundlers(pagination: { limit: $limit, offset: $offset }) {
+      nodes {
+        address
+        totalOps
+        successfulOps
+        failedOps
+        totalGasSponsored
+        lastActivityBlock
+        lastActivityTime
+      }
+      totalCount
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+      }
+    }
+  }
+`
+
+/** Get paginated list of all known paymasters with stats */
+export const GET_ALL_PAYMASTERS = gql`
+  query GetAllPaymasters($limit: Int, $offset: Int) {
+    allPaymasters(pagination: { limit: $limit, offset: $offset }) {
+      nodes {
+        address
+        totalOps
+        successfulOps
+        failedOps
+        totalGasSponsored
+        lastActivityBlock
+        lastActivityTime
+      }
+      totalCount
+      pageInfo {
+        hasNextPage
+        hasPreviousPage
+      }
+    }
+  }
+`
+
+// ============================================================================
 // Account Deployment Queries
 // ============================================================================
 

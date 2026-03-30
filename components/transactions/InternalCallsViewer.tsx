@@ -248,7 +248,7 @@ export function InternalCallsViewer({ txHash }: InternalCallsViewerProps) {
             </div>
 
             {/* Calls list */}
-            <div className="max-h-96 overflow-y-auto">
+            <div className={expanded ? 'overflow-y-auto' : 'max-h-96 overflow-y-auto'}>
               {displayedCalls.map((call, index) => (
                 <InternalCallRow key={index} call={call} />
               ))}

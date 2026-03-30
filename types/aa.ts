@@ -118,6 +118,18 @@ export interface Bundler {
   lastSeen: Date
 }
 
+/** Bundler with stats derived from real UserOp data */
+export interface BundlerWithStats {
+  address: string
+  totalOps: number
+  successfulOps: number
+  failedOps: number
+  successRate: number
+  totalGasSponsored: bigint
+  lastActivityBlock: number
+  lastActivityTime: Date
+}
+
 /** Raw paymaster stats from backend */
 export interface RawPaymasterStats {
   address: string
@@ -148,6 +160,29 @@ export interface Paymaster {
   successRate: number
   firstSeen: Date
   lastSeen: Date
+}
+
+/** Paymaster with stats derived from real UserOp data */
+export interface PaymasterWithStats {
+  address: string
+  totalOps: number
+  successfulOps: number
+  failedOps: number
+  successRate: number
+  totalGasSponsored: bigint
+  lastActivityBlock: number
+  lastActivityTime: Date
+}
+
+/** Token payment detected in a bundle transaction */
+export interface TokenPayment {
+  token: {
+    name: string
+    symbol: string
+    decimals: number
+  }
+  amount: bigint
+  direction: 'in' | 'out'
 }
 
 // ============================================================================

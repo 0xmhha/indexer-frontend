@@ -1,6 +1,7 @@
 'use client'
 
 import { memo } from 'react'
+import Link from 'next/link'
 import {
   Table,
   TableHeader,
@@ -11,10 +12,10 @@ import {
 } from '@/components/ui/Table'
 import { AddressLink } from '@/components/common/AddressLink'
 import { formatNumber, formatValue } from '@/lib/utils/format'
-import type { Bundler } from '@/types/aa'
+import type { BundlerWithStats } from '@/types/aa'
 
 interface BundlerTableProps {
-  bundlers: Bundler[]
+  bundlers: BundlerWithStats[]
 }
 
 function formatAge(date: Date): string {
@@ -28,20 +29,17 @@ function formatAge(date: Date): string {
   return `${days}d ago`
 }
 
-function BundlerRowComponent({ bundler }: { bundler: Bundler }) {
+function BundlerRowComponent({ bundler }: { bundler: BundlerWithStats }) {
   return (
     <TableRow>
       <TableCell>
-        <AddressLink address={bundler.address} />
+        <Link href={`/bundler/${bundler.address}`} className="hover:underline">
+          <AddressLink address={bundler.address} />
+        </Link>
       </TableCell>
       <TableCell>
         <span className="font-mono text-xs text-text-primary">
-          {formatNumber(bundler.totalBundles)}
-        </span>
-      </TableCell>
-      <TableCell>
-        <span className="font-mono text-xs text-text-primary">
-          {formatNumber(bundler.totalUserOps)}
+          {formatNumber(bundler.totalOps)}
         </span>
       </TableCell>
       <TableCell>
@@ -54,12 +52,12 @@ function BundlerRowComponent({ bundler }: { bundler: Bundler }) {
       </TableCell>
       <TableCell className="text-right">
         <span className="font-mono text-xs text-text-primary">
-          {formatValue(bundler.totalGasUsed)} STB
+          {formatValue(bundler.totalGasSponsored)} STB
         </span>
       </TableCell>
       <TableCell>
         <span className="font-mono text-xs text-text-secondary">
-          {formatAge(bundler.lastSeen)}
+          {formatAge(bundler.lastActivityTime)}
         </span>
       </TableCell>
     </TableRow>
@@ -82,11 +80,10 @@ export function BundlerTable({ bundlers }: BundlerTableProps) {
       <TableHeader>
         <TableRow>
           <TableHead>ADDRESS</TableHead>
-          <TableHead>BUNDLES</TableHead>
-          <TableHead>USER OPS</TableHead>
+          <TableHead>TOTAL OPS</TableHead>
           <TableHead>SUCCESS RATE</TableHead>
-          <TableHead className="text-right">TOTAL GAS USED</TableHead>
-          <TableHead>LAST SEEN</TableHead>
+          <TableHead className="text-right">TOTAL GAS</TableHead>
+          <TableHead>LAST ACTIVE</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

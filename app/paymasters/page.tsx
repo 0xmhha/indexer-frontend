@@ -24,8 +24,8 @@ function PaymastersListContent() {
     )
   }
 
-  const totalSponsored = paymasters.reduce((sum, pm) => sum + pm.totalSponsored, 0)
-  const totalGasPaid = paymasters.reduce((sum, pm) => sum + pm.totalGasPaid, BigInt(0))
+  const totalOps = paymasters.reduce((sum, pm) => sum + pm.totalOps, 0)
+  const totalGasPaid = paymasters.reduce((sum, pm) => sum + pm.totalGasSponsored, BigInt(0))
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -41,7 +41,7 @@ function PaymastersListContent() {
       {/* Stats */}
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label="Active Paymasters" value={formatNumber(totalCount)} />
-        <StatCard label="Total Sponsored Ops" value={formatNumber(totalSponsored)} />
+        <StatCard label="Total Sponsored Ops" value={formatNumber(totalOps)} />
         <StatCard label="Total Gas Paid" value={`${formatValue(totalGasPaid)} STB`} />
       </div>
 

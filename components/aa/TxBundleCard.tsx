@@ -1,5 +1,6 @@
 'use client'
 
+import { useMemo } from 'react'
 import { useQuery } from '@apollo/client'
 import Link from 'next/link'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card'
@@ -29,14 +30,27 @@ export function TxBundleCard({ txHash }: TxBundleCardProps) {
 
   const rawOps = (data?.userOpsByTx ?? []) as RawBundleUserOp[]
 
+  const userOps = useMemo(() => transformBundleUserOps(rawOps), [rawOps])
+  const bundler = userOps[0]?.bundler
+  const entryPoint = userOps[0]?.entryPoint
+
+  // Compute bundle summary
+  const totalGas = useMemo(() =>
+    userOps.reduce((sum, op) => sum + op.actualGasCost, BigInt(0)),
+    [userOps]
+  )
+  const sponsoredGas = useMemo(() =>
+    userOps
+      .filter((op) => op.paymaster !== null)
+      .reduce((sum, op) => sum + op.actualGasCost, BigInt(0)),
+    [userOps]
+  )
+  const sponsoredCount = userOps.filter((op) => op.paymaster !== null).length
+
   // Don't render anything if no UserOps in this tx
   if (loading || rawOps.length === 0) {
     return null
   }
-
-  const userOps = transformBundleUserOps(rawOps)
-  const bundler = userOps[0]?.bundler
-  const entryPoint = userOps[0]?.entryPoint
 
   return (
     <Card className="mb-4">
@@ -55,7 +69,9 @@ export function TxBundleCard({ txHash }: TxBundleCardProps) {
             {bundler && (
               <div className="flex items-center gap-2">
                 <span className="font-mono text-xs text-text-secondary">Bundler:</span>
-                <AddressLink address={bundler} />
+                <Link href={`/bundler/${bundler}`} className="hover:underline">
+                  <AddressLink address={bundler} />
+                </Link>
               </div>
             )}
             {entryPoint && (
@@ -63,6 +79,18 @@ export function TxBundleCard({ txHash }: TxBundleCardProps) {
                 <span className="font-mono text-xs text-text-secondary">EntryPoint:</span>
                 <AddressLink address={entryPoint} isContract={true} />
               </div>
+            )}
+          </div>
+          {/* Bundle summary */}
+          <div className="mt-2 flex flex-wrap gap-x-6 gap-y-1">
+            <span className="font-mono text-xs text-text-muted">
+              Total Gas: <span className="text-text-primary">{formatValue(totalGas)} STB</span>
+            </span>
+            {sponsoredCount > 0 && (
+              <span className="font-mono text-xs text-text-muted">
+                Sponsored: <span className="text-accent-orange">{formatValue(sponsoredGas)} STB</span>
+                <span className="ml-1 text-text-muted">({sponsoredCount} ops)</span>
+              </span>
             )}
           </div>
         </div>
@@ -74,6 +102,7 @@ export function TxBundleCard({ txHash }: TxBundleCardProps) {
               <TableHead>USEROP HASH</TableHead>
               <TableHead>SENDER</TableHead>
               <TableHead>PAYMASTER</TableHead>
+              <TableHead>GAS PAYMENT</TableHead>
               <TableHead className="text-right">GAS COST</TableHead>
               <TableHead>STATUS</TableHead>
             </TableRow>
@@ -89,9 +118,20 @@ export function TxBundleCard({ txHash }: TxBundleCardProps) {
                 </TableCell>
                 <TableCell>
                   {op.paymaster ? (
-                    <AddressLink address={op.paymaster} />
+                    <Link href={`/paymaster/${op.paymaster}`} className="hover:underline">
+                      <AddressLink address={op.paymaster} />
+                    </Link>
                   ) : (
                     <span className="font-mono text-xs text-text-muted">-</span>
+                  )}
+                </TableCell>
+                <TableCell>
+                  {op.paymaster ? (
+                    <span className="rounded bg-accent-orange/20 px-1.5 py-0.5 font-mono text-xs text-accent-orange">
+                      Sponsored
+                    </span>
+                  ) : (
+                    <span className="font-mono text-xs text-text-muted">Self-paid</span>
                   )}
                 </TableCell>
                 <TableCell className="text-right">

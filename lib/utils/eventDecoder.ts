@@ -25,7 +25,7 @@ export interface DecodedLog {
 
 interface EventInput {
   name: string
-  type: 'address' | 'uint256' | 'int256' | 'bool' | 'bytes32' | 'bytes' | 'string'
+  type: 'address' | 'uint256' | 'int256' | 'bool' | 'bytes32' | 'bytes' | 'string' | 'bytes4'
   indexed: boolean
 }
 
@@ -99,6 +99,61 @@ const KNOWN_EVENTS: Record<string, KnownEvent> = {
     inputs: [
       { name: 'previousOwner', type: 'address', indexed: true },
       { name: 'newOwner', type: 'address', indexed: true },
+    ],
+  },
+
+  // ============================================================================
+  // EIP-4337 Account Abstraction Events
+  // ============================================================================
+
+  // UserOperationEvent(bytes32 indexed userOpHash, address indexed sender, address indexed paymaster, uint256 nonce, bool success, uint256 actualGasCost, uint256 actualGasUsed)
+  '0x49628fd1471006c1482da88028e9ce4dbb080b815c9b0344d39e5a8e6ec1419f': {
+    name: 'UserOperationEvent',
+    signature: 'UserOperationEvent(bytes32,address,address,uint256,bool,uint256,uint256)',
+    inputs: [
+      { name: 'userOpHash', type: 'bytes32', indexed: true },
+      { name: 'sender', type: 'address', indexed: true },
+      { name: 'paymaster', type: 'address', indexed: true },
+      { name: 'nonce', type: 'uint256', indexed: false },
+      { name: 'success', type: 'bool', indexed: false },
+      { name: 'actualGasCost', type: 'uint256', indexed: false },
+      { name: 'actualGasUsed', type: 'uint256', indexed: false },
+    ],
+  },
+
+  // AccountDeployed(bytes32 indexed userOpHash, address indexed sender, address factory, address paymaster)
+  '0xd51a9c61267aa6196961883ecf5cb5112fd11386b3f0c2fa1ca13d7461d19b60': {
+    name: 'AccountDeployed',
+    signature: 'AccountDeployed(bytes32,address,address,address)',
+    inputs: [
+      { name: 'userOpHash', type: 'bytes32', indexed: true },
+      { name: 'sender', type: 'address', indexed: true },
+      { name: 'factory', type: 'address', indexed: false },
+      { name: 'paymaster', type: 'address', indexed: false },
+    ],
+  },
+
+  // UserOperationRevertReason(bytes32 indexed userOpHash, address indexed sender, uint256 nonce, bytes revertReason)
+  '0x1c4fada7374c0a9ee8841fc38afe82932dc0f8e69012e927f061a8bae611a201': {
+    name: 'UserOperationRevertReason',
+    signature: 'UserOperationRevertReason(bytes32,address,uint256,bytes)',
+    inputs: [
+      { name: 'userOpHash', type: 'bytes32', indexed: true },
+      { name: 'sender', type: 'address', indexed: true },
+      { name: 'nonce', type: 'uint256', indexed: false },
+      { name: 'revertReason', type: 'bytes', indexed: false },
+    ],
+  },
+
+  // PostOpRevertReason(bytes32 indexed userOpHash, address indexed sender, uint256 nonce, bytes revertReason)
+  '0xf62676f440ff169a3a9afdbf812e89e7f95975ee8e5c31214ffdef631c5f4792': {
+    name: 'PostOpRevertReason',
+    signature: 'PostOpRevertReason(bytes32,address,uint256,bytes)',
+    inputs: [
+      { name: 'userOpHash', type: 'bytes32', indexed: true },
+      { name: 'sender', type: 'address', indexed: true },
+      { name: 'nonce', type: 'uint256', indexed: false },
+      { name: 'revertReason', type: 'bytes', indexed: false },
     ],
   },
 }
@@ -208,7 +263,12 @@ function decodeValue(hex: string, type: EventInput['type']): string {
     case 'bool':
       return decodeBool(hex)
     case 'bytes32':
+    case 'bytes4':
       return decodeBytes32(hex)
+    case 'bytes':
+    case 'string':
+      // Dynamic types: hex is the raw data, return as-is with 0x prefix
+      return hex.startsWith('0x') ? hex : `0x${hex}`
     default:
       return hex
   }
@@ -282,10 +342,25 @@ export function decodeEventLog(
       }
     } else {
       // Non-indexed parameters are in data
-      // Each parameter is 32 bytes (64 hex chars)
-      const chunk = cleanData.slice(dataOffset, dataOffset + ABI.WORD_SIZE)
-      value = chunk ? decodeValue(`0x${chunk}`, input.type) : '0'
-      dataOffset += ABI.WORD_SIZE
+      if (input.type === 'bytes' || input.type === 'string') {
+        // Dynamic types: word at dataOffset is the byte offset to the actual data
+        const offsetWord = cleanData.slice(dataOffset, dataOffset + ABI.WORD_SIZE)
+        const byteOffset = offsetWord ? Number(BigInt(`0x${offsetWord}`)) * 2 : 0 // convert byte offset to hex char offset
+        if (byteOffset > 0 && byteOffset < cleanData.length) {
+          const lengthWord = cleanData.slice(byteOffset, byteOffset + ABI.WORD_SIZE)
+          const byteLength = lengthWord ? Number(BigInt(`0x${lengthWord}`)) * 2 : 0
+          const rawBytes = cleanData.slice(byteOffset + ABI.WORD_SIZE, byteOffset + ABI.WORD_SIZE + byteLength)
+          value = `0x${rawBytes}`
+        } else {
+          value = '0x'
+        }
+        dataOffset += ABI.WORD_SIZE
+      } else {
+        // Static types: each parameter is 32 bytes (64 hex chars)
+        const chunk = cleanData.slice(dataOffset, dataOffset + ABI.WORD_SIZE)
+        value = chunk ? decodeValue(`0x${chunk}`, input.type) : '0'
+        dataOffset += ABI.WORD_SIZE
+      }
     }
 
     params.push({

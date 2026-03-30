@@ -8,13 +8,15 @@ import { UserOpTable } from '@/components/aa/userops/UserOpTable'
 import { GET_USER_OP_COUNT, GET_RECENT_USER_OPS } from '@/lib/apollo/queries/aa'
 import { transformUserOperationListItems } from '@/lib/utils/aa-transforms'
 import { formatNumber } from '@/lib/utils/format'
+import { useBundlers } from '@/lib/hooks/aa'
+import { usePaymasters } from '@/lib/hooks/aa'
 import type { RawUserOperationListItem } from '@/types/aa'
 
 const DASHBOARD_LIMIT = 5
 
 /**
  * AA stats and recent UserOps section for the Dashboard.
- * Shows total UserOp count and the most recent UserOperations.
+ * Shows total UserOp count, active bundlers/paymasters, and recent UserOperations.
  */
 export function AADashboardSection() {
   const { data: countData } = useQuery(GET_USER_OP_COUNT, {
@@ -27,6 +29,9 @@ export function AADashboardSection() {
     fetchPolicy: 'cache-and-network',
     pollInterval: 15000,
   })
+
+  const { bundlers } = useBundlers()
+  const { paymasters } = usePaymasters()
 
   const totalCount = (countData?.userOpCount as number | undefined) ?? 0
   const rawOps = (recentData?.recentUserOps ?? []) as RawUserOperationListItem[]
@@ -50,9 +55,8 @@ export function AADashboardSection() {
         </Link>
       </div>
 
-      <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
+      <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
         <StatCard label="Total UserOperations" value={formatNumber(totalCount)} />
-        <StatCard label="Recent UserOps" value={formatNumber(recentOps.length)} />
         <StatCard
           label="Success Rate"
           value={
@@ -61,6 +65,9 @@ export function AADashboardSection() {
               : '-'
           }
         />
+        <StatCard label="Active Bundlers" value={formatNumber(bundlers.length)} />
+        <StatCard label="Active Paymasters" value={formatNumber(paymasters.length)} />
+        <StatCard label="Recent UserOps" value={formatNumber(recentOps.length)} />
       </div>
 
       {/* Recent UserOps */}

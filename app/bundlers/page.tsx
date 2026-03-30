@@ -7,7 +7,7 @@ import { ListPageSkeleton } from '@/components/skeletons/ListPageSkeleton'
 import { ErrorDisplay } from '@/components/common/ErrorBoundary'
 import { BundlerTable } from '@/components/aa/bundlers/BundlerTable'
 import { StatCard } from '@/components/common/StatCard'
-import { formatNumber } from '@/lib/utils/format'
+import { formatNumber, formatValue } from '@/lib/utils/format'
 
 function BundlersListContent() {
   const { bundlers, totalCount, loading, error } = useBundlers()
@@ -24,8 +24,8 @@ function BundlersListContent() {
     )
   }
 
-  const totalBundles = bundlers.reduce((sum, b) => sum + b.totalBundles, 0)
-  const totalUserOps = bundlers.reduce((sum, b) => sum + b.totalUserOps, 0)
+  const totalOps = bundlers.reduce((sum, b) => sum + b.totalOps, 0)
+  const totalGas = bundlers.reduce((sum, b) => sum + b.totalGasSponsored, BigInt(0))
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -41,8 +41,8 @@ function BundlersListContent() {
       {/* Stats */}
       <div className="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label="Active Bundlers" value={formatNumber(totalCount)} />
-        <StatCard label="Total Bundles" value={formatNumber(totalBundles)} />
-        <StatCard label="Total UserOps Processed" value={formatNumber(totalUserOps)} />
+        <StatCard label="Total UserOps Processed" value={formatNumber(totalOps)} />
+        <StatCard label="Total Gas" value={`${formatValue(totalGas)} STB`} />
       </div>
 
       {/* Bundlers Table */}

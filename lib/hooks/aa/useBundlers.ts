@@ -1,32 +1,22 @@
 /**
  * Hook to fetch Bundler list
  *
- * Currently uses mock data. Will switch to GraphQL when indexer schema is ready.
- * TODO: Replace mock data with actual GET_BUNDLERS query
+ * Delegates to useBundlerList which aggregates data from recent UserOps.
+ * Returns BundlerWithStats[] (real data from backend stats queries).
  */
 
 'use client'
 
-import { useState } from 'react'
-import { MOCK_BUNDLERS } from './mock-data'
-import type { Bundler } from '@/types/aa'
+import { useBundlerList } from './useBundlerList'
+import type { BundlerWithStats } from '@/types/aa'
 
 interface UseBundlersResult {
-  bundlers: Bundler[]
+  bundlers: BundlerWithStats[]
   totalCount: number
   loading: boolean
   error: Error | null
 }
 
 export function useBundlers(): UseBundlersResult {
-  // TODO: Replace with useQuery(GET_BUNDLERS)
-  const [loading] = useState(false)
-  const [error] = useState<Error | null>(null)
-
-  return {
-    bundlers: MOCK_BUNDLERS,
-    totalCount: MOCK_BUNDLERS.length,
-    loading,
-    error,
-  }
+  return useBundlerList()
 }

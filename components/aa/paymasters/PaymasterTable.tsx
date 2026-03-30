@@ -1,6 +1,7 @@
 'use client'
 
 import { memo } from 'react'
+import Link from 'next/link'
 import {
   Table,
   TableHeader,
@@ -11,26 +12,39 @@ import {
 } from '@/components/ui/Table'
 import { AddressLink } from '@/components/common/AddressLink'
 import { formatNumber, formatValue } from '@/lib/utils/format'
-import type { Paymaster } from '@/types/aa'
+import type { PaymasterWithStats } from '@/types/aa'
 
 interface PaymasterTableProps {
-  paymasters: Paymaster[]
+  paymasters: PaymasterWithStats[]
 }
 
-function PaymasterRowComponent({ paymaster }: { paymaster: Paymaster }) {
+function formatAge(date: Date): string {
+  const seconds = Math.floor((Date.now() - date.getTime()) / 1000)
+  if (seconds < 60) { return `${seconds}s ago` }
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) { return `${minutes}m ago` }
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) { return `${hours}h ago` }
+  const days = Math.floor(hours / 24)
+  return `${days}d ago`
+}
+
+function PaymasterRowComponent({ paymaster }: { paymaster: PaymasterWithStats }) {
   return (
     <TableRow>
       <TableCell>
-        <AddressLink address={paymaster.address} isContract={true} />
+        <Link href={`/paymaster/${paymaster.address}`} className="hover:underline">
+          <AddressLink address={paymaster.address} isContract={true} />
+        </Link>
       </TableCell>
       <TableCell>
         <span className="font-mono text-xs text-text-primary">
-          {formatNumber(paymaster.totalSponsored)}
+          {formatNumber(paymaster.totalOps)}
         </span>
       </TableCell>
       <TableCell className="text-right">
         <span className="font-mono text-xs text-text-primary">
-          {formatValue(paymaster.totalGasPaid)} STB
+          {formatValue(paymaster.totalGasSponsored)} STB
         </span>
       </TableCell>
       <TableCell>
@@ -39,6 +53,11 @@ function PaymasterRowComponent({ paymaster }: { paymaster: Paymaster }) {
           paymaster.successRate >= 95 ? 'text-accent-orange' : 'text-status-error'
         }`}>
           {paymaster.successRate.toFixed(1)}%
+        </span>
+      </TableCell>
+      <TableCell>
+        <span className="font-mono text-xs text-text-secondary">
+          {formatAge(paymaster.lastActivityTime)}
         </span>
       </TableCell>
     </TableRow>
@@ -61,9 +80,10 @@ export function PaymasterTable({ paymasters }: PaymasterTableProps) {
       <TableHeader>
         <TableRow>
           <TableHead>ADDRESS</TableHead>
-          <TableHead>SPONSORED OPS</TableHead>
+          <TableHead>TOTAL OPS</TableHead>
           <TableHead className="text-right">TOTAL GAS PAID</TableHead>
           <TableHead>SUCCESS RATE</TableHead>
+          <TableHead>LAST ACTIVE</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
