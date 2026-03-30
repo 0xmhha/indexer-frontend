@@ -33,6 +33,78 @@ export interface ApolloClientInstance {
 }
 
 /**
+ * Default PageInfo values for when the backend returns null
+ * for non-nullable PageInfo fields.
+ */
+const DEFAULT_PAGE_INFO = { hasNextPage: false, hasPreviousPage: false, __typename: 'PageInfo' }
+
+/**
+ * Recursively patch null `pageInfo` fields in a GraphQL response.
+ * The backend sometimes returns null for PageInfo.hasPreviousPage (non-nullable),
+ * which triggers GraphQL null propagation that can null out entire parent objects.
+ */
+function patchPageInfoInData(obj: unknown): void {
+  if (!obj || typeof obj !== 'object') {
+    return
+  }
+  const record = obj as Record<string, unknown>
+  for (const key of Object.keys(record)) {
+    if (key === 'pageInfo') {
+      patchPageInfoField(record)
+    } else if (Array.isArray(record[key])) {
+      (record[key] as unknown[]).forEach(patchPageInfoInData)
+    } else if (typeof record[key] === 'object' && record[key] !== null) {
+      patchPageInfoInData(record[key])
+    }
+  }
+}
+
+function patchPageInfoField(record: Record<string, unknown>): void {
+  if (record.pageInfo === null || record.pageInfo === undefined) {
+    record.pageInfo = { ...DEFAULT_PAGE_INFO }
+    return
+  }
+  if (typeof record.pageInfo === 'object') {
+    const pi = record.pageInfo as Record<string, unknown>
+    if (pi.hasNextPage === null || pi.hasNextPage === undefined) {
+      pi.hasNextPage = false
+    }
+    if (pi.hasPreviousPage === null || pi.hasPreviousPage === undefined) {
+      pi.hasPreviousPage = false
+    }
+  }
+}
+
+/**
+ * Create link that patches null PageInfo fields from the backend.
+ * Filters server errors for non-nullable PageInfo violations and
+ * provides default values to prevent null propagation.
+ */
+function createPageInfoPatchLink() {
+  return new ApolloLink((operation, forward) => {
+    return forward(operation).map((response) => {
+      // Patch any null pageInfo fields in response data
+      if (response.data) {
+        patchPageInfoInData(response.data)
+      }
+
+      // Filter out PageInfo null-field errors from server
+      if (response.errors?.length) {
+        const filtered = response.errors.filter(
+          (e) => !e.message.includes('Cannot return null for non-nullable field PageInfo')
+        )
+        if (filtered.length < response.errors.length) {
+          const { errors: _errors, ...rest } = response
+          return filtered.length > 0 ? { ...rest, errors: filtered } : rest
+        }
+      }
+
+      return response
+    })
+  })
+}
+
+/**
  * Create error handling link for Apollo Client
  */
 function createErrorLink() {
@@ -219,6 +291,7 @@ function createWsClient(wsEndpoint: string): WsClient | null {
  * @returns Apollo Client instance with cleanup function
  */
 export function createApolloClient(endpoints: NetworkEndpoints): ApolloClientInstance {
+  const pageInfoPatchLink = createPageInfoPatchLink()
   const errorLink = createErrorLink()
   const loggingLink = createLoggingLink()
 
@@ -247,7 +320,7 @@ export function createApolloClient(endpoints: NetworkEndpoints): ApolloClientIns
 
   // Create Apollo Client
   const client = new ApolloClient({
-    link: from([errorLink, loggingLink, splitLink]),
+    link: from([pageInfoPatchLink, errorLink, loggingLink, splitLink]),
     cache: createCache(),
     defaultOptions: createDefaultOptions(),
   })
