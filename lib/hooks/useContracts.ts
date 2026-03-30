@@ -78,9 +78,9 @@ export function useContracts({ limit = 20, offset = 0 }: UseContractsOptions = {
   const rawContracts = effectiveData?.contracts?.nodes ?? []
   const contracts = rawContracts.map(transformContractCreation)
   const totalCount = effectiveData?.contracts?.totalCount ?? 0
-  const pageInfo = effectiveData?.contracts?.pageInfo ?? {
-    hasNextPage: false,
-    hasPreviousPage: false,
+  const pageInfo = {
+    hasNextPage: effectiveData?.contracts?.pageInfo?.hasNextPage ?? false,
+    hasPreviousPage: offset > 0,
   }
 
   return {

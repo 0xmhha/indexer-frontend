@@ -76,7 +76,6 @@ export const GET_BALANCE_HISTORY = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }

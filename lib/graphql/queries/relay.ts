@@ -64,7 +64,6 @@ export const GET_TRANSACTIONS_BY_ADDRESS = gql`
       }
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
       totalCount
     }
@@ -96,7 +95,6 @@ export const GET_LOGS_BY_ADDRESS = gql`
       }
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
       totalCount
     }
@@ -303,7 +301,6 @@ export const GET_TOKEN_HOLDERS = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }

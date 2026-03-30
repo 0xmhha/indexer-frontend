@@ -3149,7 +3149,6 @@ export const GetTransactionsByAddressDocument = gql`
     totalCount
     pageInfo {
       hasNextPage
-      hasPreviousPage
     }
   }
 }
@@ -3338,7 +3337,6 @@ export const GetBalanceHistoryDocument = gql`
     totalCount
     pageInfo {
       hasNextPage
-      hasPreviousPage
     }
   }
 }
@@ -4389,7 +4387,6 @@ export const GetContractsByCreatorDocument = gql`
     totalCount
     pageInfo {
       hasNextPage
-      hasPreviousPage
     }
   }
 }
@@ -4443,7 +4440,6 @@ export const GetContractsDocument = gql`
     totalCount
     pageInfo {
       hasNextPage
-      hasPreviousPage
     }
   }
 }
@@ -4502,7 +4498,6 @@ export const GetInternalTransactionsByAddressDocument = gql`
     totalCount
     pageInfo {
       hasNextPage
-      hasPreviousPage
     }
   }
 }
@@ -4604,7 +4599,6 @@ export const GetErc20TransfersByTokenDocument = gql`
     totalCount
     pageInfo {
       hasNextPage
-      hasPreviousPage
     }
   }
 }
@@ -4663,7 +4657,6 @@ export const GetErc20TransfersByAddressDocument = gql`
     totalCount
     pageInfo {
       hasNextPage
-      hasPreviousPage
     }
   }
 }
@@ -4765,7 +4758,6 @@ export const GetErc721TransfersByTokenDocument = gql`
     totalCount
     pageInfo {
       hasNextPage
-      hasPreviousPage
     }
   }
 }
@@ -4824,7 +4816,6 @@ export const GetErc721TransfersByAddressDocument = gql`
     totalCount
     pageInfo {
       hasNextPage
-      hasPreviousPage
     }
   }
 }
@@ -5199,7 +5190,6 @@ export const GetAllValidatorsSigningStatsDocument = gql`
     totalCount
     pageInfo {
       hasNextPage
-      hasPreviousPage
     }
   }
 }
@@ -5261,7 +5251,6 @@ export const GetValidatorSigningActivityDocument = gql`
     totalCount
     pageInfo {
       hasNextPage
-      hasPreviousPage
     }
   }
 }
@@ -5556,7 +5545,6 @@ export const GetTransactionsByAddressRelayDocument = gql`
     }
     pageInfo {
       hasNextPage
-      hasPreviousPage
     }
     totalCount
   }
@@ -5612,7 +5600,6 @@ export const GetLogsByAddressRelayDocument = gql`
     }
     pageInfo {
       hasNextPage
-      hasPreviousPage
     }
     totalCount
   }
@@ -6614,7 +6601,6 @@ export const GetMintEventsDocument = gql`
     totalCount
     pageInfo {
       hasNextPage
-      hasPreviousPage
     }
   }
 }
@@ -6667,7 +6653,6 @@ export const GetBurnEventsDocument = gql`
     totalCount
     pageInfo {
       hasNextPage
-      hasPreviousPage
     }
   }
 }
@@ -6728,7 +6713,6 @@ export const GetProposalsDocument = gql`
     totalCount
     pageInfo {
       hasNextPage
-      hasPreviousPage
     }
   }
 }
@@ -7577,7 +7561,6 @@ export const GetBlocksDocument = gql`
     totalCount
     pageInfo {
       hasNextPage
-      hasPreviousPage
     }
   }
 }
@@ -7643,7 +7626,6 @@ export const GetFilteredTransactionsDocument = gql`
     totalCount
     pageInfo {
       hasNextPage
-      hasPreviousPage
     }
   }
 }
@@ -7986,7 +7968,6 @@ export const GetProposalsLocalDocument = gql`
     totalCount
     pageInfo {
       hasNextPage
-      hasPreviousPage
     }
   }
 }
@@ -8140,7 +8121,6 @@ export const GetTransactionsDocument = gql`
     totalCount
     pageInfo {
       hasNextPage
-      hasPreviousPage
     }
   }
 }

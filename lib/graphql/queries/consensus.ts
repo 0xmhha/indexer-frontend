@@ -125,7 +125,6 @@ export const GET_EPOCHS = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }
@@ -219,7 +218,6 @@ export const GET_ALL_VALIDATORS_SIGNING_STATS = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }
@@ -255,7 +253,6 @@ export const GET_VALIDATOR_SIGNING_ACTIVITY = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }

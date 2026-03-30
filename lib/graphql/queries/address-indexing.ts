@@ -36,7 +36,6 @@ export const GET_CONTRACTS_BY_CREATOR = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }
@@ -61,7 +60,6 @@ export const GET_CONTRACTS = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }
@@ -98,7 +96,6 @@ export const GET_INTERNAL_TRANSACTIONS_BY_ADDRESS = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }
@@ -140,7 +137,6 @@ export const GET_ERC20_TRANSFERS_BY_TOKEN = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }
@@ -166,7 +162,6 @@ export const GET_ERC20_TRANSFERS_BY_ADDRESS = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }
@@ -208,7 +203,6 @@ export const GET_ERC721_TRANSFERS_BY_TOKEN = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }
@@ -234,7 +228,6 @@ export const GET_ERC721_TRANSFERS_BY_ADDRESS = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }

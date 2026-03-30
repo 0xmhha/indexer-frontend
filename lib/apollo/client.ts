@@ -320,7 +320,7 @@ export function createApolloClient(endpoints: NetworkEndpoints): ApolloClientIns
 
   // Create Apollo Client
   const client = new ApolloClient({
-    link: from([pageInfoPatchLink, errorLink, loggingLink, splitLink]),
+    link: from([errorLink, loggingLink, pageInfoPatchLink, splitLink]),
     cache: createCache(),
     defaultOptions: createDefaultOptions(),
   })

@@ -92,7 +92,10 @@ export function useERC721TransfersByToken(
   const rawData = data?.erc721TransfersByToken || previousData?.erc721TransfersByToken
   const erc721Transfers = rawData?.nodes?.map(transformERC721Transfer) || []
   const totalCount = rawData?.totalCount || 0
-  const pageInfo = rawData?.pageInfo || { hasNextPage: false, hasPreviousPage: false }
+  const pageInfo = {
+    hasNextPage: rawData?.pageInfo?.hasNextPage ?? false,
+    hasPreviousPage: (pagination?.offset ?? 0) > 0,
+  }
 
   return {
     erc721Transfers,
@@ -127,7 +130,10 @@ export function useERC721TransfersByAddress(
   const rawData = data?.erc721TransfersByAddress || previousData?.erc721TransfersByAddress
   const erc721Transfers = rawData?.nodes?.map(transformERC721Transfer) || []
   const totalCount = rawData?.totalCount || 0
-  const pageInfo = rawData?.pageInfo || { hasNextPage: false, hasPreviousPage: false }
+  const pageInfo = {
+    hasNextPage: rawData?.pageInfo?.hasNextPage ?? false,
+    hasPreviousPage: (pagination?.offset ?? 0) > 0,
+  }
 
   return {
     erc721Transfers,

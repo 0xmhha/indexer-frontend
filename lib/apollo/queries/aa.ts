@@ -55,7 +55,6 @@ export const GET_USER_OPS_BY_SENDER = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }
@@ -80,7 +79,6 @@ export const GET_USER_OPS_BY_BUNDLER = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }
@@ -105,7 +103,6 @@ export const GET_USER_OPS_BY_PAYMASTER = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }
@@ -222,7 +219,6 @@ export const GET_ALL_BUNDLERS = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }
@@ -244,7 +240,6 @@ export const GET_ALL_PAYMASTERS = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }

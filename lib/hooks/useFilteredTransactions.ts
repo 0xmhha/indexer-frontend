@@ -61,7 +61,6 @@ const GET_FILTERED_TRANSACTIONS = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }

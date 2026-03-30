@@ -81,7 +81,10 @@ export function useERC20TransfersByToken(
   const rawData = data?.erc20TransfersByToken || previousData?.erc20TransfersByToken
   const erc20Transfers = rawData?.nodes?.map(transformERC20Transfer) || []
   const totalCount = rawData?.totalCount || 0
-  const pageInfo = rawData?.pageInfo || { hasNextPage: false, hasPreviousPage: false }
+  const pageInfo = {
+    hasNextPage: rawData?.pageInfo?.hasNextPage ?? false,
+    hasPreviousPage: (pagination?.offset ?? 0) > 0,
+  }
 
   return {
     erc20Transfers,
@@ -116,7 +119,10 @@ export function useERC20TransfersByAddress(
   const rawData = data?.erc20TransfersByAddress || previousData?.erc20TransfersByAddress
   const erc20Transfers = rawData?.nodes?.map(transformERC20Transfer) || []
   const totalCount = rawData?.totalCount || 0
-  const pageInfo = rawData?.pageInfo || { hasNextPage: false, hasPreviousPage: false }
+  const pageInfo = {
+    hasNextPage: rawData?.pageInfo?.hasNextPage ?? false,
+    hasPreviousPage: (pagination?.offset ?? 0) > 0,
+  }
 
   return {
     erc20Transfers,

@@ -30,7 +30,6 @@ const GET_BLOCKS = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }

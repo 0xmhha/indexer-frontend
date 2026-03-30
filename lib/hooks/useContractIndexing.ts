@@ -108,7 +108,10 @@ export function useContractsByCreator(
   const rawData = data?.contractsByCreator || previousData?.contractsByCreator
   const contracts = rawData?.nodes?.map(transformContractCreation) || []
   const totalCount = rawData?.totalCount || 0
-  const pageInfo = rawData?.pageInfo || { hasNextPage: false, hasPreviousPage: false }
+  const pageInfo = {
+    hasNextPage: rawData?.pageInfo?.hasNextPage ?? false,
+    hasPreviousPage: (pagination?.offset ?? 0) > 0,
+  }
 
   const loadMore = () => {
     if (!pageInfo.hasNextPage) {return}
@@ -162,7 +165,10 @@ export function useInternalTransactionsByAddress(
     data?.internalTransactionsByAddress || previousData?.internalTransactionsByAddress
   const internalTransactions = rawData?.nodes?.map(transformInternalTransaction) || []
   const totalCount = rawData?.totalCount || 0
-  const pageInfo = rawData?.pageInfo || { hasNextPage: false, hasPreviousPage: false }
+  const pageInfo = {
+    hasNextPage: rawData?.pageInfo?.hasNextPage ?? false,
+    hasPreviousPage: (pagination?.offset ?? 0) > 0,
+  }
 
   const loadMore = () => {
     if (!pageInfo.hasNextPage) {return}

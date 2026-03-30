@@ -63,7 +63,7 @@ export function useBalanceHistory(options: BalanceHistoryOptions): BalanceHistor
   const snapshots = rawNodes.map(transformBalanceSnapshot)
   const totalCount = data?.balanceHistory?.totalCount ?? 0
   const hasNextPage = data?.balanceHistory?.pageInfo?.hasNextPage ?? false
-  const hasPreviousPage = data?.balanceHistory?.pageInfo?.hasPreviousPage ?? false
+  const hasPreviousPage = offset > 0
 
   return {
     snapshots,

@@ -39,7 +39,6 @@ const GET_TRANSACTIONS = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }

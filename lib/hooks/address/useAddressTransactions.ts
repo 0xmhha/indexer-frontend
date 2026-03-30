@@ -9,7 +9,7 @@ import { PAGINATION, POLLING_INTERVALS } from '@/lib/config/constants'
 interface CachedTransactionData {
   transactions: TransformedTransaction[]
   totalCount: number
-  pageInfo: { hasNextPage: boolean; hasPreviousPage: boolean } | undefined
+  pageInfo: { hasNextPage: boolean } | undefined
 }
 
 const EMPTY_CACHE: CachedTransactionData = { transactions: [], totalCount: 0, pageInfo: undefined }

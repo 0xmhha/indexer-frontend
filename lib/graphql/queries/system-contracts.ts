@@ -40,7 +40,6 @@ export const GET_MINT_EVENTS = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }
@@ -60,7 +59,6 @@ export const GET_BURN_EVENTS = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }
@@ -92,7 +90,6 @@ export const GET_PROPOSALS = gql`
       totalCount
       pageInfo {
         hasNextPage
-        hasPreviousPage
       }
     }
   }
